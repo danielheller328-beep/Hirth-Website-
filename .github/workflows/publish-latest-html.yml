@@ -1,0 +1,85 @@
+name: Publish newest HTML
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.html"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-newest-html
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Find newest uploaded HTML
+        id: newest
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          latest_file=""
+          latest_time=0
+
+          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+            mapfile -d '' changed_files < <(git ls-files -z '*.html')
+          else
+            mapfile -d '' changed_files < <(git diff --name-only -z --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- '*.html')
+          fi
+
+          for file in "${changed_files[@]}"; do
+            if [[ "$file" == "index.html" ]]; then
+              continue
+            fi
+
+            commit_time=$(git log -1 --format=%ct -- "$file")
+            commit_time=${commit_time:-0}
+
+            if (( commit_time >= latest_time )); then
+              latest_file="$file"
+              latest_time=$commit_time
+            fi
+          done
+
+          if [[ -z "$latest_file" ]]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Publishing $latest_file as index.html"
+          cp -- "$latest_file" index.html
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+          echo "source=$latest_file" >> "$GITHUB_OUTPUT"
+
+      - name: Publish as homepage
+        if: steps.newest.outputs.publish == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- index.html; then
+            echo "index.html already matches the newest upload."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Publish newest website: ${{ steps.newest.outputs.source }}"
+          git push
