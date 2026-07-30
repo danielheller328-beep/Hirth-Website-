@@ -1,4 +1,4 @@
-name: Publish newest HTML
+name: Publish newest website upload
 
 on:
   push:
@@ -6,12 +6,15 @@ on:
       - main
     paths:
       - "**/*.html"
+      - "**/*.zip"
+      - ".github/workflows/publish-latest-html.yml"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: publish-newest-html
+  group: publish-newest-website
   cancel-in-progress: true
 
 jobs:
@@ -25,25 +28,16 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Find newest uploaded HTML
+      - name: Find and prepare newest website upload
         id: newest
         shell: bash
-        env:
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
           latest_file=""
           latest_time=0
 
-          if [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
-            mapfile -d '' changed_files < <(git ls-files -z '*.html')
-          else
-            mapfile -d '' changed_files < <(git diff --name-only -z --diff-filter=AM "$BEFORE_SHA" "$AFTER_SHA" -- '*.html')
-          fi
-
-          for file in "${changed_files[@]}"; do
+          while IFS= read -r -d '' file; do
             if [[ "$file" == "index.html" ]]; then
               continue
             fi
@@ -55,31 +49,58 @@ jobs:
               latest_file="$file"
               latest_time=$commit_time
             fi
-          done
+          done < <(git ls-files -z '*.html' '*.zip')
 
           if [[ -z "$latest_file" ]]; then
             echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "No website HTML or ZIP upload was found."
             exit 0
           fi
 
-          echo "Publishing $latest_file as index.html"
-          cp -- "$latest_file" index.html
+          lower_file="${latest_file,,}"
+
+          if [[ "$lower_file" == *.zip ]]; then
+            extract_dir=$(mktemp -d)
+            unzip -q "$latest_file" -d "$extract_dir"
+
+            site_index=$(find "$extract_dir" -type f -iname 'index.html' -print -quit)
+            if [[ -z "$site_index" ]]; then
+              site_index=$(find "$extract_dir" -type f -iname '*.html' -print -quit)
+            fi
+
+            if [[ -z "$site_index" ]]; then
+              echo "The newest ZIP does not contain an HTML website." >&2
+              exit 1
+            fi
+
+            site_root=$(dirname "$site_index")
+            rsync -a \
+              --exclude '.git' \
+              --exclude '.github' \
+              --exclude 'CNAME' \
+              "$site_root/" ./
+            cp -- "$site_index" index.html
+          else
+            cp -- "$latest_file" index.html
+          fi
+
+          echo "Prepared $latest_file as the live website"
           echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "source=$latest_file" >> "$GITHUB_OUTPUT"
 
-      - name: Publish as homepage
+      - name: Publish website
         if: steps.newest.outputs.publish == 'true'
         shell: bash
         run: |
           set -euo pipefail
 
-          if git diff --quiet -- index.html; then
-            echo "index.html already matches the newest upload."
+          if git diff --quiet; then
+            echo "The live website already matches the newest upload."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
+          git add -A
           git commit -m "Publish newest website: ${{ steps.newest.outputs.source }}"
           git push
