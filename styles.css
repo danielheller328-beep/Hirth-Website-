@@ -1,0 +1,8 @@
+/* The Hirth Group Design System — global CSS entry point.
+   Imports only; see tokens/ for the actual definitions. */
+
+@import './tokens/fonts.css';
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/base.css';
