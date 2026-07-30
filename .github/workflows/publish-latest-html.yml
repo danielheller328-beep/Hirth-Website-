@@ -84,6 +84,16 @@ jobs:
             cp -- "$latest_file" index.html
           fi
 
+          # GitHub Pages and some browsers block underscore-prefixed bundles.
+          # Publish this design-system bundle under a normal public filename.
+          if [[ -f "_ds_bundle.js" ]]; then
+            cp -- "_ds_bundle.js" "ds-bundle.js"
+            sed -i 's|src="_ds_bundle.js"|src="ds-bundle.js"|g' index.html
+            sed -i "s|src='_ds_bundle.js'|src='ds-bundle.js'|g" index.html
+          fi
+
+          touch .nojekyll
+
           echo "Prepared $latest_file as the live website"
           echo "publish=true" >> "$GITHUB_OUTPUT"
           echo "source=$latest_file" >> "$GITHUB_OUTPUT"
