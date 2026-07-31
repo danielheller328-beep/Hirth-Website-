@@ -1,13 +1,9 @@
-name: Publish newest website upload
+name: Publish newest uploaded website
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "**/*.html"
-      - "**/*.zip"
-      - ".github/workflows/publish-latest-html.yml"
   workflow_dispatch:
 
 permissions:
@@ -21,96 +17,150 @@ jobs:
   publish:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
+      - name: Check out the complete repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Find and prepare newest website upload
-        id: newest
+      - name: Make the newest uploaded website the live index
+        id: publish
         shell: bash
         run: |
           set -euo pipefail
 
-          latest_file=""
-          latest_time=0
+          is_website_file() {
+            local file="$1"
+            local lower="${file,,}"
 
-          while IFS= read -r -d '' file; do
-            if [[ "$file" == "index.html" ]]; then
-              continue
+            [[ -f "$file" ]] || return 1
+            [[ "$lower" == *.zip ]] && return 0
+
+            # A website upload can have any filename. Detect HTML by its content.
+            [[ $(stat -c '%s' "$file") -le 52428800 ]] || return 1
+            head -c 8192 "$file" | LC_ALL=C grep -Eiq '<!doctype[[:space:]]+html|<html([[:space:]>])'
+          }
+
+          candidates=()
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            before="${{ github.event.before }}"
+            after="${{ github.sha }}"
+
+            if [[ "$before" =~ ^0+$ ]] || ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+              while IFS= read -r -d '' file; do
+                is_website_file "$file" && candidates+=("$file")
+              done < <(git diff-tree --root --no-commit-id --name-only -r -z "$after")
+            else
+              while IFS= read -r -d '' file; do
+                is_website_file "$file" && candidates+=("$file")
+              done < <(git diff --name-only --diff-filter=AMR -z "$before" "$after")
             fi
+          else
+            # Manual runs publish the most recently committed website file.
+            newest_time=0
+            newest_file=""
+            while IFS= read -r -d '' file; do
+              if is_website_file "$file"; then
+                file_time=$(git log -1 --format='%ct' -- "$file")
+                if (( file_time >= newest_time )); then
+                  newest_time=$file_time
+                  newest_file="$file"
+                fi
+              fi
+            done < <(git ls-files -z)
+            [[ -n "$newest_file" ]] && candidates+=("$newest_file")
+          fi
 
-            commit_time=$(git log -1 --format=%ct -- "$file")
-            commit_time=${commit_time:-0}
-
-            if (( commit_time >= latest_time )); then
-              latest_file="$file"
-              latest_time=$commit_time
-            fi
-          done < <(git ls-files -z '*.html' '*.zip')
-
-          if [[ -z "$latest_file" ]]; then
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            echo "No website HTML or ZIP upload was found."
+          if (( ${#candidates[@]} == 0 )); then
+            echo "No new HTML website or ZIP package was found. Other uploaded assets are already live."
+            echo "published=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          lower_file="${latest_file,,}"
-
-          if [[ "$lower_file" == *.zip ]]; then
-            extract_dir=$(mktemp -d)
-            unzip -q "$latest_file" -d "$extract_dir"
-
-            site_index=$(find "$extract_dir" -type f -iname 'index.html' -print -quit)
-            if [[ -z "$site_index" ]]; then
-              site_index=$(find "$extract_dir" -type f -iname '*.html' -print -quit)
+          # When a push includes index.html, it is always the intended website.
+          # Otherwise, use the last website file in that push, regardless of name.
+          site_file="${candidates[${#candidates[@]}-1]}"
+          for candidate in "${candidates[@]}"; do
+            if [[ "${candidate##*/}" == "index.html" ]]; then
+              site_file="$candidate"
             fi
+          done
 
-            if [[ -z "$site_index" ]]; then
-              echo "The newest ZIP does not contain an HTML website." >&2
+          echo "Publishing: $site_file"
+          lower_site_file="${site_file,,}"
+
+          if [[ "$lower_site_file" == *.zip ]]; then
+            extract_dir=$(mktemp -d)
+            trap 'rm -rf "$extract_dir"' EXIT
+
+            python3 - "$site_file" "$extract_dir" <<'PY'
+          import pathlib
+          import sys
+          import zipfile
+
+          archive = pathlib.Path(sys.argv[1])
+          destination = pathlib.Path(sys.argv[2]).resolve()
+
+          with zipfile.ZipFile(archive) as package:
+              for member in package.infolist():
+                  target = (destination / member.filename).resolve()
+                  if destination != target and destination not in target.parents:
+                      raise SystemExit(f"Unsafe ZIP path: {member.filename}")
+              package.extractall(destination)
+          PY
+
+            mapfile -d '' packaged_html < <(
+              find "$extract_dir" -type f -print0 | while IFS= read -r -d '' file; do
+                head -c 8192 "$file" | LC_ALL=C grep -Eiq '<!doctype[[:space:]]+html|<html([[:space:]>])' && printf '%s\0' "$file"
+              done
+            )
+
+            if (( ${#packaged_html[@]} == 0 )); then
+              echo "The uploaded ZIP does not contain a website HTML file." >&2
               exit 1
             fi
 
-            site_root=$(dirname "$site_index")
-            rsync -a \
-              --exclude '.git' \
-              --exclude '.github' \
-              --exclude 'CNAME' \
-              "$site_root/" ./
-            cp -- "$site_index" index.html
-          else
-            cp -- "$latest_file" index.html
+            packaged_index=""
+            for candidate in "${packaged_html[@]}"; do
+              if [[ "${candidate##*/}" == "index.html" ]]; then
+                packaged_index="$candidate"
+                break
+              fi
+            done
+            [[ -n "$packaged_index" ]] || packaged_index="${packaged_html[0]}"
+
+            package_root=$(dirname "$packaged_index")
+            tar -C "$package_root" --exclude='.git' --exclude='.github' -cf - . | tar -xf -
+            cp "$packaged_index" index.html
+          elif [[ "$site_file" != "index.html" ]]; then
+            cp "$site_file" index.html
           fi
 
-          # GitHub Pages and some browsers block underscore-prefixed bundles.
-          # Publish this design-system bundle under a normal public filename.
-          if [[ -f "_ds_bundle.js" ]]; then
-            cp -- "_ds_bundle.js" "ds-bundle.js"
-            sed -i 's|src="_ds_bundle.js"|src="ds-bundle.js"|g' index.html
-            sed -i "s|src='_ds_bundle.js'|src='ds-bundle.js'|g" index.html
+          # GitHub Pages can ignore underscore-prefixed files; use the safe bundle name.
+          if [[ -f _ds_bundle.js && ! -f ds-bundle.js ]]; then
+            cp _ds_bundle.js ds-bundle.js
           fi
-
+          sed -i 's|src="_ds_bundle\.js"|src="ds-bundle.js"|g' index.html
           touch .nojekyll
+          printf '%s\n' "$site_file" > .published-source
 
-          echo "Prepared $latest_file as the live website"
-          echo "publish=true" >> "$GITHUB_OUTPUT"
-          echo "source=$latest_file" >> "$GITHUB_OUTPUT"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "site_file=$site_file" >> "$GITHUB_OUTPUT"
 
-      - name: Publish website
-        if: steps.newest.outputs.publish == 'true'
+      - name: Commit the live website
+        if: steps.publish.outputs.published == 'true'
         shell: bash
         run: |
           set -euo pipefail
-
-          if git diff --quiet; then
-            echo "The live website already matches the newest upload."
-            exit 0
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Publish newest website: ${{ steps.newest.outputs.source }}"
+
+          if git diff --cached --quiet; then
+            echo "The uploaded file is already the live website."
+            exit 0
+          fi
+
+          git commit -m "Publish newest website: ${{ steps.publish.outputs.site_file }}"
           git push
