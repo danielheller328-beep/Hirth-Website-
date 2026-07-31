@@ -383,6 +383,22 @@ function PropertiesMap({
       lng: c[1]
     };
   }).filter(Boolean);
+  // Leaflet loads deferred — if this mounts before window.L exists, poll
+  // briefly and re-run the init effect instead of giving up forever.
+  const [lTick, setLTick] = React.useState(0);
+  React.useEffect(() => {
+    if (window.L) return;
+    let tries = 0;
+    const t = setInterval(() => {
+      if (window.L) {
+        clearInterval(t);
+        setLTick(x => x + 1);
+      } else if (++tries > 250) {
+        clearInterval(t);
+      }
+    }, 120);
+    return () => clearInterval(t);
+  }, []);
   React.useEffect(() => {
     if (!window.L || !elRef.current) return;
     const L = window.L;
@@ -453,7 +469,7 @@ function PropertiesMap({
       maxZoom: 11
     });
     setTimeout(() => mapRef.current && mapRef.current.invalidateSize(), 200);
-  }, [items]);
+  }, [items, lTick]);
   React.useEffect(() => {
     if (!mapRef.current || !layersRef.current.road) return;
     const {

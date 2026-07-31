@@ -205,6 +205,7 @@ function ProfilePage({
   }, /*#__PURE__*/React.createElement("img", {
     src: "../assets/logo-hirth-group.png",
     alt: "",
+    loading: "lazy",
     style: {
       height: '54px',
       width: 'auto',

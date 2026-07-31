@@ -209,6 +209,7 @@ function SoldCard({
   }, /*#__PURE__*/React.createElement("img", {
     src: window.__ASSET ? window.__ASSET('../assets/logo-hirth-white.png') : '../assets/logo-hirth-white.png',
     alt: "",
+    loading: "lazy",
     style: {
       width: '34%',
       opacity: 0.2
@@ -401,7 +402,7 @@ function PropertiesPage({
       gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
       gap: '30px'
     }
-  }, window.SOLD_LIST.slice(0, soldShown).map((l, i) => /*#__PURE__*/React.createElement("div", {
+  }, (window.SOLD_LIST || []).slice(0, soldShown).map((l, i) => /*#__PURE__*/React.createElement("div", {
     className: "reveal-up",
     style: {
       transitionDelay: i % 3 * 50 + 'ms'
@@ -410,7 +411,7 @@ function PropertiesPage({
   }, /*#__PURE__*/React.createElement(SoldCard, {
     l: l,
     i: i
-  })))), soldShown < window.SOLD_LIST.length ? /*#__PURE__*/React.createElement("div", {
+  })))), soldShown < (window.SOLD_LIST || []).length ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'center',
@@ -429,7 +430,7 @@ function PropertiesPage({
       borderRadius: '2px',
       cursor: 'pointer'
     }
-  }, "See More (", window.SOLD_LIST.length - soldShown, " remaining)")) : null) : /*#__PURE__*/React.createElement("div", {
+  }, "See More (", (window.SOLD_LIST || []).length - soldShown, " remaining)")) : null) : /*#__PURE__*/React.createElement("div", {
     className: "r-grid-3",
     style: {
       display: 'grid',

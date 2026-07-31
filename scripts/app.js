@@ -852,10 +852,20 @@ function App() {
   listingHolder.open = setSelected;
   const [flyer, setFlyer] = React.useState(null);
   flyerHolder.open = setFlyer;
-  const [page, setPage] = React.useState(() => localStorage.getItem('hirth-kit-page') || 'home');
+  // localStorage throws when storage is disabled (private mode / blocked
+  // third-party frame) — never let that abort the initial render.
+  const [page, setPage] = React.useState(() => {
+    try {
+      return localStorage.getItem('hirth-kit-page') || 'home';
+    } catch (e) {
+      return 'home';
+    }
+  });
   const go = p => {
     setPage(p);
-    localStorage.setItem('hirth-kit-page', p);
+    try {
+      localStorage.setItem('hirth-kit-page', p);
+    } catch (e) {}
     window.scrollTo({
       top: 0
     });

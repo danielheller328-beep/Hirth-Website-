@@ -228,7 +228,12 @@ function DiveHero({
         finalEl.style.opacity = fo;
         finalEl.style.pointerEvents = fo > 0.6 ? 'auto' : 'none';
         finalEl.classList.toggle('show', fo > 0.12);
-        raf = requestAnimationFrame(loop);
+        // Once landed and fully settled every write above is identical each
+        // frame — stop re-queuing. All input handlers early-return when done,
+        // so nothing can move the target again; resize keeps its own listener.
+        if (!(done && prog === 1 && smoothTarget === 1 && target === 1)) {
+          raf = requestAnimationFrame(loop);
+        }
       };
       let disposed = false;
       place();
