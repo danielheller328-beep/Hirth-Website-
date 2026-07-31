@@ -153,6 +153,7 @@ function HomePage({
   }, /*#__PURE__*/React.createElement("img", {
     src: "../assets/photos/team.png",
     alt: "The Hirth Group team",
+    loading: "lazy",
     style: {
       width: '100%',
       borderRadius: 'var(--radius-md)',
@@ -230,6 +231,7 @@ function HomePage({
   }, /*#__PURE__*/React.createElement("img", {
     src: s.image,
     alt: s.title,
+    loading: "lazy",
     style: {
       width: '100%',
       height: '100%',

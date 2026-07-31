@@ -534,6 +534,7 @@ function PropertyCard({
   const media = image ? /*#__PURE__*/React.createElement("img", {
     src: image,
     alt: title,
+    loading: "lazy",
     style: {
       width: '100%',
       height: '100%',

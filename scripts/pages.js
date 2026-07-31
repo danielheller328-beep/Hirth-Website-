@@ -475,6 +475,7 @@ function TeamPage({
     }, /*#__PURE__*/React.createElement("img", {
       src: m.photo,
       alt: m.name,
+      loading: "lazy",
       style: {
         width: '100%',
         display: 'block',
@@ -605,6 +606,7 @@ function ServicesPage({
     }, /*#__PURE__*/React.createElement("img", {
       src: s.image,
       alt: s.title,
+      loading: "lazy",
       style: {
         width: '100%',
         height: '440px',
