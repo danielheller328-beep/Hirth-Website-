@@ -276,6 +276,11 @@ function ListingModal({
   onClose,
   go
 }) {
+  const _hash = s => {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = h * 31 + s.charCodeAt(i) >>> 0;
+    return h;
+  };
   const HIRTH_AGENTS = [{
     name: 'Daniel Hirth',
     role: 'Managing Director',
@@ -310,8 +315,28 @@ function ListingModal({
     Tag
   } = window.HirthGroupDesignSystem_c76dea;
   const region = (listing.meta || '').split('·')[0].trim();
-  const addr = listing.title + ', ' + (listing.meta || '').split('·')[0].trim();
-  const body = listing.description || [listing.status === 'closed' ? 'A representative Hirth Group transaction — successfully closed on behalf of our client.' : listing.status === 'leased' ? 'Successfully leased by The Hirth Group.' : 'This asset is currently available. The full marketing package — pricing, financials, rent roll, and offering memorandum — is provided on request.', 'Note: Buyers are advised to independently verify all information, measurements, and permitted uses with the applicable jurisdiction.'];
+  // Build the most geocode-reliable address: strip range/multi-address noise
+  // ("1250 & 1270 East Park Street", "5501–5521 Hollywood Boulevard", brand
+  // prefixes like "Chipotle — 2929 Berry Street") down to a single clean
+  // street number + street name, so Google pins the exact parcel instead of
+  // guessing at an ambiguous combined address.
+  const cleanAddr = t => {
+    const s = String(t || '').replace(/[–—]/g, '-');
+    const idx = s.search(/\d/);
+    if (idx === -1) return null; // no street number in the title at all
+    const rest = s.slice(idx).replace(/^(\d+)(?:\s*[-&]\s*\d+)?/, '$1');
+    return rest.trim();
+  };
+  const cleaned = cleanAddr(listing.title);
+  // If the title carries no street number (e.g. a brand/portfolio name with the
+  // real address only in meta), geocode off the meta address alone.
+  const addr = cleaned ? cleaned + ', ' + region : region;
+  const propType = (listing.dealType || listing.headline || '').toLowerCase();
+  const cityOnly = region ? region.split(',')[0].trim() : 'Los Angeles';
+  const cityPhrase = cityOnly !== 'Los Angeles' || !propType ? cityOnly : '';
+  const openers = [(t, c, p) => 'The Hirth Group sold ' + t + (c ? ', a well-positioned asset in ' + c + ',' : '') + ' on behalf of our client. From the initial engagement through marketing, negotiation, and escrow, the team managed every stage of the process directly — the kind of hands-on representation that has defined The Hirth Group\u2019s track record across the greater Los Angeles commercial real estate market' + (p ? '. The transaction closed at ' + p : '') + '.', (t, c, p) => 'Bringing ' + t + (c ? ' to market in ' + c : '') + ', The Hirth Group ran a focused, relationship-driven process from listing to close. Our team worked the deal from the ground up — positioning the asset, driving demand, and guiding our client through negotiation and escrow to a smooth, on-time close' + (p ? ' at ' + p : '') + ', backed by the firm\u2019s deep knowledge of the local market.', (t, c, p) => t + (c ? ' in ' + c : '') + ' represents the kind of deal The Hirth Group is built for: hands-on stewardship through every stage of the transaction, from underwriting through close of escrow. Our team managed the marketing, negotiation, and diligence process directly on behalf of our client, delivering a successful outcome' + (p ? ' at a sale price of ' + p : '') + ' as part of the firm\u2019s extensive record across Southern California.', (t, c, p) => 'The Hirth Group guided ' + t + (c ? ' in ' + c : '') + ' to a successful sale' + (p ? ' at ' + p : '') + ', representing our client from the first conversation through final closing. This closing reflects the same disciplined process behind every transaction the firm handles — thorough preparation, direct client communication, and a relentless focus on getting the deal to the finish line.'];
+  const idx = _hash(listing.title || '') % openers.length;
+  const body = listing.description || [listing.status === 'closed' ? openers[idx](listing.title, cityPhrase, listing.price && /^\$/.test(listing.price) ? listing.price : null) : listing.status === 'leased' ? 'Successfully leased by The Hirth Group.' : 'This asset is currently available. The full marketing package — pricing, financials, rent roll, and offering memorandum — is provided on request.'];
   return /*#__PURE__*/React.createElement("div", {
     onClick: onClose,
     style: {
@@ -396,7 +421,7 @@ function ListingModal({
       inset: 0,
       width: '100%',
       height: '100%',
-      objectFit: 'cover'
+      objectFit: 'contain'
     }
   }) : /*#__PURE__*/React.createElement("div", {
     style: {
