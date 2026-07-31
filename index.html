@@ -1316,6 +1316,15 @@ svg.leaflet-image-layer.leaflet-interactive path {
     .page-anim, footer { overflow-x: clip; }
   }
 
+  /* Keep the dark-theme text palette from falling back to the original light-theme colors. */
+  [style*="color: var(--text-primary)"] { color: #eef4f7 !important; }
+  [style*="color: var(--text-secondary)"] { color: #b9c8d1 !important; }
+  [style*="color: var(--text-muted)"] { color: #8499a4 !important; }
+  [style*="color: var(--text-accent)"] { color: #1485bd !important; }
+  [style*="color: var(--text-inverse)"] { color: #f4f7f9 !important; }
+  [style*="color: var(--text-inverse-secondary)"] { color: #aebfc9 !important; }
+  [style*="color: var(--gold-400)"] { color: #d9b574 !important; }
+
 </style>
 <script>
 // The world map behind the whole site keeps zooming in as you scroll down — the
