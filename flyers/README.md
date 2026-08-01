@@ -1,10 +1,11 @@
 # The Hirth Group — weekly social kit
 
-A self-contained page that produces the week's posts. Two sections:
+A self-contained page that produces the week's posts. Three sections:
 
-- **Posts** — five carousels. Each one is four feed frames (1080 × 1080) plus
-  that same post cut as a 9:16 story, in the one carousel, so the vertical
-  never has to be hunted down separately. Plus the house team story.
+- **Posts** — five content carousels of four frames each, plus the house
+  poster. 1080 × 1080.
+- **Stories** — 1080 × 1920. One for every post in the week, plus the poster
+  and the team.
 - **LinkedIn** — seven written posts, one a day.
 
 Every frame is drawn on canvas at export resolution — what you see on screen is
@@ -69,6 +70,25 @@ the accent, with the line breaker measuring each run in its own font. A headline
 set in one weight of one face is a headline a machine set; the clause that
 carries the argument should look like it does.
 
+### The poster
+
+A seventh art direction, **Press**, carries the house piece: Daniel set large
+and bleeding off a corner, one statement in Fraunces at poster scale, the mark
+top-left, the contact line along the foot. Six statements rotate, one a week,
+so it changes with everything else. It appears in both sections — 1:1 in Posts,
+9:16 in Stories.
+
+The headshot on file is 240px and already masked to a circle, so blowing it up
+straight would be visibly soft. It is printed instead: a cream rondel, a faint
+duotone to hold the modelling, then a halftone screen laid over it with dot
+radius tracking darkness, auto-levelled off the plate's own histogram. At that
+pitch the source resolution stops mattering and the softness reads as ink.
+A larger headshot dropped into `assets/dh.png` prints finer with no code change
+— worth doing if one exists.
+
+New statements go in `POSTERS` in `src/45-poster.js`: `kicker`, `line`
+(`*emphasis*` allowed), `cap`, `tags`.
+
 ### Listings
 
 Listing records and their frames (photographic hero, drawn site plan) are still
@@ -131,6 +151,7 @@ flyers/
     20-brand.js   house details, the mark, the six art directions
     30-slides.js  the twenty-four compositions
     40-listings.js listing frames, the site plan, the stories
+    45-poster.js  the Press poster and the screen-printed portrait plate
     50-content.js the bank
     60-app.js     the week's rotation and the page around it
 ```

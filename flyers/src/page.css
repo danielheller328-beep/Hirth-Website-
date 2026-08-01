@@ -70,6 +70,8 @@ main.posts{padding:26px 0 20px;display:flex;flex-direction:column;gap:28px}
 .card.story .media{padding-right:22px}
 /* one stage holds both aspect ratios: square frames fill it, the 9:16 story
    is letterboxed inside it, and the card never jumps height mid-carousel */
+.card.story .car{aspect-ratio:9/16}
+.card.story .media{padding-left:64px;padding-right:64px}
 .car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;
   background:rgba(0,0,0,.28);
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}

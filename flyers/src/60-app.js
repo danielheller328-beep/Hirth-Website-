@@ -98,21 +98,15 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
-/* Four feed frames, then the same post cut for stories — one carousel, so
-   the vertical never has to be hunted for in a separate section. */
-function contentSlides(P, idx) {
+function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
-  const story = P.review ? (c => storyReview(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
-    : (idx % 2 ? (c => storyFigure(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
-      : (c => storyStatement(c, ad, P, frameMeta(P, 9, 1, SW, SH))));
   return [
     paint(c => L.cover(c, ad, P, frameMeta(P, 0, total, FW, FH)), FW, FH),
     paint(c => (P.review ? quoteSlide(c, ad, P, frameMeta(P, 1, total, FW, FH))
       : L.points(c, ad, P, frameMeta(P, 1, total, FW, FH))), FW, FH),
     paint(c => (P.review ? L.points(c, ad, P, frameMeta(P, 2, total, FW, FH))
       : L.figure(c, ad, P, frameMeta(P, 2, total, FW, FH))), FW, FH),
-    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH),
-    paint(story, SW, SH)
+    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH)
   ];
 }
 
@@ -121,20 +115,47 @@ const WEEK = {
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-/* the house piece — the team, as a story */
-WEEK.house = (function () {
-  const ad = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-  return [{
-    id: 'team', kind: 'Story', title: 'The Team', ad, story: true,
+/* the poster — the house piece, one statement a week */
+WEEK.poster = (function () {
+  const P = POSTERS[WEEK_N % POSTERS.length];
+  return Object.assign({}, P, {
+    poster: true, who: 'dh',
+    title: stripRich(P.line),
+    stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
+  });
+})();
+
+/* the stories — their own section again: one for every post in the week,
+   plus the poster, the team and the review */
+WEEK.stories = (function () {
+  const out = WEEK.content.map((P, i) => ({
+    id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
+    kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
+    draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+      : i % 2 ? storyFigure(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+        : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
+  }));
+
+  const pp = WEEK.poster;
+  out.push({
+    id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
+    adName: 'Press', cap: pp.cap, tags: pp.tags, stats: pp.stats,
+    draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
+  });
+
+  const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
+  out.push({
+    id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
     stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
-    draw: c => storyTeam(c, ad, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
+    draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
     cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
 
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
     tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-  }];
+  });
+  return out;
 })();
 
 /* ══ page ═════════════════════════════════════════════════════════════════ */
@@ -234,7 +255,8 @@ function postCard(i, P, cvs, eyebrow) {
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
     '<span class="eyebrow">' + esc(eyebrow) + '</span>' +
-    (P.ad ? '<span class="adtag" title="Art direction">' + esc(P.ad.name) + '</span>' : '') + '</div>' +
+    (P.ad || P.adName ? '<span class="adtag" title="Art direction">' +
+      esc(P.ad ? P.ad.name : P.adName) + '</span>' : '') + '</div>' +
     '<h2>' + esc(stripRich(P.title)) + '</h2>';
   if (P.stats) {
     const s = document.createElement('div');
@@ -304,12 +326,17 @@ function liCard(i, P) {
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
   posts: {
-    name: 'Posts', head: 'Five carousels · four feed frames and a story each',
-    items: () => WEEK.content.concat(WEEK.house),
-    build: (P, i) => P.story
-      ? postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · THE HOUSE')
-      : postCard(i, P, contentSlides(P, i),
-        'CAROUSEL · 4 FRAMES + STORY · ' + P.topic.toUpperCase())
+    name: 'Posts', head: 'Five carousels and the poster · 1080 × 1080',
+    items: () => WEEK.content.concat([WEEK.poster]),
+    build: (P, i) => P.poster
+      ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
+        'POSTER · THE HOUSE · ' + P.kicker.toUpperCase())
+      : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
+  },
+  stories: {
+    name: 'Stories', head: 'Vertical · 1080 × 1920',
+    items: () => WEEK.stories,
+    build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · ' + String(P.kind).toUpperCase())
   },
   linkedin: {
     name: 'LinkedIn', head: 'One post a day, Monday to Sunday',

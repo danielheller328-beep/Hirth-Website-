@@ -83,6 +83,8 @@ main.posts{padding:26px 0 20px;display:flex;flex-direction:column;gap:28px}
 .card.story .media{padding-right:22px}
 /* one stage holds both aspect ratios: square frames fill it, the 9:16 story
    is letterboxed inside it, and the card never jumps height mid-carousel */
+.card.story .car{aspect-ratio:9/16}
+.card.story .media{padding-left:64px;padding-right:64px}
 .car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;
   background:rgba(0,0,0,.28);
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
@@ -169,7 +171,7 @@ footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.0
   <section class="weekbar">
     <div><span class="k">This week</span><span class="v" id="weekRange">—</span></div>
     <div><span class="k">Next set drops</span><span class="v small" id="nextDrop">—</span></div>
-    <div><span class="k">Rotation</span><span class="v small">5 carousels · 7 LinkedIn · stories</span></div>
+    <div><span class="k">Rotation</span><span class="v small">5 carousels · poster · 7 stories · 7 LinkedIn</span></div>
     <span class="chip" id="weekNo">WEEK</span>
   </section>
   <p class="autonote">The set rebuilds itself every Monday — new topics from the bank, and a different
@@ -2822,6 +2824,292 @@ function storyReview(c, ad, P, S) {
 }
 
 
+/* ---- 45-poster.js ---- */
+/* ══════════════════════════════════════════════════════════════════════════
+   45-poster.js — PRESS: the screen-printed portrait poster
+
+   The house piece. Daniel set large and bleeding off a corner, big type on
+   the open field, the mark top-left and the contact line along the foot.
+
+   On the treatment: the headshot on file is 240px square and already masked
+   to a circle, so blowing it up straight would be visibly soft. It is printed
+   instead — a duotone plate under a coarse halftone screen, the way a
+   portrait gets reproduced on a press. At this dot pitch the source
+   resolution stops mattering and the softness reads as ink, not as a bad
+   crop. Drop a larger headshot into assets/ and the same code prints it finer;
+   nothing else has to change.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const PRESS = {
+  id: 'press', name: 'Press',
+  paper: '#08161F', ink: '#F4EFE3', body: '#AEBFC9', muted: '#71838F',
+  accent: '#C6A461', accent2: '#6FB6E8',
+  plate: ['#0A1E2B', '#F2ECE0']          /* duotone: shadow, highlight */
+};
+
+/* ── the plate ────────────────────────────────────────────────────────────
+   Printed as a positive on a cream rondel: the disc is inked flat, then dark
+   dots are laid over it with radius tracking darkness, which is how a
+   portrait actually reproduces on a press. The earlier negative screen made
+   the bright office window behind him print solid while his face dropped out
+   — on a light ground the window simply falls away to clean paper and the
+   face carries the tone, so no cutout is needed at all.
+   ─────────────────────────────────────────────────────────────────────── */
+function portraitPlate(c, img, cx, cy, r, o) {
+  o = o || {};
+  const pitch = o.pitch || 10;
+  const size = Math.ceil(r * 2);
+  const off = document.createElement('canvas');
+  off.width = off.height = size;
+  const oc = off.getContext('2d');
+  oc.drawImage(img, 0, 0, size, size);
+  const px = oc.getImageData(0, 0, size, size).data;
+
+  const x0 = cx - r, y0 = cy - r;
+  const sample = (sx, sy) => {
+    const i = ((sy | 0) * size + (sx | 0)) * 4;
+    if (px[i + 3] < 90) return null;
+    return (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) / 255;
+  };
+
+  /* Auto-levels off the plate's own histogram. A headshot lit for a website
+     occupies maybe half the available range; printed straight, the skin sits
+     in a band too narrow for the screen to describe a face with, and the whole
+     portrait collapses to hair-and-suit. Stretching the 2nd–98th percentile
+     across the full range is what a platemaker would do before burning it. */
+  const hist = new Uint32Array(256);
+  let count = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 90) continue;
+    hist[(px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0]++;
+    count++;
+  }
+  let lo = 0, hi = 255, acc = 0;
+  for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc > count * 0.02) { lo = i; break; } }
+  acc = 0;
+  for (let i = 255; i >= 0; i--) { acc += hist[i]; if (acc > count * 0.02) { hi = i; break; } }
+  const loN = lo / 255, hiN = Math.max(loN + 0.05, hi / 255);
+  const levels = v => clamp((v - loN) / (hiN - loN), 0, 1);
+
+  c.save();
+  /* the rondel — flat ink, the paper the portrait prints on */
+  c.beginPath(); c.arc(cx, cy, r, 0, 6.284); c.clip();
+  c.fillStyle = o.paper || '#F1EBDF';
+  c.fillRect(x0, y0, size, size);
+
+  /* a faint duotone under the screen holds the modelling */
+  c.globalAlpha = o.plateAlpha == null ? 0.22 : o.plateAlpha;
+  const duo = duotone(img, (o.plate || PRESS.plate)[0], (o.plate || PRESS.plate)[1],
+    (o.key || 'dh') + '-plate', size, size);
+  c.drawImage(duo, x0, y0, size, size);
+  c.globalAlpha = 1;
+
+  /* the screen — dark ink, radius by darkness */
+  c.fillStyle = o.ink || '#0B1E2B';
+  const ang = o.angle == null ? -0.38 : o.angle;
+  const cos = Math.cos(ang), sin = Math.sin(ang);
+  const span = size * 1.5;
+  const lift = o.lift == null ? 0.06 : o.lift;   /* highlights that print clean */
+  for (let v = -span; v < span; v += pitch) {
+    for (let u = -span; u < span; u += pitch) {
+      const sx = r + u * cos - v * sin, sy = r + u * sin + v * cos;
+      if (sx < 0 || sy < 0 || sx >= size || sy >= size) continue;
+      const lum = sample(sx, sy);
+      if (lum === null) continue;
+      const dark = clamp(Math.pow(1 - levels(lum), o.gamma == null ? 0.85 : o.gamma) - lift, 0, 1);
+      const rr = pitch * 0.72 * dark;
+      if (rr < 0.4) continue;
+      c.beginPath();
+      c.arc(x0 + sx, y0 + sy, rr, 0, 6.284);
+      c.fill();
+    }
+  }
+  c.restore();
+
+  /* the plate edge */
+  if (o.edge) {
+    c.save();
+    c.strokeStyle = o.edge; c.lineWidth = o.edgeWidth || 3;
+    c.beginPath(); c.arc(cx, cy, r, 0, 6.284); c.stroke();
+    c.restore();
+  }
+}
+
+/* the poster ground: deep field, one bloom, a screened corner, heavy tooth */
+function pressGround(c, w, h, seed) {
+  const g = c.createLinearGradient(0, 0, w * .4, h);
+  g.addColorStop(0, '#0D2534'); g.addColorStop(.55, '#081824'); g.addColorStop(1, '#040E16');
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  bloom(c, w, h, '#3E93C4', w * .18, h * .12, w * .9, .20);
+  bloom(c, w, h, '#C6A461', w * .92, h * .96, w * .6, .12);
+  halftone(c, 0, h * .30, w, h * .70, {
+    color: 'rgba(255,255,255,.055)', pitch: 16, maxR: 5.4,
+    density: (u, v) => clamp(v * 1.1, 0, 1)
+  });
+  vignette(c, w, h, .46);
+  grain(c, w, h, .13, true);
+}
+
+/* ── the feed poster · 1080 × 1080 ────────────────────────────────────── */
+function posterFrame(c, P, S) {
+  const w = S.w, h = S.h, M = S.M;
+  pressGround(c, w, h, S.seed);
+
+  /* the portrait, bleeding off the bottom-right corner */
+  const face = IMG[P.who || 'dh'];
+  const r = 332, cx = 880, cy = 872;
+  if (face) {
+    engravedRings(c, cx, cy, r + 16, r + 46, 3, rgba('#C6A461', .20), 1);
+    portraitPlate(c, face, cx, cy, r, {
+      key: P.who || 'dh', pitch: 5, gamma: 0.95, lift: .075, angle: -0.38,
+      edge: rgba('#C6A461', .8), edgeWidth: 3
+    });
+  }
+
+  logoLockup(c, M, LOGO_Y, 210, 'white');
+  caps(c, P.kicker || 'The Hirth Group', w - M, LOGO_Y + 46, {
+    size: 14, fill: PRESS.accent, align: 'right', track: 4
+  });
+
+  /* the words */
+  const head = fitRich(c, P.line, { w: w - M * 2 - 24, h: 300 }, {
+    roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+    max: 104, min: 46, leading: 1.02, maxLines: 3
+  });
+  let y = 246;
+  foilRule(c, M, y - 34, 128, 3, '#C6A461', '#F0DFAE');
+  drawRich(c, head, M, y, {
+    fill: PRESS.ink, emFill: '#E7CE93', shadow: ['rgba(2,10,16,.8)', 28, 8]
+  });
+
+  /* the signature block, along the foot on the open side */
+  const by = h - 150;
+  rule(c, M, by, 300, rgba('#C6A461', .5), 1);
+  text(c, HOUSE.agent, M, by + 46, {
+    font: FS(600, 42), fill: PRESS.ink, base: 'middle', shadow: ['rgba(2,10,16,.7)', 18, 4]
+  });
+  caps(c, HOUSE.role, M, by + 82, { size: 13, fill: PRESS.accent, track: 3.2 });
+  caps(c, HOUSE.phone + '   ·   ' + HOUSE.site, M, by + 112, { size: 14, fill: PRESS.body, track: 3 });
+  caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, M, by + 140, { size: 11, fill: PRESS.muted, track: 2.6 });
+}
+
+/* ── the poster as a story · 1080 × 1920 ──────────────────────────────── */
+function posterStory(c, P, S) {
+  const w = S.w, h = S.h, M = S.M;
+  pressGround(c, w, h, S.seed);
+
+  const face = IMG[P.who || 'dh'];
+  const r = 432, cx = 906, cy = h - 372;   /* bleeding off the bottom-right */
+  if (face) {
+    engravedRings(c, cx, cy, r + 18, r + 54, 3, rgba('#C6A461', .20), 1);
+    portraitPlate(c, face, cx, cy, r, {
+      key: P.who || 'dh', pitch: 6, gamma: 0.95, lift: .075, angle: -0.38,
+      edge: rgba('#C6A461', .8), edgeWidth: 3
+    });
+  }
+
+  logoLockup(c, M, 120, 250, 'white');
+  caps(c, P.kicker || 'The Hirth Group', M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
+
+  const head = fitRich(c, P.line, { w: w - M * 2, h: 560 }, {
+    roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+    max: 138, min: 58, leading: 1.0, maxLines: 4
+  });
+  foilRule(c, M, 430, 150, 3, '#C6A461', '#F0DFAE');
+  drawRich(c, head, M, 486, {
+    fill: PRESS.ink, emFill: '#E7CE93', shadow: ['rgba(2,10,16,.8)', 34, 10]
+  });
+
+  /* the signature keeps to the open left column so the plate can bleed */
+  const by = h - 300;
+  rule(c, M, by, 360, rgba('#C6A461', .55), 1);
+  text(c, HOUSE.agent, M, by + 56, {
+    font: FS(600, 54), fill: PRESS.ink, base: 'middle', shadow: ['rgba(2,10,16,.7)', 20, 5]
+  });
+  caps(c, HOUSE.role, M, by + 100, { size: 16, fill: PRESS.accent, track: 3.4 });
+  caps(c, HOUSE.phone + '   ·   ' + HOUSE.site, M, by + 142, { size: 17, fill: PRESS.body, track: 3.2 });
+  caps(c, HOUSE.dre, M, by + 176, { size: 12, fill: PRESS.muted, track: 2.6 });
+}
+
+/* ── the words ────────────────────────────────────────────────────────────
+   Poster copy, not caption copy: three or four lines, short enough to set
+   enormous, and the clause that carries the argument marked for emphasis.
+   One is picked per week, so the poster changes with everything else.
+   ─────────────────────────────────────────────────────────────────────── */
+const POSTERS = [
+  { id: 'p-worth', kicker: 'Broker’s Opinion of Value',
+    line: 'Know what it is worth *before you need to.*',
+    cap: `Know what it's worth before you need to.
+
+Most owners find out what their building is worth at the worst possible moment — when a loan is maturing, when a partner wants out, when a tenant leaves. By then the number is not a decision, it is a constraint.
+
+A broker's opinion of value costs nothing and takes a week. Current market, real comps, no obligation, no listing agreement attached to it.
+
+Daniel Hirth · The Hirth Group
+310.300.2838 · HirthGroup.com`,
+    tags: '#BrokerOpinionOfValue #CommercialRealEstate #CRE #PropertyValuation #SellCommercial #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ThinkingOfSelling #RealEstateStrategy #1031Exchange #CommercialProperty' },
+
+  { id: 'p-number', kicker: 'How We Work',
+    line: 'The first number you hear should be *the true one.*',
+    cap: `The first number you hear should be the true one.
+
+It is easy to win a listing by agreeing with whatever the owner hopes it is worth. It is also how a building sits on the market for fourteen months and sells for less than the first offer.
+
+We would rather have the uncomfortable conversation in week one than the expensive one in month twelve.
+
+197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+
+Daniel Hirth · 310.300.2838`,
+    tags: '#CommercialRealEstate #CRE #SellCommercial #PropertyValuation #RealEstateStrategy #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ListingStrategy #InvestmentProperty #ThinkingOfSelling #DaysOnMarket #BrokerOpinionOfValue' },
+
+  { id: 'p-record', kicker: 'The Record',
+    line: '197 deals. $471 million. *One phone number.*',
+    cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+
+Not the loudest team in the room — the one that finds the deal everyone else walked past, and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
+
+Daniel Hirth · Managing Director
+310.300.2838 · HirthGroup.com · CA DRE 01515796`,
+    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #HirthGroup #KWCommercial #NNN #SoldByHirth' },
+
+  { id: 'p-cost', kicker: 'Pricing',
+    line: 'Every seller has a number. *Know what yours costs.*',
+    cap: `Every seller has a number. That is fine. Just know what the number costs to defend.
+
+Fourteen months of carry. A vacancy you cover the whole time. A rate environment that does not wait for you. Buyers who move on and do not come back.
+
+Holding out is a decision with a price on it. Most owners never see the invoice, because nobody puts the cost of waiting on the same page as the price.
+
+That is the conversation worth having before you list.
+
+Daniel Hirth · 310.300.2838`,
+    tags: '#CommercialRealEstate #CRE #Pricing #SellCommercial #PropertyValuation #RealEstateStrategy #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #DaysOnMarket #InvestmentProperty #ThinkingOfSelling #BrokerOpinionOfValue' },
+
+  { id: 'p-la', kicker: 'The Market',
+    line: 'Commercial real estate in Los Angeles. *That is the whole list.*',
+    cap: `Commercial real estate in Los Angeles. That is the whole list.
+
+No relocation division, no residential arm, no second market we are learning on your deal. Retail, industrial, multifamily, mixed-use and land, in Greater LA, which is the only market we have spent nineteen years in.
+
+Depth beats breadth when the question is what a specific parcel on a specific corner will actually trade for.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+    tags: '#LosAngelesRealEstate #LARealEstate #CommercialRealEstate #CRE #CREBroker #InvestmentProperty #SanFernandoValley #IndustrialRealEstate #RetailRealEstate #MultiFamily #HirthGroup #KWCommercial #CommercialProperty #DealFlow #1031Exchange' },
+
+  { id: 'p-call', kicker: 'Thinking of Selling?',
+    line: 'The conversation is free. *The mistake is not.*',
+    cap: `The conversation is free. The mistake is not.
+
+Mispricing a building by ten percent does not cost you ten percent — it costs you the first three weeks, which is when the buyers with money and a mandate actually look. They do not come back for the price cut.
+
+Call before you decide the number, not after. No listing agreement, no obligation, no pressure.
+
+Daniel Hirth · Managing Director
+310.300.2838 · HirthGroup.com`,
+    tags: '#ThinkingOfSelling #CommercialRealEstate #CRE #SellCommercial #BrokerOpinionOfValue #PropertyValuation #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateStrategy #1031Exchange #DaysOnMarket' }
+];
+
+
 /* ---- 50-content.js ---- */
 /* ══════════════════════════════════════════════════════════════════════════
    50-content.js — the bank
@@ -3715,21 +4003,15 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
-/* Four feed frames, then the same post cut for stories — one carousel, so
-   the vertical never has to be hunted for in a separate section. */
-function contentSlides(P, idx) {
+function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
-  const story = P.review ? (c => storyReview(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
-    : (idx % 2 ? (c => storyFigure(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
-      : (c => storyStatement(c, ad, P, frameMeta(P, 9, 1, SW, SH))));
   return [
     paint(c => L.cover(c, ad, P, frameMeta(P, 0, total, FW, FH)), FW, FH),
     paint(c => (P.review ? quoteSlide(c, ad, P, frameMeta(P, 1, total, FW, FH))
       : L.points(c, ad, P, frameMeta(P, 1, total, FW, FH))), FW, FH),
     paint(c => (P.review ? L.points(c, ad, P, frameMeta(P, 2, total, FW, FH))
       : L.figure(c, ad, P, frameMeta(P, 2, total, FW, FH))), FW, FH),
-    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH),
-    paint(story, SW, SH)
+    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH)
   ];
 }
 
@@ -3738,20 +4020,47 @@ const WEEK = {
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-/* the house piece — the team, as a story */
-WEEK.house = (function () {
-  const ad = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-  return [{
-    id: 'team', kind: 'Story', title: 'The Team', ad, story: true,
+/* the poster — the house piece, one statement a week */
+WEEK.poster = (function () {
+  const P = POSTERS[WEEK_N % POSTERS.length];
+  return Object.assign({}, P, {
+    poster: true, who: 'dh',
+    title: stripRich(P.line),
+    stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
+  });
+})();
+
+/* the stories — their own section again: one for every post in the week,
+   plus the poster, the team and the review */
+WEEK.stories = (function () {
+  const out = WEEK.content.map((P, i) => ({
+    id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
+    kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
+    draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+      : i % 2 ? storyFigure(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+        : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
+  }));
+
+  const pp = WEEK.poster;
+  out.push({
+    id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
+    adName: 'Press', cap: pp.cap, tags: pp.tags, stats: pp.stats,
+    draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
+  });
+
+  const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
+  out.push({
+    id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
     stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
-    draw: c => storyTeam(c, ad, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
+    draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
     cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
 
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
     tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-  }];
+  });
+  return out;
 })();
 
 /* ══ page ═════════════════════════════════════════════════════════════════ */
@@ -3851,7 +4160,8 @@ function postCard(i, P, cvs, eyebrow) {
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
     '<span class="eyebrow">' + esc(eyebrow) + '</span>' +
-    (P.ad ? '<span class="adtag" title="Art direction">' + esc(P.ad.name) + '</span>' : '') + '</div>' +
+    (P.ad || P.adName ? '<span class="adtag" title="Art direction">' +
+      esc(P.ad ? P.ad.name : P.adName) + '</span>' : '') + '</div>' +
     '<h2>' + esc(stripRich(P.title)) + '</h2>';
   if (P.stats) {
     const s = document.createElement('div');
@@ -3921,12 +4231,17 @@ function liCard(i, P) {
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
   posts: {
-    name: 'Posts', head: 'Five carousels · four feed frames and a story each',
-    items: () => WEEK.content.concat(WEEK.house),
-    build: (P, i) => P.story
-      ? postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · THE HOUSE')
-      : postCard(i, P, contentSlides(P, i),
-        'CAROUSEL · 4 FRAMES + STORY · ' + P.topic.toUpperCase())
+    name: 'Posts', head: 'Five carousels and the poster · 1080 × 1080',
+    items: () => WEEK.content.concat([WEEK.poster]),
+    build: (P, i) => P.poster
+      ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
+        'POSTER · THE HOUSE · ' + P.kicker.toUpperCase())
+      : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
+  },
+  stories: {
+    name: 'Stories', head: 'Vertical · 1080 × 1920',
+    items: () => WEEK.stories,
+    build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · ' + String(P.kind).toUpperCase())
   },
   linkedin: {
     name: 'LinkedIn', head: 'One post a day, Monday to Sunday',
