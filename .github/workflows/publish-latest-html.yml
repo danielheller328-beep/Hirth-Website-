@@ -34,6 +34,12 @@ jobs:
             local lower="${file,,}"
 
             [[ -f "$file" ]] || return 1
+
+            # The weekly social kit lives at /flyers and is its own page. It is a
+            # full HTML document, so without this guard a push that rebuilds it
+            # would be mistaken for a new website upload and copied over index.html.
+            [[ "$file" == flyers/* ]] && return 1
+
             [[ "$lower" == *.zip ]] && return 0
 
             # A website upload can have any filename. Detect HTML by its content.

@@ -1,0 +1,85 @@
+{
+  "week": 134,
+  "starts": "2026-07-27",
+  "ends": "2026-08-02",
+  "recorded": "2026-08-01",
+  "carousels": [
+    {
+      "id": "ccarry",
+      "topic": "Structure",
+      "art_direction": "Blueprint"
+    },
+    {
+      "id": "creview",
+      "topic": "Client Review",
+      "art_direction": "Signal"
+    },
+    {
+      "id": "c1031",
+      "topic": "1031 Exchange",
+      "art_direction": "Dossier"
+    },
+    {
+      "id": "ccap",
+      "topic": "Underwriting",
+      "art_direction": "Nocturne"
+    },
+    {
+      "id": "cwait",
+      "topic": "Pricing",
+      "art_direction": "Atelier"
+    }
+  ],
+  "listings": [
+    {
+      "id": "olive",
+      "title": "2221 \u2013 2225 Olive Avenue"
+    },
+    {
+      "id": "saviers",
+      "title": "1177 Saviers Road"
+    }
+  ],
+  "linkedin": [
+    {
+      "day": "Monday",
+      "topic": "Transfer Tax",
+      "title": "In the City of LA, transfer tax is part of the price"
+    },
+    {
+      "day": "Tuesday",
+      "topic": "Due Diligence",
+      "title": "The estoppel is where the story stops matching the file"
+    },
+    {
+      "day": "Wednesday",
+      "topic": "Negotiation",
+      "title": "Price is one term"
+    },
+    {
+      "day": "Thursday",
+      "topic": "Submarkets",
+      "title": "The submarket is not the city"
+    },
+    {
+      "day": "Friday",
+      "topic": "The Business",
+      "title": "The deal you walk away from"
+    },
+    {
+      "day": "Saturday",
+      "topic": "Owner-Users",
+      "title": "Owner-users are quietly the strongest buyers right now"
+    },
+    {
+      "day": "Sunday",
+      "topic": "Process",
+      "title": "A quiet escrow is a designed escrow"
+    }
+  ],
+  "bank": {
+    "content": 16,
+    "linkedin": 21,
+    "listings": 2
+  }
+}

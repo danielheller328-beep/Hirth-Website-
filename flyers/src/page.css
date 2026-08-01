@@ -1,0 +1,137 @@
+/* the frame around the work — deliberately quiet, so the flyers carry it */
+:root{
+  --bg:#0B0F14; --bg2:#111820; --line:#1E2932; --line2:#2A3742;
+  --ink:#ECF1F5; --dim:#8A98A4; --dim2:#5F6C77;
+  --accent:#6FB6E8; --gold:#C6A461;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Space Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+  background-image:
+    radial-gradient(1200px 520px at 50% -140px, rgba(59,124,178,.16), transparent 70%),
+    radial-gradient(700px 400px at 100% 8%, rgba(198,164,97,.05), transparent 65%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+body{opacity:0;transition:opacity .4s ease}
+body.ready{opacity:1}
+
+/* masthead */
+header.mast{padding:64px 0 8px;text-align:center;position:relative}
+header.mast .logo{width:min(300px,64vw);height:auto;display:block;margin:0 auto}
+.tagline{font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:500;
+  color:var(--gold);font-size:clamp(17px,2.4vw,22px);margin:22px 0 0}
+.meta{margin:14px 0 0;color:var(--dim);font-size:13px;letter-spacing:.02em}
+.meta .sep{color:var(--gold);margin:0 10px;opacity:.8}
+.rulemark{display:flex;align-items:center;gap:14px;margin:30px auto 0;max-width:340px}
+.rulemark::before,.rulemark::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(198,164,97,.6))}
+.rulemark::after{background:linear-gradient(90deg,rgba(198,164,97,.6),transparent)}
+.rulemark i{width:6px;height:6px;transform:rotate(45deg);background:var(--gold);display:block}
+
+/* the week banner — the thing that proves it keeps moving */
+.weekbar{margin:34px 0 0;border:1px solid var(--line);border-radius:16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01));
+  padding:20px 24px;display:flex;flex-wrap:wrap;gap:14px 34px;align-items:center;justify-content:space-between}
+.weekbar .k{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim2);
+  display:block;margin-bottom:4px}
+.weekbar .v{font-family:Fraunces,serif;font-size:23px;font-weight:600;color:var(--ink);line-height:1.2}
+.weekbar .v.small{font-size:17px;font-family:"Space Grotesk",sans-serif;font-weight:500;color:var(--dim)}
+.weekbar .chip{font-size:11px;letter-spacing:.2em;color:var(--gold);border:1px solid rgba(198,164,97,.4);
+  border-radius:999px;padding:6px 14px;white-space:nowrap}
+.autonote{margin:12px 2px 0;color:var(--dim2);font-size:12.5px;letter-spacing:.01em}
+
+/* tabs */
+.switch{display:flex;gap:10px;justify-content:center;margin:38px 0 6px;flex-wrap:wrap}
+.switch button{font:600 14px "Space Grotesk",sans-serif;background:var(--bg2);color:var(--dim);
+  border:1px solid var(--line2);padding:11px 24px;border-radius:999px;cursor:pointer;transition:.16s}
+.switch button[aria-selected="true"]{background:var(--accent);color:#08121B;border-color:transparent;
+  box-shadow:0 10px 26px -12px rgba(111,182,232,.7)}
+.switch button:hover{color:var(--ink);border-color:var(--accent)}
+.switch button[aria-selected="true"]:hover{color:#08121B}
+.switch .ct{margin-left:9px;font-size:12px;opacity:.7;font-weight:500}
+
+.sechead{display:flex;align-items:center;gap:16px;margin:30px 0 4px}
+.sechead h2{font-family:Fraunces,serif;font-weight:500;font-size:21px;margin:0;white-space:nowrap;color:var(--ink)}
+.sechead .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+
+/* cards */
+main.posts{padding:26px 0 20px;display:flex;flex-direction:column;gap:28px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:20px;overflow:hidden;
+  display:grid;grid-template-columns:430px 1fr;align-items:start;
+  transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
+.card:hover{border-color:var(--line2);transform:translateY(-2px);
+  box-shadow:0 30px 60px -34px rgba(0,0,0,.85)}
+.card.text{grid-template-columns:1fr}
+.media{position:relative;padding:22px 0 44px 22px}
+.card.story .media{padding-right:22px}
+.car{position:relative;overflow:hidden;border-radius:8px;
+  box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
+.track{display:flex;transition:transform .42s cubic-bezier(.22,.61,.36,1)}
+.slide{min-width:100%}
+canvas.cv{width:100%;height:auto;display:block}
+.nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  color:#F1E7D3;border:1px solid rgba(255,255,255,.18);background:rgba(9,16,26,.55);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:19px;line-height:1;
+  transition:background .15s ease,opacity .15s ease}
+.nav:hover{background:rgba(9,16,26,.9)}
+.nav[disabled]{opacity:.25;cursor:default}
+.prev{left:10px}.next{right:10px}
+.dots{position:absolute;left:0;right:0;bottom:-26px;display:flex;gap:7px;justify-content:center}
+.dot{width:7px;height:7px;padding:0;border:none;border-radius:50%;background:rgba(236,241,245,.28);
+  cursor:pointer;transition:width .2s ease,background .2s ease,border-radius .2s ease}
+.dot.on{background:var(--gold);width:22px;border-radius:4px}
+
+.body{padding:26px 30px 28px;min-width:0}
+.topline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.num{font-family:Fraunces,serif;font-weight:600;font-size:15px;color:var(--gold);opacity:.85}
+.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--accent);font-weight:600}
+.adtag{margin-left:auto;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim2);border:1px solid var(--line2);border-radius:999px;padding:4px 11px}
+.body h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:clamp(23px,2.7vw,30px);
+  color:#F3EEE3;margin:10px 0 16px;line-height:1.1}
+.strip{display:flex;gap:26px;flex-wrap:wrap;padding:14px 0 6px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);margin-bottom:16px}
+.strip div{display:flex;flex-direction:column;gap:2px}
+.strip .v{font-family:Fraunces,serif;font-size:21px;font-weight:600;color:var(--accent)}
+.strip .l{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2)}
+
+.panel{background:rgba(255,255,255,.028);border:1px solid var(--line);border-radius:13px;
+  padding:14px 16px;margin-top:12px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.plabel{font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim2);font-weight:600}
+.ptext{color:#D6E0E8;font-size:14px;white-space:pre-wrap}
+.ptext.tags{color:#9FB9CC;font-size:13px}
+.lipost{margin-top:18px;font:400 15.5px/1.72 "Space Grotesk",sans-serif;color:#D8E4EC;white-space:pre-wrap}
+.litags{margin-top:18px;font:400 13px/1.6 "Space Grotesk",sans-serif;color:#6EA8D8}
+
+.row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
+button.primary,button.copy{font:600 12.5px "Space Grotesk",sans-serif;border-radius:999px;
+  cursor:pointer;padding:9px 16px;transition:filter .14s ease,transform .14s ease;white-space:nowrap}
+button.primary{background:var(--accent);color:#08121B;border:none}
+button.copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+button.copy:hover{color:var(--ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.07)}
+button.primary:active,button.copy:active{transform:scale(.97)}
+button.done{background:#243642;color:var(--gold)}
+button[disabled]{opacity:.6;cursor:default}
+
+footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
+  text-align:center;color:var(--dim);font-size:13px}
+footer.ft strong{color:var(--ink);font-family:Fraunces,serif;font-weight:600;font-size:17px}
+footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.04em}
+
+@media (max-width:900px){
+  .card{grid-template-columns:1fr}
+  .media{padding:20px 20px 44px}
+  .body{padding:6px 22px 24px}
+}
+@media print{
+  .switch,.nav,.dots,.row,.weekbar,.autonote{display:none!important}
+  body{background:#fff!important;opacity:1!important}
+  .card{break-inside:avoid;grid-template-columns:1fr;border-color:#ddd}
+}
