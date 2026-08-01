@@ -250,11 +250,44 @@ function panel(label, body, btnLabel, isTags) {
   return p;
 }
 
-function postCard(i, P, cvs, eyebrow) {
+/* Everything lives on one page now, which means twenty-eight canvases would
+   otherwise be painted before the first one is on screen. Each card paints
+   when it scrolls into view instead — the page opens instantly and the
+   browser never holds more pixels than it is showing. */
+const _paintQueue = [];
+let _observer = null;
+function whenVisible(el, fn) {
+  if (!('IntersectionObserver' in window)) { fn(); return; }
+  if (!_observer) {
+    _observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        _observer.unobserve(e.target);
+        const job = _paintQueue.find(j => j.el === e.target);
+        if (job) { job.fn(); job.done = true; }
+      });
+    }, { rootMargin: '600px 0px' });
+  }
+  _paintQueue.push({ el, fn });
+  _observer.observe(el);
+}
+
+function postCard(i, P, slidesFn, eyebrow) {
   const a = document.createElement('article');
   a.className = 'card' + (P.story ? ' story' : '');
   a.id = 'post-' + (P.id || i);
-  a.appendChild(carousel(cvs, stripRich(P.title)));
+
+  const media = document.createElement('div');
+  media.className = 'media';
+  media.innerHTML = '<div class="car placeholder"><span class="spin"></span></div>';
+  a.appendChild(media);
+
+  let cvs = null;
+  whenVisible(a, () => {
+    cvs = slidesFn();
+    const real = carousel(cvs, stripRich(P.title));
+    a.replaceChild(real, media);
+  });
   const b = document.createElement('div');
   b.className = 'body';
   b.innerHTML =
@@ -276,8 +309,9 @@ function postCard(i, P, cvs, eyebrow) {
   row.className = 'row';
   const dlBtn = document.createElement('button');
   dlBtn.className = 'primary';
-  dlBtn.textContent = '↓ Save post (' + cvs.length + ' PNG)';
+  dlBtn.textContent = P.story ? '↓ Save story' : '↓ Save post';
   dlBtn.onclick = async () => {
+    if (!cvs) { cvs = slidesFn(); }
     dlBtn.disabled = true;
     const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
     for (let k = 0; k < cvs.length; k++)
@@ -329,56 +363,37 @@ function liCard(i, P) {
 }
 
 /* ── tabs ─────────────────────────────────────────────────────────────── */
-const TABS = {
-  posts: {
-    name: 'Posts', head: 'Five carousels and the poster · 1080 × 1080',
-    items: () => WEEK.content.concat([WEEK.poster]),
-    build: (P, i) => P.poster
-      ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
-        'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
-      : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
-  },
-  stories: {
-    name: 'Stories', head: 'Vertical · 1080 × 1920',
-    items: () => WEEK.stories,
-    build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · ' + String(P.kind).toUpperCase())
-  },
-  linkedin: {
-    name: 'LinkedIn', head: 'One post a day, Monday to Sunday',
-    items: () => WEEK.linkedin,
-    build: (P, i) => liCard(i, P)
-  }
-};
-let active = 'posts';
-const built = {};
+/* ── the page: one continuous run ────────────────────────────────────────
+   Posts and stories are not two sections you switch between. They are the
+   week, in order, each one its own card with its own download and its own
+   caption — a story sits next to the post it belongs beside rather than
+   behind a tab.
+   ─────────────────────────────────────────────────────────────────────── */
+function buildFeed() {
+  const host = document.getElementById('posts');
+  host.innerHTML = '';
+  let n = 0;
 
-function buildTab(key) {
-  if (built[key]) return built[key];
-  const host = document.createElement('div');
-  host.style.display = 'contents';
-  const T = TABS[key];
-  T.items().slice(0, MAXPOSTS).forEach((P, i) => host.appendChild(T.build(P, i)));
-  built[key] = host;
-  return host;
-}
-function render() {
-  const sw = document.getElementById('switch');
-  sw.innerHTML = '';
-  Object.keys(TABS).forEach(k => {
-    const b = document.createElement('button');
-    b.setAttribute('aria-selected', String(k === active));
-    b.innerHTML = TABS[k].name + '<span class="ct">' + TABS[k].items().length + '</span>';
-    b.onclick = () => {
-      if (active === k) return;
-      active = k; render();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-    sw.appendChild(b);
+  WEEK.content.slice(0, MAXPOSTS).forEach(P => {
+    host.appendChild(postCard(n++, P, () => contentSlides(P),
+      'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase()));
   });
-  document.getElementById('sectionHead').textContent = TABS[active].head;
-  const posts = document.getElementById('posts');
-  posts.innerHTML = '';
-  posts.appendChild(buildTab(active));
+
+  const pp = WEEK.poster;
+  host.appendChild(postCard(n++, pp,
+    () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
+    'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
+
+  WEEK.stories.slice(0, MAXPOSTS * 2).forEach(P => {
+    host.appendChild(postCard(n++, P, () => [paint(P.draw, SW, SH)],
+      'STORY · 9:16 · ' + String(P.kind).toUpperCase()));
+  });
+
+  WEEK.linkedin.forEach((P, i) => host.appendChild(liCard(i, P)));
+
+  document.getElementById('sectionHead').textContent =
+    WEEK.content.length + ' carousels · poster · ' + WEEK.stories.length +
+    ' stories · ' + WEEK.linkedin.length + ' LinkedIn';
 }
 
 /* ── boot ─────────────────────────────────────────────────────────────── */
@@ -411,6 +426,6 @@ function loadImages() {
     }
   } catch (e) { }
   try { await loadImages(); } catch (e) { }
-  render();
+  buildFeed();
   document.body.classList.add('ready');
 })();
