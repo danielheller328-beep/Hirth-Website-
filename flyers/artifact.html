@@ -123,6 +123,7 @@ canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .plabel{font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim2);font-weight:600}
 .ptext{color:#D6E0E8;font-size:14px;white-space:pre-wrap}
+.card.text .ptext{font-size:15px;line-height:1.72}
 .ptext.tags{color:#9FB9CC;font-size:13px}
 .lipost{margin-top:18px;font:400 15.5px/1.72 "Space Grotesk",sans-serif;color:#D8E4EC;white-space:pre-wrap}
 .litags{margin-top:18px;font:400 13px/1.6 "Space Grotesk",sans-serif;color:#6EA8D8}
@@ -3963,7 +3964,36 @@ Buying or selling automotive / commercial property? Call or text 310.300.2838.`,
 /* ══════════════════════════════════════════════════════════════════════════
    LINKEDIN — twenty-one pieces, seven a week, three weeks before repeat
    ══════════════════════════════════════════════════════════════════════════ */
-const LI_TAGS = '#CommercialRealEstate #CRE #LosAngeles #InvestmentProperty #1031Exchange';
+const LI_TAGS = '#CommercialRealEstate #CRE #LosAngeles #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LARealEstate';
+
+/* Every LinkedIn piece was falling back to the same five generic tags, which
+   is the first-comment equivalent of saying nothing. Keyed to the topic
+   instead — the house tags plus the ones the piece is actually about. */
+const LI_HOUSE = ' #CommercialRealEstate #CRE #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty';
+const LI_TAGS_BY_TOPIC = {
+  'Underwriting': '#Underwriting #CapRate #NOI #DueDiligence #ValueAdd',
+  'Pricing': '#PropertyValuation #SellCommercial #ListingStrategy #BrokerOpinionOfValue #ThinkingOfSelling',
+  '1031 Exchange': '#1031Exchange #TaxDeferred #CapitalGains #NetLease #RealEstateInvesting',
+  'Deal Flow': '#OffMarket #DealFlow #PocketListing #SanFernandoValley #BuyerRepresentation',
+  'Due Diligence': '#DueDiligence #RentRoll #Estoppel #LeaseAudit #Escrow',
+  'Net Lease': '#NetLease #NNN #CreditTenant #PassiveIncome #CapRate',
+  'The Business': '#RealEstateInvesting #DealFlow #CommercialProperty #BrokerLife #MarketInsight',
+  'Property Tax': '#PropertyTax #Prop13 #Underwriting #NOI #CaliforniaRealEstate',
+  'Days on Market': '#DaysOnMarket #ListingStrategy #SellCommercial #PropertyValuation #ThinkingOfSelling',
+  'Debt': '#Refinance #DebtMaturity #CapitalMarkets #RealEstateStrategy #SellCommercial',
+  'Valuation': '#BrokerOpinionOfValue #PropertyValuation #Appraisal #SellCommercial #RealEstateStrategy',
+  'Leasing': '#CommercialLeasing #CreditTenant #NNN #LeaseAudit #DueDiligence',
+  'Structure': '#SellerFinancing #Carryback #DealStructure #CapitalMarkets #RealEstateInvesting',
+  'Capital': '#CapEx #DueDiligence #PropertyManagement #ValueAdd #BuildingInspection',
+  'Transfer Tax': '#MeasureULA #TransferTax #SellCommercial #PropertyTax #RealEstateStrategy',
+  'Negotiation': '#Negotiation #DealStructure #Escrow #SellCommercial #BuyerRepresentation',
+  'Submarkets': '#IndustrialRealEstate #SanFernandoValley #Submarket #Absorption #ValueAdd',
+  'Owner-Users': '#OwnerUser #SBA #IndustrialRealEstate #SellCommercial #CommercialProperty',
+  'Process': '#Escrow #DueDiligence #TransactionManagement #SellCommercial #RealEstateStrategy'
+};
+function liTags(topic) {
+  return (LI_TAGS_BY_TOPIC[topic] || '#RealEstateInvesting #CommercialProperty #DealFlow') + LI_HOUSE;
+}
 const LINKEDIN = [
 { topic: 'Underwriting', title: 'The cap rate on the flyer is not the cap rate',
   body: `A broker sends you a 6.5% cap. You run it yourself and get 5.1%.
@@ -4581,39 +4611,41 @@ function postCard(i, P, slidesFn, eyebrow) {
 function liCard(i, P) {
   const a = document.createElement('article');
   a.className = 'card text';
+  a.id = 'post-li-' + i;
   const b = document.createElement('div');
   b.className = 'body';
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span></div>' +
+    '<span class="eyebrow">LINKEDIN · ' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span>' +
+    '<span class="adtag">Written</span></div>' +
     '<h2>' + esc(P.title) + '</h2>';
-  const post = document.createElement('div');
-  post.className = 'lipost'; post.textContent = P.body;
-  b.appendChild(post);
-  const tags = P.tags || LI_TAGS;
-  const t = document.createElement('div');
-  t.className = 'litags'; t.textContent = tags;
-  b.appendChild(t);
+
+  /* the same caption panel every other card carries, so a LinkedIn post is
+     copied the same way a carousel caption is rather than selected by hand */
+  const tags = P.tags || liTags(P.topic);
+  const full = P.title + '\n\n' + P.body;
+  b.appendChild(panel('Caption · the post', full, 'Copy caption'));
+  b.appendChild(panel('Hashtags · first comment', tags, 'Copy', true));
+
   const row = document.createElement('div');
   row.className = 'row';
-  const mk = (cls, label, fn) => {
-    const x = document.createElement('button');
-    x.className = cls; x.textContent = label; x.onclick = fn; return x;
+  const dl = document.createElement('button');
+  dl.className = 'primary';
+  dl.textContent = '↓ Save .txt';
+  dl.onclick = e => {
+    saveText(full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
+    flash(e.target, 'Saved ✓');
   };
-  row.append(
-    mk('primary', '⧉ Copy post', e => copy(P.title + '\n\n' + P.body + '\n\n' + tags, e.target)),
-    mk('copy', 'Copy hashtags', e => copy(tags, e.target)),
-    mk('copy', '↓ Save .txt', e => {
-      saveText(P.title + '\n\n' + P.body + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
-      flash(e.target, 'Saved ✓');
-    })
-  );
+  const both = document.createElement('button');
+  both.className = 'copy';
+  both.textContent = '⧉ Copy post + hashtags';
+  both.onclick = e => copy(full + '\n\n' + tags, e.target);
+  row.append(dl, both);
   b.appendChild(row);
   a.appendChild(b);
   return a;
 }
 
-/* ── tabs ─────────────────────────────────────────────────────────────── */
 /* ── the page: one continuous run ────────────────────────────────────────
    Posts and stories are not two sections you switch between. They are the
    week, in order, each one its own card with its own download and its own

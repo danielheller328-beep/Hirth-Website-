@@ -504,7 +504,36 @@ Buying or selling automotive / commercial property? Call or text 310.300.2838.`,
 /* ══════════════════════════════════════════════════════════════════════════
    LINKEDIN — twenty-one pieces, seven a week, three weeks before repeat
    ══════════════════════════════════════════════════════════════════════════ */
-const LI_TAGS = '#CommercialRealEstate #CRE #LosAngeles #InvestmentProperty #1031Exchange';
+const LI_TAGS = '#CommercialRealEstate #CRE #LosAngeles #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LARealEstate';
+
+/* Every LinkedIn piece was falling back to the same five generic tags, which
+   is the first-comment equivalent of saying nothing. Keyed to the topic
+   instead — the house tags plus the ones the piece is actually about. */
+const LI_HOUSE = ' #CommercialRealEstate #CRE #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty';
+const LI_TAGS_BY_TOPIC = {
+  'Underwriting': '#Underwriting #CapRate #NOI #DueDiligence #ValueAdd',
+  'Pricing': '#PropertyValuation #SellCommercial #ListingStrategy #BrokerOpinionOfValue #ThinkingOfSelling',
+  '1031 Exchange': '#1031Exchange #TaxDeferred #CapitalGains #NetLease #RealEstateInvesting',
+  'Deal Flow': '#OffMarket #DealFlow #PocketListing #SanFernandoValley #BuyerRepresentation',
+  'Due Diligence': '#DueDiligence #RentRoll #Estoppel #LeaseAudit #Escrow',
+  'Net Lease': '#NetLease #NNN #CreditTenant #PassiveIncome #CapRate',
+  'The Business': '#RealEstateInvesting #DealFlow #CommercialProperty #BrokerLife #MarketInsight',
+  'Property Tax': '#PropertyTax #Prop13 #Underwriting #NOI #CaliforniaRealEstate',
+  'Days on Market': '#DaysOnMarket #ListingStrategy #SellCommercial #PropertyValuation #ThinkingOfSelling',
+  'Debt': '#Refinance #DebtMaturity #CapitalMarkets #RealEstateStrategy #SellCommercial',
+  'Valuation': '#BrokerOpinionOfValue #PropertyValuation #Appraisal #SellCommercial #RealEstateStrategy',
+  'Leasing': '#CommercialLeasing #CreditTenant #NNN #LeaseAudit #DueDiligence',
+  'Structure': '#SellerFinancing #Carryback #DealStructure #CapitalMarkets #RealEstateInvesting',
+  'Capital': '#CapEx #DueDiligence #PropertyManagement #ValueAdd #BuildingInspection',
+  'Transfer Tax': '#MeasureULA #TransferTax #SellCommercial #PropertyTax #RealEstateStrategy',
+  'Negotiation': '#Negotiation #DealStructure #Escrow #SellCommercial #BuyerRepresentation',
+  'Submarkets': '#IndustrialRealEstate #SanFernandoValley #Submarket #Absorption #ValueAdd',
+  'Owner-Users': '#OwnerUser #SBA #IndustrialRealEstate #SellCommercial #CommercialProperty',
+  'Process': '#Escrow #DueDiligence #TransactionManagement #SellCommercial #RealEstateStrategy'
+};
+function liTags(topic) {
+  return (LI_TAGS_BY_TOPIC[topic] || '#RealEstateInvesting #CommercialProperty #DealFlow') + LI_HOUSE;
+}
 const LINKEDIN = [
 { topic: 'Underwriting', title: 'The cap rate on the flyer is not the cap rate',
   body: `A broker sends you a 6.5% cap. You run it yourself and get 5.1%.

@@ -330,39 +330,41 @@ function postCard(i, P, slidesFn, eyebrow) {
 function liCard(i, P) {
   const a = document.createElement('article');
   a.className = 'card text';
+  a.id = 'post-li-' + i;
   const b = document.createElement('div');
   b.className = 'body';
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span></div>' +
+    '<span class="eyebrow">LINKEDIN · ' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span>' +
+    '<span class="adtag">Written</span></div>' +
     '<h2>' + esc(P.title) + '</h2>';
-  const post = document.createElement('div');
-  post.className = 'lipost'; post.textContent = P.body;
-  b.appendChild(post);
-  const tags = P.tags || LI_TAGS;
-  const t = document.createElement('div');
-  t.className = 'litags'; t.textContent = tags;
-  b.appendChild(t);
+
+  /* the same caption panel every other card carries, so a LinkedIn post is
+     copied the same way a carousel caption is rather than selected by hand */
+  const tags = P.tags || liTags(P.topic);
+  const full = P.title + '\n\n' + P.body;
+  b.appendChild(panel('Caption · the post', full, 'Copy caption'));
+  b.appendChild(panel('Hashtags · first comment', tags, 'Copy', true));
+
   const row = document.createElement('div');
   row.className = 'row';
-  const mk = (cls, label, fn) => {
-    const x = document.createElement('button');
-    x.className = cls; x.textContent = label; x.onclick = fn; return x;
+  const dl = document.createElement('button');
+  dl.className = 'primary';
+  dl.textContent = '↓ Save .txt';
+  dl.onclick = e => {
+    saveText(full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
+    flash(e.target, 'Saved ✓');
   };
-  row.append(
-    mk('primary', '⧉ Copy post', e => copy(P.title + '\n\n' + P.body + '\n\n' + tags, e.target)),
-    mk('copy', 'Copy hashtags', e => copy(tags, e.target)),
-    mk('copy', '↓ Save .txt', e => {
-      saveText(P.title + '\n\n' + P.body + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
-      flash(e.target, 'Saved ✓');
-    })
-  );
+  const both = document.createElement('button');
+  both.className = 'copy';
+  both.textContent = '⧉ Copy post + hashtags';
+  both.onclick = e => copy(full + '\n\n' + tags, e.target);
+  row.append(dl, both);
   b.appendChild(row);
   a.appendChild(b);
   return a;
 }
 
-/* ── tabs ─────────────────────────────────────────────────────────────── */
 /* ── the page: one continuous run ────────────────────────────────────────
    Posts and stories are not two sections you switch between. They are the
    week, in order, each one its own card with its own download and its own

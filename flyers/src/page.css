@@ -119,6 +119,7 @@ canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .phead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .plabel{font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim2);font-weight:600}
 .ptext{color:#D6E0E8;font-size:14px;white-space:pre-wrap}
+.card.text .ptext{font-size:15px;line-height:1.72}
 .ptext.tags{color:#9FB9CC;font-size:13px}
 .lipost{margin-top:18px;font:400 15.5px/1.72 "Space Grotesk",sans-serif;color:#D8E4EC;white-space:pre-wrap}
 .litags{margin-top:18px;font:400 13px/1.6 "Space Grotesk",sans-serif;color:#6EA8D8}
