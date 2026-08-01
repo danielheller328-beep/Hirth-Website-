@@ -42,7 +42,10 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
    from the week number plus the slot, so a post that does come round again
    comes round in a different world.
    ─────────────────────────────────────────────────────────────────────── */
-const WEEK_CONTENT_N = 5;
+/* Three, not five. Twenty pieces of abstract advice a week is itself the tell
+   — no working broker produces that much and none of it is about a building.
+   The real inventory leads instead. */
+const WEEK_CONTENT_N = 3;
 function pickContent() {
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
@@ -51,8 +54,13 @@ function pickContent() {
   }
   return out;
 }
-/* Listings are kept in the bank but are not surfaced as their own section.
-   To bring them back, add a `listings` entry to TABS below. */
+/* The listings are the only genuinely specific material in the whole system —
+   a real address, a real price, a real photograph, a deal that actually
+   happened. They lead the week now instead of sitting in a tab. */
+function pickListings() {
+  return LISTINGS.map((L, i) =>
+    Object.assign({}, L, { ad: AD[AD_ORDER[(WEEK_N * 5 + i + 3) % AD_ORDER.length]] }));
+}
 function pickLinkedIn() {
   const out = [];
   for (let i = 0; i < 7; i++) {
@@ -98,6 +106,14 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
+function listingSlides(L) {
+  const ad = L.ad, n = L.closed ? 3 : 4;
+  const out = [paint(c => listingHero(c, L, frameMeta(L, 0, n, FW, FH)), FW, FH)];
+  out.push(paint(c => listingCase(c, ad, L, frameMeta(L, 1, n, FW, FH)), FW, FH));
+  if (!L.closed) out.push(paint(c => listingSite(c, L, frameMeta(L, 2, n, FW, FH)), FW, FH));
+  out.push(paint(c => listingAsk(c, ad, L, frameMeta(L, n - 1, n, FW, FH)), FW, FH));
+  return out;
+}
 function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
   return [
@@ -112,6 +128,7 @@ function contentSlides(P) {
 
 /* ── the week, assembled ──────────────────────────────────────────────── */
 const WEEK = {
+  listings: pickListings(),
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
@@ -139,6 +156,13 @@ WEEK.stories = (function () {
     draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
       : i % 2 ? storyFigure(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
         : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
+  }));
+
+  WEEK.listings.forEach(L => out.push({
+    id: 'st-' + L.id, title: L.title, ad: AD.nocturne, story: true,
+    kind: L.closed ? 'Just Closed' : 'Just Listed',
+    cap: L.cap, tags: L.tags, stats: L.stats,
+    draw: c => storyListing(c, L, frameMeta(L, 8, 1, SW, SH))
   }));
 
   const pp = WEEK.poster;
@@ -331,12 +355,15 @@ function liCard(i, P) {
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
   posts: {
-    name: 'Posts', head: 'Five carousels and the poster · 1080 × 1080',
-    items: () => WEEK.content.concat([WEEK.poster]),
+    name: 'Posts', head: 'The deals first, then the week · 1080 × 1080',
+    items: () => WEEK.listings.concat(WEEK.content, [WEEK.poster]),
     build: (P, i) => P.poster
       ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
         'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
-      : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
+      : P.addr
+        ? postCard(i, P, listingSlides(P),
+          (P.closed ? 'JUST CLOSED' : 'JUST LISTED') + ' · ' + P.cityline.toUpperCase())
+        : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
   },
   stories: {
     name: 'Stories', head: 'Vertical · 1080 × 1920',
