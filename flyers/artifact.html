@@ -1668,32 +1668,58 @@ const L_atelier = {
   },
 
   ask(c, ad, P, S) {
+    /* An engraved calling card, struck on the sheet. The whole close is one
+       object rather than a row of faces and a button. */
     const cx = S.w / 2;
     const B = stage(c, ad, S, {
       label: 'Contact',
-      art: () => engravedRings(c, cx, S.h * .52, 300, 470, 9, rgba('#1C5C86', .06), 1)
+      art: () => guilloche(c, cx, S.h * .52, S.w * .44, {
+        rings: 8, petals: 11, inner: .7, arm: .22,
+        color: rgba('#1C5C86', .14), weight: 1
+      })
     });
-    let y = B.y + 22;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 16, fill: ad.accent, align: 'center', track: 4.4 });
-    y += 40;
-    const head = fitBlock(c, P.cta, { w: B.w * .86, h: 190 }, {
-      weight: 600, family: SERIF, style: 'italic', max: 66, min: 38, leading: 1.14, maxLines: 3
+    const cardW = B.w * .86, cardH = B.h * .82;
+    const cardX = cx - cardW / 2, cardY = B.y + (B.h - cardH) / 2;
+    c.save();
+    c.shadowColor = 'rgba(60,50,32,.20)'; c.shadowBlur = 40; c.shadowOffsetY = 14;
+    c.fillStyle = '#FAF6EE'; c.fillRect(cardX, cardY, cardW, cardH);
+    c.restore();
+    c.save();
+    c.strokeStyle = rgba('#1C5C86', .5); c.lineWidth = 1;
+    c.strokeRect(hair(cardX + 14), hair(cardY + 14), cardW - 28, cardH - 28);
+    c.strokeStyle = ad.rule; c.lineWidth = 1;
+    c.strokeRect(hair(cardX + 20), hair(cardY + 20), cardW - 40, cardH - 40);
+    c.restore();
+    /* corner fleurons */
+    [[cardX + 20, cardY + 20], [cardX + cardW - 20, cardY + 20],
+     [cardX + 20, cardY + cardH - 20], [cardX + cardW - 20, cardY + cardH - 20]]
+      .forEach(pt => diamond(c, pt[0], pt[1], 4, ad.accent2));
+
+    const head = fitRich(c, P.cta, { w: cardW - 130, h: 190 }, {
+      roman: s => FS(600, s, 'italic'), italic: s => FS(600, s),
+      max: 54, min: 30, leading: 1.16, maxLines: 3
     });
-    y = drawBlock(c, head, cx, y, { fill: ad.ink, align: 'center' });
-    y += 30;
-    diamond(c, cx, y, 4, ad.accent2);
-    y += 40;
-    const cw = B.w / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + cw * i + cw / 2, face = IMG[t.key];
-      if (face) circleImg(c, face, px, y + 62, 58, ad.rule, 1.5);
-      else { c.fillStyle = ad.panel; c.beginPath(); c.arc(px, y + 62, 58, 0, 7); c.fill(); }
-      text(c, t.name, px, y + 158, { font: FS(600, 28), fill: ad.ink, align: 'center', base: 'middle' });
-      caps(c, t.role, px, y + 188, { size: 12, fill: ad.accent, align: 'center', track: 2.6 });
-      text(c, t.phone, px, y + 218, { font: FN(400, 19), fill: ad.muted, align: 'center', base: 'middle' });
+    const groupH = 42 + head.height + 34 + 44 + 128 + 74 + 34;
+    let y = cardY + Math.max(54, (cardH - groupH) / 2);
+    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, {
+      size: 14, fill: ad.muted, align: 'center', track: 4.2
     });
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, cx, B.bottom - 96, { size: 26 });
-  }
+    y += 42;
+    y = drawRich(c, head, cx, y, { fill: ad.ink, emFill: ad.accent, align: 'center' });
+    y += 34;
+    rule(c, cx - 44, y, 88, ad.accent, 2);
+    y += 44;
+    const face = IMG.dh;
+    if (face) circleImg(c, face, cx, y + 52, 50, ad.rule, 1.5);
+    y += 128;
+    text(c, HOUSE.agent, cx, y, { font: FS(600, 40), fill: ad.ink, align: 'center', base: 'middle' });
+    caps(c, HOUSE.role, cx, y + 34, { size: 12, fill: ad.accent, align: 'center', track: 3 });
+    y += 74;
+    text(c, HOUSE.phone, cx, y, { font: FN(600, 30), fill: ad.ink, align: 'center', base: 'middle' });
+    caps(c, HOUSE.site + '   ·   ' + HOUSE.dre, cx, y + 34, {
+      size: 11, fill: ad.muted, align: 'center', track: 2.8
+    });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -1820,38 +1846,38 @@ const L_midnight = {
   },
 
   ask(c, ad, P, S) {
-    const B = stage(c, ad, S, {
-      label: 'Contact',
-      art: () => contourField(c, 0, 0, S.w, S.h * .42, S.seed + 11, {
-        lines: 20, color: t => rgba('#79BDEA', .03 + t * .05), amp: .3
-      })
-    });
-    let y = B.y + 16;
+    /* One portrait, printed on a pale plate down the right, rather than three
+       thumbnails in a row. The person you are calling, not the org chart. */
+    const B = stage(c, ad, S, { label: 'Contact' });
+    const px = S.w * .58, face = IMG.dh;
+    if (face) {
+      portraitPlate(c, face, px, 0, S.w - px, S.h, {
+        key: 'dh-mid', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
+        zoom: 1.02, fy: .46, paper: '#DDE6ED', ink: '#0B1620',
+        plateAlpha: .18, plate: ['#0B1620', '#DDE6ED']
+      });
+      c.fillStyle = ad.accent; c.fillRect(px - 3, 0, 3, S.h);
+      const g = c.createLinearGradient(px, 0, px + 90, 0);
+      g.addColorStop(0, 'rgba(5,9,13,.55)'); g.addColorStop(1, 'rgba(5,9,13,0)');
+      c.fillStyle = g; c.fillRect(px, 0, 90, S.h);
+    }
+    let y = B.y + 26;
     kicker(c, ad, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8);
-    y += 54;
-    const head = fitRich(c, P.cta, { w: B.w * .88, h: 210 }, {
+    y += 58;
+    const head = fitRich(c, P.cta, { w: px - B.x - 54, h: 300 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-      max: 74, min: 40, leading: 1.1, maxLines: 3
+      max: 66, min: 34, leading: 1.08, maxLines: 5
     });
     y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
-    y += 58;
-    const gap = 22, sq = (B.w - gap * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + (sq + gap) * i, face = IMG[t.key];
-      c.save(); c.beginPath(); c.rect(px, y, sq, sq); c.clip();
-      if (face) coverImg(c, face, px, y, sq, sq, .34);
-      else { c.fillStyle = ad.panel; c.fillRect(px, y, sq, sq); }
-      const g = c.createLinearGradient(0, y + sq * .45, 0, y + sq);
-      g.addColorStop(0, 'rgba(5,9,13,0)'); g.addColorStop(1, 'rgba(5,9,13,.85)');
-      c.fillStyle = g; c.fillRect(px, y, sq, sq);
-      c.restore();
-      c.save(); c.strokeStyle = ad.ruleSoft; c.lineWidth = 1; c.strokeRect(hair(px), hair(y), sq, sq); c.restore();
-      text(c, t.name.split(' ')[0], px + 16, y + sq - 44, { font: FS(600, 26), fill: '#fff', base: 'middle' });
-      caps(c, t.role, px + 16, y + sq - 18, { size: 11, fill: ad.accent, track: 2.2 });
-    });
-    y += sq + 44;
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, S.w / 2, Math.min(y, B.bottom - 88), { size: 26 });
-  }
+    y += 56;
+    rule(c, B.x, y, px - B.x - 54, ad.rule, 1);
+    y += 46;
+    text(c, HOUSE.agent, B.x, y, { font: FS(600, 44), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.role, B.x, y + 38, { size: 13, fill: ad.accent, track: 3.2 });
+    y += 86;
+    text(c, HOUSE.phone, B.x, y, { font: FN(600, 40), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.site + '  ·  ' + HOUSE.dre, B.x, y + 38, { size: 12, fill: ad.muted, track: 2.8 });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2138,31 +2164,45 @@ const L_signal = {
   },
 
   ask(c, ad, P, S) {
+    /* No portraits here. In this world the close is the number, set as large
+       as the sheet allows, on a flat field. */
     const B = stage(c, ad, S, { label: 'Contact' });
-    let y = B.y + 12;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8, { size: 15, fill: ad.accent, track: 3.6 });
-    y += 50;
-    const head = fitRich(c, P.cta, { w: B.w * .94, h: 210 }, {
+    const colW = B.w / 12;
+    c.fillStyle = ad.accent;
+    c.fillRect(B.x + colW * 8, 0, colW * 4 + S.M, B.y - 22);
+    halftone(c, B.x + colW * 8, B.y - 22, colW * 4 + S.M, 150, {
+      color: ad.accent, pitch: 15, maxR: 6, alpha: .55,
+      density: (u, v) => Math.pow(1 - v, 1.35)
+    });
+    let y = B.y + 18;
+    caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y, { size: 15, fill: ad.accent, track: 3.6 });
+    y += 46;
+    const head = fitRich(c, P.cta, { w: colW * 9, h: 190 }, {
       roman: s => FN(700, s), italic: s => FN(500, s, 'italic'),
-      max: 72, min: 38, leading: 1.04, maxLines: 3, track: -1.4
+      max: 60, min: 32, leading: 1.06, maxLines: 3, track: -1.2
     });
-    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
-    y += 40;
-    rule(c, B.x, y, B.w, ad.ink, 3); y += 40;
-    const gap = 20, sq = (B.w - gap * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + (sq + gap) * i, face = IMG[t.key];
-      if (face) { c.save(); c.beginPath(); c.rect(px, y, sq, sq * .92); c.clip(); coverImg(c, face, px, y, sq, sq * .92, .3); c.restore(); }
-      else { c.fillStyle = ad.panel; c.fillRect(px, y, sq, sq * .92); }
-      text(c, t.name, px, y + sq * .92 + 34, { font: FN(700, 23), fill: ad.ink, base: 'middle' });
-      caps(c, t.role, px, y + sq * .92 + 62, { size: 11, fill: ad.muted, track: 2.2 });
+    drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
+    /* the lower half hangs off the foot of the field, not off the headline */
+    let sz = 150;
+    while (measure(c, HOUSE.phone, FN(700, sz), -5) > B.w && sz > 60) sz -= 4;
+    const cellY = B.bottom - 52;
+    const numY = cellY - 46 - sz * .52;
+    rule(c, B.x, cellY - 34, B.w, ad.rule, 1);
+    text(c, HOUSE.phone, B.x, numY, {
+      font: FN(700, sz), fill: ad.ink, base: 'middle', track: -5
     });
-    y += sq * .92 + 96;
-    const bh = 84, by = Math.min(y, B.bottom - bh);
-    c.fillStyle = ad.accent; c.fillRect(B.x, by, B.w, bh);
-    text(c, 'Call or text ' + HOUSE.phone, B.x + 30, by + bh / 2, { font: FN(700, 28), fill: '#fff', base: 'middle' });
-    icon(c, 'arrow', B.x + B.w - 44, by + bh / 2, 26, '#fff', 2);
-  }
+    caps(c, 'call or text', B.x, numY - sz * .56, { size: 14, fill: ad.muted, track: 3.4 });
+    rule(c, B.x, numY - sz * .56 - 40, B.w, ad.ink, 3);
+    y = cellY;
+    const cells = [[HOUSE.agent, HOUSE.role], [HOUSE.site, 'Web'], [HOUSE.dre.replace('CA DRE ', ''), 'Licence']];
+    const cw = B.w / 3;
+    cells.forEach((cell, i) => {
+      const x = B.x + cw * i;
+      if (i) vrule(c, x - 20, y - 10, 60, ad.ruleSoft, 1);
+      text(c, cell[0], x, y + 12, { font: FN(700, 22), fill: ad.ink, base: 'middle' });
+      caps(c, cell[1], x, y + 42, { size: 11, fill: ad.muted, track: 2.4 });
+    });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2468,34 +2508,44 @@ const L_nocturne = {
   },
 
   ask(c, ad, P, S) {
-    ad.ground(c, S.w, S.h, S.seed);
+    /* Photography closes this world, the same way it opens it — not a row of
+       circular headshots on a flat ground. */
+    nocturneField(c, ad, S, P.photo || 'olive');
     const M = S.M, cx = S.w / 2;
-    guilloche(c, cx, S.h * .44, S.w * .46, {
-      rings: 7, petals: 13, inner: .68, arm: .24, color: rgba('#C6A461', .10), weight: 1
-    });
-    let y = logoLockup(c, cx, M - 4, 236, 'white', 'center') + 34;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 15, fill: ad.accent, align: 'center', track: 4.2 });
-    y += 44;
-    const head = fitRich(c, P.cta, { w: (S.w - M * 2) * .9, h: 210 }, {
+    c.save();
+    c.fillStyle = 'rgba(4,16,24,.42)'; c.fillRect(0, 0, S.w, S.h);
+    c.restore();
+    logoLockup(c, M, LOGO_Y, 204, 'white');
+    caps(c, 'Contact', S.w - M, LOGO_Y + 40, { size: 14, fill: ad.accent, align: 'right', track: 4 });
+
+    const bottom = S.h - 152;
+    const head = fitRich(c, P.cta, { w: S.w - M * 2, h: 320 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-      max: 74, min: 40, leading: 1.1, maxLines: 3
+      max: 88, min: 42, leading: 1.04, maxLines: 4
     });
-    y = drawRich(c, head, cx, y, { fill: ad.ink, emFill: '#E4C98A', align: 'center' });
-    y += 34;
-    foilRule(c, cx - 46, y, 92, 2, '#C6A461', '#F0DFAE');
-    y += 46;
-    const cw = (S.w - M * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = M + cw * i + cw / 2, face = IMG[t.key];
-      if (face) circleImg(c, face, px, y + 62, 60, rgba('#C6A461', .7), 2);
-      text(c, t.name, px, y + 162, { font: FS(600, 27), fill: ad.ink, align: 'center', base: 'middle' });
-      caps(c, t.role, px, y + 192, { size: 11, fill: ad.accent, align: 'center', track: 2.4 });
-      text(c, t.phone, px, y + 220, { font: FN(400, 19), fill: ad.muted, align: 'center', base: 'middle' });
+    let y = bottom - 250 - head.height;
+    caps(c, P.ctaKicker || 'Thinking about a deal?', M, y - 40, { size: 15, fill: ad.accent, track: 4.2 });
+    y = drawRich(c, head, M, y, {
+      fill: ad.ink, emFill: '#E4C98A', shadow: ['rgba(0,0,0,.6)', 26, 8]
     });
-    y += 262;
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, cx, Math.min(y, S.h - 152 - 92), { size: 26 });
-    ad.footer(c, S.w, S.h, { M });
-  }
+    y += 40;
+    foilRule(c, M, y, 132, 3, '#C6A461', '#F0DFAE');
+    y += 44;
+    const face = IMG.dh;
+    if (face) circleImg(c, face, M + 46, y + 40, 46, rgba('#C6A461', .75), 2);
+    text(c, HOUSE.agent, M + 116, y + 26, { font: FS(600, 34), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.role, M + 116, y + 58, { size: 12, fill: ad.accent, track: 2.8 });
+    text(c, HOUSE.phone, S.w - M, y + 30, {
+      font: FN(600, 42), fill: ad.ink, align: 'right', base: 'middle',
+      shadow: ['rgba(0,0,0,.5)', 18, 4]
+    });
+    caps(c, HOUSE.site, S.w - M, y + 64, { size: 13, fill: ad.accent, align: 'right', track: 3 });
+    /* no house footer on this one — the block above already carries the number,
+       and printing it twice on one frame reads as an oversight */
+    rule(c, M, S.h - 92, S.w - M * 2, rgba('#C6A461', .3), 1);
+    caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm + '  ·  ' + HOUSE.market, M, S.h - 58,
+      { size: 11, fill: ad.muted, track: 2.6 });
+  },
 };
 
 const LAYOUT = {
@@ -2666,16 +2716,77 @@ function listingAsk(c, ad, L, S) {
    Same six worlds, re-composed for the taller frame. A story is one idea,
    so these are deliberately sparser than the feed slides.
    ══════════════════════════════════════════════════════════════════════════ */
+/* the imagery each world brings to a vertical frame — without it a story is
+   just centred type on a coloured field, which is exactly the thing this set
+   is trying not to be */
+function storyArt(c, ad, S) {
+  const w = S.w, h = S.h;
+  switch (ad.id) {
+    case 'atelier':
+      guilloche(c, w * 1.02, h * .88, w * .62, {
+        rings: 7, petals: 13, inner: .66, arm: .27, color: rgba('#1C5C86', .22), weight: 1
+      });
+      guilloche(c, w * -.06, h * .16, w * .40, {
+        rings: 5, petals: 9, inner: .6, arm: .3, color: rgba('#B08447', .18), weight: 1
+      });
+      break;
+    case 'midnight':
+      contourField(c, 0, h * .42, w, h * .46, S.seed, {
+        lines: 30, color: t => rgba('#79BDEA', .04 + t * .08), amp: .26
+      });
+      break;
+    case 'blueprint':
+      /* no scrim here: an opaque rectangle over a grid leaves a visible edge
+         where it starts. The massing is placed low enough instead. */
+      isoMassing(c, w * .5, h * .82, 88, 5, 5, S.seed, {
+        top: 'rgba(89,198,242,.24)', left: 'rgba(20,66,96,.58)', right: 'rgba(12,42,62,.64)',
+        edge: 'rgba(140,205,240,.18)', alpha: .9
+      });
+      cropMarks(c, w, h, 26, 22, rgba('#59C6F2', .4), 1);
+      break;
+    case 'signal':
+      c.fillStyle = ad.accent; c.fillRect(w * .60, 0, w * .40, h * .155);
+      halftone(c, w * .60, h * .155, w * .40, h * .12, {
+        color: ad.accent, pitch: 15, maxR: 6, alpha: .55,
+        density: (u, v) => Math.pow(1 - v, 1.35)
+      });
+      halftone(c, 0, h * .66, w, h * .18, {
+        color: ad.accent, pitch: 18, maxR: 7, alpha: .22,
+        density: (u, v) => clamp(v * 1.2, 0, 1)
+      });
+      break;
+    case 'dossier':
+      guilloche(c, w * .84, h * .74, w * .46, {
+        rings: 7, petals: 7, inner: .6, arm: .3, color: rgba('#A6432B', .22), weight: 1
+      });
+      punchHoles(c, ad, h);
+      fileTab(c, w - 320, 6, 180, 46, 'FILE', rgba('#A6432B', .82), '#F2ECE1');
+      break;
+    case 'nocturne':
+      strata(c, 0, h * .34, w, h * .60, S.seed, { color: '#C6A461', alpha: .12, bands: 9 });
+      c.save(); c.strokeStyle = rgba('#C6A461', .14); c.lineWidth = 1;
+      for (let i = 0; i < 20; i++) {
+        c.beginPath(); c.arc(w * 1.04, h * .22, w * (.34 + i * .05), Math.PI * .55, Math.PI * 1.45); c.stroke();
+      }
+      c.restore();
+      break;
+  }
+}
+
 function storyStage(c, ad, S, label) {
   ad.ground(c, S.w, S.h, S.seed);
+  storyArt(c, ad, S);
   const M = S.M;
-  const top = logoLockup(c, S.w / 2, 128, 300, ad.logo === 'white' ? 'white' : 'color', 'center');
+  const flush = ad.id === 'signal';
+  const top = flush
+    ? logoLockup(c, M, 128, 260, 'color')
+    : logoLockup(c, S.w / 2, 128, 300, ad.logo === 'white' ? 'white' : 'color', 'center');
   let y = top + 46;
   if (label) {
-    if (ad.id === 'signal') {
+    if (flush) {
       const tw = measure(c, label.toUpperCase(), FN(700, 19), 5) + 60;
-      c.fillStyle = ad.accent; c.fillRect(S.w / 2 - tw / 2, y - 24, tw, 50);
-      caps(c, label, S.w / 2, y + 1, { size: 19, weight: 700, fill: '#fff', align: 'center', track: 5 });
+      c.fillStyle = ad.accent; c.fillRect(M, y - 24, tw, 50);
+      caps(c, label, M + tw / 2, y + 1, { size: 19, weight: 700, fill: '#fff', align: 'center', track: 5 });
     } else if (ad.id === 'atelier' || ad.id === 'dossier') {
       caps(c, label, S.w / 2, y, { size: 18, fill: ad.accent, align: 'center', track: 5 });
       const tw = measure(c, label.toUpperCase(), FN(600, 18), 5);
@@ -2693,6 +2804,50 @@ function storyStage(c, ad, S, label) {
 }
 function storyFoot(c, ad, S, rows, cta) {
   const M = S.M, n = (rows || []).length;
+
+  /* Signal closes on the number, flush left, on a flat band — no pill, no
+     centred contact line. The worlds should not share a foot any more than
+     they share a headline. */
+  if (ad.id === 'signal') {
+    const bandY = S.h - 300;
+    c.fillStyle = ad.ink; c.fillRect(0, bandY, S.w, 300);
+    c.fillStyle = ad.accent; c.fillRect(0, bandY, S.w, 6);
+    caps(c, 'call or text', M, bandY + 54, { size: 16, fill: 'rgba(255,255,255,.55)', track: 3.6 });
+    let sz = 96;
+    while (measure(c, HOUSE.phone, FN(700, sz), -3) > S.w - M * 2 && sz > 40) sz -= 2;
+    text(c, HOUSE.phone, M, bandY + 130, { font: FN(700, sz), fill: '#fff', base: 'middle', track: -3 });
+    caps(c, HOUSE.agent + ' · ' + HOUSE.role, M, bandY + 200, {
+      size: 15, fill: 'rgba(255,255,255,.72)', track: 3
+    });
+    caps(c, HOUSE.site + '  ·  ' + HOUSE.dre, M, bandY + 240, {
+      size: 12, fill: 'rgba(255,255,255,.45)', track: 2.6
+    });
+    (rows || []).slice(0, 2).forEach((r, i) => {
+      const x = M + (S.w - M * 2) * .55 * i;
+      text(c, r[0], x, bandY - 60, { font: FN(700, 40), fill: ad.ink, base: 'middle', track: -1 });
+      caps(c, r[1], x, bandY - 24, { size: 12, fill: ad.muted, track: 2.4 });
+    });
+    return;
+  }
+
+  /* Atelier and Dossier close on a ruled plate, the way a printed page would */
+  if (ad.id === 'atelier' || ad.id === 'dossier') {
+    const top = S.h - 330;
+    rule(c, M, top, S.w - M * 2, ad.rule, 1.5);
+    rule(c, M, top + 5, S.w - M * 2, ad.ruleSoft, 1);
+    let y = top + 56;
+    (rows || []).slice(0, 2).forEach(r => {
+      caps(c, r[1], M, y, { size: 16, fill: ad.muted, track: 3.2 });
+      text(c, r[0], S.w - M, y, { font: FS(600, 40), fill: ad.ink, align: 'right', base: 'middle' });
+      y += 62;
+      rule(c, M, y - 26, S.w - M * 2, ad.ruleSoft, 1);
+    });
+    if (cta) ctaMark(c, ad, cta, S.w / 2, S.h - 176, { size: 27, h: 82, pad: 48 });
+    caps(c, HOUSE.agent + '   ·   ' + HOUSE.phone + '   ·   ' + HOUSE.site, S.w / 2, S.h - 62,
+      { size: 15, fill: ad.muted, align: 'center', track: 3.2 });
+    return;
+  }
+
   const ctaTop = S.h - 212;
   const rowsBottom = cta ? ctaTop - 34 : S.h - 118;
   let y = rowsBottom - n * 96;
@@ -2846,19 +3001,38 @@ const PRESS = {
    — on a light ground the window simply falls away to clean paper and the
    face carries the tone, so no cutout is needed at all.
    ─────────────────────────────────────────────────────────────────────── */
-function portraitPlate(c, img, cx, cy, r, o) {
-  o = o || {};
-  const pitch = o.pitch || 10;
-  const size = Math.ceil(r * 2);
-  const off = document.createElement('canvas');
-  off.width = off.height = size;
-  const oc = off.getContext('2d');
-  oc.drawImage(img, 0, 0, size, size);
-  const px = oc.getImageData(0, 0, size, size).data;
+function plateShape(c, shape, x, y, w, h) {
+  c.beginPath();
+  if (shape === 'circle') c.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, 6.284);
+  else if (shape === 'arch') {
+    const rr = w / 2;
+    c.moveTo(x, y + h); c.lineTo(x, y + rr);
+    c.arc(x + rr, y + rr, rr, Math.PI, 0);
+    c.lineTo(x + w, y + h); c.closePath();
+  } else c.rect(x, y, w, h);
+}
 
-  const x0 = cx - r, y0 = cy - r;
-  const sample = (sx, sy) => {
-    const i = ((sy | 0) * size + (sx | 0)) * 4;
+/* o.shape 'circle'|'rect'|'arch' · o.zoom · o.fx/fy focus · o.invert polarity */
+function portraitPlate(c, img, x, y, w, h, o) {
+  o = o || {};
+  const pitch = o.pitch || 6;
+  const sw = Math.ceil(w), sh = Math.ceil(h);
+  const off = document.createElement('canvas');
+  off.width = sw; off.height = sh;
+  const oc = off.getContext('2d');
+
+  /* crop: scale the source about a focus point so the face can be framed
+     tight on one cut and loose on the next */
+  const zoom = o.zoom || 1;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const scale = Math.max(sw / iw, sh / ih) * zoom;
+  const dw = iw * scale, dh = ih * scale;
+  const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy;
+  oc.drawImage(img, sw / 2 - dw * fx, sh / 2 - dh * fy, dw, dh);
+  const px = oc.getImageData(0, 0, sw, sh).data;
+
+  const sample = (ix, iy) => {
+    const i = ((iy | 0) * sw + (ix | 0)) * 4;
     if (px[i + 3] < 90) return null;
     return (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) / 255;
   };
@@ -2867,7 +3041,7 @@ function portraitPlate(c, img, cx, cy, r, o) {
      occupies maybe half the available range; printed straight, the skin sits
      in a band too narrow for the screen to describe a face with, and the whole
      portrait collapses to hair-and-suit. Stretching the 2nd–98th percentile
-     across the full range is what a platemaker would do before burning it. */
+     across the range is what a platemaker would do before burning it. */
   const hist = new Uint32Array(256);
   let count = 0;
   for (let i = 0; i < px.length; i += 4) {
@@ -2883,46 +3057,47 @@ function portraitPlate(c, img, cx, cy, r, o) {
   const levels = v => clamp((v - loN) / (hiN - loN), 0, 1);
 
   c.save();
-  /* the rondel — flat ink, the paper the portrait prints on */
-  c.beginPath(); c.arc(cx, cy, r, 0, 6.284); c.clip();
-  c.fillStyle = o.paper || '#F1EBDF';
-  c.fillRect(x0, y0, size, size);
+  plateShape(c, o.shape || 'circle', x, y, w, h);
+  c.clip();
 
-  /* a faint duotone under the screen holds the modelling */
-  c.globalAlpha = o.plateAlpha == null ? 0.22 : o.plateAlpha;
-  const duo = duotone(img, (o.plate || PRESS.plate)[0], (o.plate || PRESS.plate)[1],
-    (o.key || 'dh') + '-plate', size, size);
-  c.drawImage(duo, x0, y0, size, size);
-  c.globalAlpha = 1;
+  if (o.paper) { c.fillStyle = o.paper; c.fillRect(x, y, w, h); }
 
-  /* the screen — dark ink, radius by darkness */
+  if (o.plateAlpha) {
+    c.globalAlpha = o.plateAlpha;
+    const duo = duotone(off, (o.plate || PRESS.plate)[0], (o.plate || PRESS.plate)[1],
+      (o.key || 'dh') + '|' + zoom + '|' + fx + '|' + fy, sw, sh);
+    c.drawImage(duo, x, y, w, h);
+    c.globalAlpha = 1;
+  }
+
   c.fillStyle = o.ink || '#0B1E2B';
   const ang = o.angle == null ? -0.38 : o.angle;
   const cos = Math.cos(ang), sin = Math.sin(ang);
-  const span = size * 1.5;
-  const lift = o.lift == null ? 0.06 : o.lift;   /* highlights that print clean */
+  const span = Math.hypot(sw, sh);
+  const lift = o.lift == null ? 0.06 : o.lift;
+  const invert = !!o.invert;                 /* light ink on a dark ground */
   for (let v = -span; v < span; v += pitch) {
     for (let u = -span; u < span; u += pitch) {
-      const sx = r + u * cos - v * sin, sy = r + u * sin + v * cos;
-      if (sx < 0 || sy < 0 || sx >= size || sy >= size) continue;
-      const lum = sample(sx, sy);
+      const ix = sw / 2 + u * cos - v * sin, iy = sh / 2 + u * sin + v * cos;
+      if (ix < 0 || iy < 0 || ix >= sw || iy >= sh) continue;
+      const lum = sample(ix, iy);
       if (lum === null) continue;
-      const dark = clamp(Math.pow(1 - levels(lum), o.gamma == null ? 0.85 : o.gamma) - lift, 0, 1);
-      const rr = pitch * 0.72 * dark;
+      const t = invert ? levels(lum) : 1 - levels(lum);
+      const d = clamp(Math.pow(t, o.gamma == null ? 0.95 : o.gamma) - lift, 0, 1);
+      const rr = pitch * 0.72 * d;
       if (rr < 0.4) continue;
       c.beginPath();
-      c.arc(x0 + sx, y0 + sy, rr, 0, 6.284);
+      c.arc(x + ix, y + iy, rr, 0, 6.284);
       c.fill();
     }
   }
   c.restore();
 
-  /* the plate edge */
   if (o.edge) {
     c.save();
     c.strokeStyle = o.edge; c.lineWidth = o.edgeWidth || 3;
-    c.beginPath(); c.arc(cx, cy, r, 0, 6.284); c.stroke();
-    c.restore();
+    plateShape(c, o.shape || 'circle', x, y, w, h);
+    c.stroke(); c.restore();
   }
 }
 
@@ -2941,86 +3116,223 @@ function pressGround(c, w, h, seed) {
   grain(c, w, h, .13, true);
 }
 
-/* ── the feed poster · 1080 × 1080 ────────────────────────────────────── */
-function posterFrame(c, P, S) {
-  const w = S.w, h = S.h, M = S.M;
-  pressGround(c, w, h, S.seed);
-
-  /* the portrait, bleeding off the bottom-right corner */
-  const face = IMG[P.who || 'dh'];
-  const r = 332, cx = 880, cy = 872;
-  if (face) {
-    engravedRings(c, cx, cy, r + 16, r + 46, 3, rgba('#C6A461', .20), 1);
-    portraitPlate(c, face, cx, cy, r, {
-      key: P.who || 'dh', pitch: 5, gamma: 0.95, lift: .075, angle: -0.38,
-      edge: rgba('#C6A461', .8), edgeWidth: 3
-    });
-  }
-
-  logoLockup(c, M, LOGO_Y, 210, 'white');
-  caps(c, P.kicker || 'The Hirth Group', w - M, LOGO_Y + 46, {
-    size: 14, fill: PRESS.accent, align: 'right', track: 4
+/* a light press ground, for the cut that prints on paper instead of ink */
+function pressGroundLight(c, w, h, seed) {
+  paper(c, w, h, '#EFE8DA', seed);
+  const g = c.createLinearGradient(0, 0, w * .4, h);
+  g.addColorStop(0, 'rgba(255,255,255,.55)');
+  g.addColorStop(1, 'rgba(150,138,116,.16)');
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  halftone(c, 0, h * .3, w, h * .7, {
+    color: 'rgba(20,40,55,.05)', pitch: 16, maxR: 5.4,
+    density: (u, v) => clamp(v * 1.1, 0, 1)
   });
-
-  /* the words */
-  const head = fitRich(c, P.line, { w: w - M * 2 - 24, h: 300 }, {
-    roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-    max: 104, min: 46, leading: 1.02, maxLines: 3
-  });
-  let y = 246;
-  foilRule(c, M, y - 34, 128, 3, '#C6A461', '#F0DFAE');
-  drawRich(c, head, M, y, {
-    fill: PRESS.ink, emFill: '#E7CE93', shadow: ['rgba(2,10,16,.8)', 28, 8]
-  });
-
-  /* the signature block, along the foot on the open side */
-  const by = h - 150;
-  rule(c, M, by, 300, rgba('#C6A461', .5), 1);
-  text(c, HOUSE.agent, M, by + 46, {
-    font: FS(600, 42), fill: PRESS.ink, base: 'middle', shadow: ['rgba(2,10,16,.7)', 18, 4]
-  });
-  caps(c, HOUSE.role, M, by + 82, { size: 13, fill: PRESS.accent, track: 3.2 });
-  caps(c, HOUSE.phone + '   ·   ' + HOUSE.site, M, by + 112, { size: 14, fill: PRESS.body, track: 3 });
-  caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, M, by + 140, { size: 11, fill: PRESS.muted, track: 2.6 });
+  vignette(c, w, h, .10);
 }
 
-/* ── the poster as a story · 1080 × 1920 ──────────────────────────────── */
-function posterStory(c, P, S) {
-  const w = S.w, h = S.h, M = S.M;
-  pressGround(c, w, h, S.seed);
-
-  const face = IMG[P.who || 'dh'];
-  const r = 432, cx = 906, cy = h - 372;   /* bleeding off the bottom-right */
-  if (face) {
-    engravedRings(c, cx, cy, r + 18, r + 54, 3, rgba('#C6A461', .20), 1);
-    portraitPlate(c, face, cx, cy, r, {
-      key: P.who || 'dh', pitch: 6, gamma: 0.95, lift: .075, angle: -0.38,
-      edge: rgba('#C6A461', .8), edgeWidth: 3
-    });
-  }
-
-  logoLockup(c, M, 120, 250, 'white');
-  caps(c, P.kicker || 'The Hirth Group', M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
-
-  const head = fitRich(c, P.line, { w: w - M * 2, h: 560 }, {
-    roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-    max: 138, min: 58, leading: 1.0, maxLines: 4
+/* the signature block, in whichever polarity the cut is printed */
+function pressSig(c, x, y, o) {
+  o = o || {};
+  const ink = o.ink || PRESS.ink, dim = o.body || PRESS.body, faint = o.muted || PRESS.muted;
+  const sh = o.shadow || ['rgba(2,10,16,.7)', 18, 4];
+  const align = o.align || 'left';
+  rule(c, align === 'right' ? x - 300 : x, y, 300, o.accentRule || rgba('#C6A461', .55), 1);
+  text(c, HOUSE.agent, x, y + 46, {
+    font: FS(600, o.size || 42), fill: ink, base: 'middle', align, shadow: sh
   });
-  foilRule(c, M, 430, 150, 3, '#C6A461', '#F0DFAE');
-  drawRich(c, head, M, 486, {
-    fill: PRESS.ink, emFill: '#E7CE93', shadow: ['rgba(2,10,16,.8)', 34, 10]
-  });
-
-  /* the signature keeps to the open left column so the plate can bleed */
-  const by = h - 300;
-  rule(c, M, by, 360, rgba('#C6A461', .55), 1);
-  text(c, HOUSE.agent, M, by + 56, {
-    font: FS(600, 54), fill: PRESS.ink, base: 'middle', shadow: ['rgba(2,10,16,.7)', 20, 5]
-  });
-  caps(c, HOUSE.role, M, by + 100, { size: 16, fill: PRESS.accent, track: 3.4 });
-  caps(c, HOUSE.phone + '   ·   ' + HOUSE.site, M, by + 142, { size: 17, fill: PRESS.body, track: 3.2 });
-  caps(c, HOUSE.dre, M, by + 176, { size: 12, fill: PRESS.muted, track: 2.6 });
+  caps(c, HOUSE.role, x, y + 82, { size: 13, fill: o.accent || PRESS.accent, track: 3.2, align });
+  caps(c, HOUSE.phone + '   ·   ' + HOUSE.site, x, y + 112, { size: 14, fill: dim, track: 3, align });
+  caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, x, y + 140, { size: 11, fill: faint, track: 2.6, align });
 }
+
+/* the headline, set to the cut's measure */
+function pressHead(c, P, x, y, boxW, maxSize, o) {
+  o = o || {};
+  const head = fitRich(c, P.line, { w: boxW, h: o.boxH || 340 }, {
+    roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+    max: maxSize, min: 44, leading: 1.02, maxLines: o.maxLines || 4
+  });
+  foilRule(c, o.align === 'right' ? x - 128 : x, y - 34, 128, 3,
+    o.foil || '#C6A461', o.foilHi || '#F0DFAE');
+  drawRich(c, head, x, y, {
+    fill: o.ink || PRESS.ink, emFill: o.em || '#E7CE93',
+    align: o.align, shadow: o.shadow === false ? null : (o.shadow || ['rgba(2,10,16,.8)', 28, 8])
+  });
+  return head;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE CUTS
+
+   The poster comes round every week, so the portrait cannot be the same
+   portrait every week. Four cuts rotate independently of the statement — a
+   different plate shape, a different crop of his face, a different polarity
+   of ink. Twelve weeks before a statement meets the same cut twice.
+   ══════════════════════════════════════════════════════════════════════════ */
+const POSTER_CUTS = [
+
+  /* 1 · RONDEL — a struck coin, bleeding off the bottom-right */
+  { id: 'rondel', name: 'Rondel',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      if (face) {
+        const d = 664, x = 548, y = 540;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 16, d / 2 + 46, 3, rgba('#C6A461', .20), 1);
+        portraitPlate(c, face, x, y, d, d, {
+          key: P.who || 'dh', shape: 'circle', pitch: 5, gamma: .95, lift: .075,
+          paper: '#F1EBDF', plateAlpha: .22, edge: rgba('#C6A461', .8), edgeWidth: 3
+        });
+      }
+      logoLockup(c, M, LOGO_Y, 210, 'white');
+      caps(c, P.kicker, w - M, LOGO_Y + 46, { size: 14, fill: PRESS.accent, align: 'right', track: 4 });
+      pressHead(c, P, M, 246, w - M * 2 - 24, 104, { boxH: 300, maxLines: 3 });
+      pressSig(c, M, h - 150);
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      if (face) {
+        const d = 864, x = 474, y = h - 804;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 54, 3, rgba('#C6A461', .20), 1);
+        portraitPlate(c, face, x, y, d, d, {
+          key: P.who || 'dh', shape: 'circle', pitch: 6, gamma: .95, lift: .075,
+          paper: '#F1EBDF', plateAlpha: .22, edge: rgba('#C6A461', .8), edgeWidth: 3
+        });
+      }
+      logoLockup(c, M, 120, 250, 'white');
+      caps(c, P.kicker, M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
+      pressHead(c, P, M, 486, w - M * 2, 138, { boxH: 560, maxLines: 4 });
+      pressSig(c, M, h - 300);
+    } },
+
+  /* 2 · COLUMN — a full-height plate down the right, cropped tight to the face */
+  { id: 'column', name: 'Column',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      const px = 588;
+      if (face) {
+        portraitPlate(c, face, px, 0, w - px, h, {
+          key: P.who || 'dh', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
+          zoom: 1.02, fy: .46, paper: '#F1EBDF', plateAlpha: .22
+        });
+        foilRule(c, px - 2, 0, 4, h, '#C6A461', '#F0DFAE');
+      }
+      logoLockup(c, M, LOGO_Y, 196, 'white');
+      caps(c, P.kicker, M, LOGO_Y + 150, { size: 14, fill: PRESS.accent, track: 4 });
+      pressHead(c, P, M, 306, px - M - 40, 78, { boxH: 470, maxLines: 6 });
+      pressSig(c, M, h - 200, { size: 36 });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      const py = 1010;
+      if (face) {
+        portraitPlate(c, face, 0, py, w, h - py, {
+          key: P.who || 'dh', shape: 'rect', pitch: 6, gamma: .95, lift: .06,
+          zoom: 1.0, fy: .40, paper: '#F1EBDF', plateAlpha: .22
+        });
+        foilRule(c, 0, py - 2, w, 4, '#C6A461', '#F0DFAE');
+      }
+      logoLockup(c, M, 130, 250, 'white');
+      caps(c, P.kicker, M, 310, { size: 16, fill: PRESS.accent, track: 4.4 });
+      pressHead(c, P, M, 420, w - M * 2, 128, { boxH: 480, maxLines: 4 });
+      pressSig(c, M, py - 190);
+    } },
+
+  /* 3 · INVERSE — printed on paper: dark ink, cream stock, the plate on the left */
+  { id: 'inverse', name: 'Inverse',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGroundLight(c, w, h, S.seed);
+      const pw = 470;
+      if (face) {
+        portraitPlate(c, face, -30, 0, pw, h, {
+          key: P.who || 'dh', shape: 'rect', pitch: 5, gamma: 1.0, lift: .05,
+          zoom: 1.04, fx: .50, fy: .47, ink: '#12303F', plateAlpha: .16,
+          plate: ['#12303F', '#EFE8DA']
+        });
+        foilRule(c, pw - 32, 0, 3, h, '#9A7A3E', '#D8BE84');
+      }
+      logoLockup(c, w - M, LOGO_Y, 196, 'color', 'right');
+      caps(c, P.kicker, w - M, LOGO_Y + 150, { size: 14, fill: '#9A7A3E', align: 'right', track: 4 });
+      pressHead(c, P, w - M, 292, w - pw - M - 40, 82, {
+        boxH: 440, maxLines: 6, align: 'right', ink: '#14222B', em: '#1C5C86',
+        foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
+      });
+      pressSig(c, w - M, h - 200, {
+        align: 'right', size: 36, ink: '#14222B', body: '#4A5560', muted: '#8A9299',
+        accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
+      });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGroundLight(c, w, h, S.seed);
+      const py = 980;
+      if (face) {
+        portraitPlate(c, face, 0, py, w, h - py, {
+          key: P.who || 'dh', shape: 'rect', pitch: 6, gamma: 1.0, lift: .05,
+          zoom: 1.0, fy: .40, ink: '#12303F', plateAlpha: .16, plate: ['#12303F', '#EFE8DA']
+        });
+        foilRule(c, 0, py - 3, w, 3, '#9A7A3E', '#D8BE84');
+      }
+      logoLockup(c, M, 130, 250, 'color');
+      caps(c, P.kicker, M, 306, { size: 16, fill: '#9A7A3E', track: 4.4 });
+      pressHead(c, P, M, 420, w - M * 2, 128, {
+        boxH: 460, maxLines: 4, ink: '#14222B', em: '#1C5C86',
+        foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
+      });
+      pressSig(c, M, py - 200, {
+        ink: '#14222B', body: '#4A5560', muted: '#8A9299',
+        accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
+      });
+    } },
+
+  /* 4 · ECLIPSE — no paper at all: he is screened straight onto the ground in
+     light ink, under an arch, and emerges out of the dark */
+  { id: 'eclipse', name: 'Eclipse',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      if (face) {
+        const pw = 470, ph = 566;
+        portraitPlate(c, face, w - pw - 40, h - ph, pw, ph, {
+          key: P.who || 'dh', shape: 'arch', pitch: 5, gamma: 1.0, lift: .06,
+          zoom: 1.0, fy: .46, paper: '#EDE4D2', ink: '#14384C',
+          plateAlpha: .18, plate: ['#14384C', '#EDE4D2']
+        });
+        c.save(); c.strokeStyle = rgba('#C6A461', .55); c.lineWidth = 2;
+        plateShape(c, 'arch', w - pw - 40, h - ph, pw, ph); c.stroke(); c.restore();
+      }
+      logoLockup(c, M, LOGO_Y, 210, 'white');
+      caps(c, P.kicker, w - M, LOGO_Y + 46, { size: 14, fill: PRESS.accent, align: 'right', track: 4 });
+      pressHead(c, P, M, 250, w - M * 2 - 24, 88, { boxH: 300, maxLines: 3 });
+      pressSig(c, M, h - 210, { size: 38 });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
+      pressGround(c, w, h, S.seed);
+      if (face) {
+        const pw = 700, ph = 840;
+        portraitPlate(c, face, (w - pw) / 2, h - ph - 260, pw, ph, {
+          key: P.who || 'dh', shape: 'arch', pitch: 6, gamma: 1.0, lift: .06,
+          zoom: 1.0, fy: .46, paper: '#EDE4D2', ink: '#14384C',
+          plateAlpha: .18, plate: ['#14384C', '#EDE4D2']
+        });
+        c.save(); c.strokeStyle = rgba('#C6A461', .5); c.lineWidth = 2;
+        plateShape(c, 'arch', (w - pw) / 2, h - ph - 260, pw, ph); c.stroke(); c.restore();
+      }
+      logoLockup(c, M, 120, 250, 'white');
+      caps(c, P.kicker, M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
+      pressHead(c, P, M, 430, w - M * 2, 122, { boxH: 380, maxLines: 3 });
+      pressSig(c, M, h - 200);
+    } }
+];
+
+function posterCut(weekN) { return POSTER_CUTS[Math.abs(weekN) % POSTER_CUTS.length]; }
+function posterFrame(c, P, S) { posterCut(P.cutIndex == null ? 0 : P.cutIndex).feed(c, P, S); }
+function posterStory(c, P, S) { posterCut(P.cutIndex == null ? 0 : P.cutIndex).story(c, P, S); }
 
 /* ── the words ────────────────────────────────────────────────────────────
    Poster copy, not caption copy: three or four lines, short enough to set
@@ -4016,7 +4328,12 @@ WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
     poster: true, who: 'dh',
+    /* the cut turns independently of the statement — twelve weeks before a
+       statement meets the same portrait treatment twice */
+    cutIndex: WEEK_N,
+    cutName: posterCut(WEEK_N).name,
     title: stripRich(P.line),
+    adName: 'Press · ' + posterCut(WEEK_N).name,
     stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
   });
 })();
@@ -4035,7 +4352,7 @@ WEEK.stories = (function () {
   const pp = WEEK.poster;
   out.push({
     id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
-    adName: 'Press', cap: pp.cap, tags: pp.tags, stats: pp.stats,
+    adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
     draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
   });
 
@@ -4226,7 +4543,7 @@ const TABS = {
     items: () => WEEK.content.concat([WEEK.poster]),
     build: (P, i) => P.poster
       ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
-        'POSTER · THE HOUSE · ' + P.kicker.toUpperCase())
+        'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
       : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
   },
   stories: {

@@ -159,16 +159,77 @@ function listingAsk(c, ad, L, S) {
    Same six worlds, re-composed for the taller frame. A story is one idea,
    so these are deliberately sparser than the feed slides.
    ══════════════════════════════════════════════════════════════════════════ */
+/* the imagery each world brings to a vertical frame — without it a story is
+   just centred type on a coloured field, which is exactly the thing this set
+   is trying not to be */
+function storyArt(c, ad, S) {
+  const w = S.w, h = S.h;
+  switch (ad.id) {
+    case 'atelier':
+      guilloche(c, w * 1.02, h * .88, w * .62, {
+        rings: 7, petals: 13, inner: .66, arm: .27, color: rgba('#1C5C86', .22), weight: 1
+      });
+      guilloche(c, w * -.06, h * .16, w * .40, {
+        rings: 5, petals: 9, inner: .6, arm: .3, color: rgba('#B08447', .18), weight: 1
+      });
+      break;
+    case 'midnight':
+      contourField(c, 0, h * .42, w, h * .46, S.seed, {
+        lines: 30, color: t => rgba('#79BDEA', .04 + t * .08), amp: .26
+      });
+      break;
+    case 'blueprint':
+      /* no scrim here: an opaque rectangle over a grid leaves a visible edge
+         where it starts. The massing is placed low enough instead. */
+      isoMassing(c, w * .5, h * .82, 88, 5, 5, S.seed, {
+        top: 'rgba(89,198,242,.24)', left: 'rgba(20,66,96,.58)', right: 'rgba(12,42,62,.64)',
+        edge: 'rgba(140,205,240,.18)', alpha: .9
+      });
+      cropMarks(c, w, h, 26, 22, rgba('#59C6F2', .4), 1);
+      break;
+    case 'signal':
+      c.fillStyle = ad.accent; c.fillRect(w * .60, 0, w * .40, h * .155);
+      halftone(c, w * .60, h * .155, w * .40, h * .12, {
+        color: ad.accent, pitch: 15, maxR: 6, alpha: .55,
+        density: (u, v) => Math.pow(1 - v, 1.35)
+      });
+      halftone(c, 0, h * .66, w, h * .18, {
+        color: ad.accent, pitch: 18, maxR: 7, alpha: .22,
+        density: (u, v) => clamp(v * 1.2, 0, 1)
+      });
+      break;
+    case 'dossier':
+      guilloche(c, w * .84, h * .74, w * .46, {
+        rings: 7, petals: 7, inner: .6, arm: .3, color: rgba('#A6432B', .22), weight: 1
+      });
+      punchHoles(c, ad, h);
+      fileTab(c, w - 320, 6, 180, 46, 'FILE', rgba('#A6432B', .82), '#F2ECE1');
+      break;
+    case 'nocturne':
+      strata(c, 0, h * .34, w, h * .60, S.seed, { color: '#C6A461', alpha: .12, bands: 9 });
+      c.save(); c.strokeStyle = rgba('#C6A461', .14); c.lineWidth = 1;
+      for (let i = 0; i < 20; i++) {
+        c.beginPath(); c.arc(w * 1.04, h * .22, w * (.34 + i * .05), Math.PI * .55, Math.PI * 1.45); c.stroke();
+      }
+      c.restore();
+      break;
+  }
+}
+
 function storyStage(c, ad, S, label) {
   ad.ground(c, S.w, S.h, S.seed);
+  storyArt(c, ad, S);
   const M = S.M;
-  const top = logoLockup(c, S.w / 2, 128, 300, ad.logo === 'white' ? 'white' : 'color', 'center');
+  const flush = ad.id === 'signal';
+  const top = flush
+    ? logoLockup(c, M, 128, 260, 'color')
+    : logoLockup(c, S.w / 2, 128, 300, ad.logo === 'white' ? 'white' : 'color', 'center');
   let y = top + 46;
   if (label) {
-    if (ad.id === 'signal') {
+    if (flush) {
       const tw = measure(c, label.toUpperCase(), FN(700, 19), 5) + 60;
-      c.fillStyle = ad.accent; c.fillRect(S.w / 2 - tw / 2, y - 24, tw, 50);
-      caps(c, label, S.w / 2, y + 1, { size: 19, weight: 700, fill: '#fff', align: 'center', track: 5 });
+      c.fillStyle = ad.accent; c.fillRect(M, y - 24, tw, 50);
+      caps(c, label, M + tw / 2, y + 1, { size: 19, weight: 700, fill: '#fff', align: 'center', track: 5 });
     } else if (ad.id === 'atelier' || ad.id === 'dossier') {
       caps(c, label, S.w / 2, y, { size: 18, fill: ad.accent, align: 'center', track: 5 });
       const tw = measure(c, label.toUpperCase(), FN(600, 18), 5);
@@ -186,6 +247,50 @@ function storyStage(c, ad, S, label) {
 }
 function storyFoot(c, ad, S, rows, cta) {
   const M = S.M, n = (rows || []).length;
+
+  /* Signal closes on the number, flush left, on a flat band — no pill, no
+     centred contact line. The worlds should not share a foot any more than
+     they share a headline. */
+  if (ad.id === 'signal') {
+    const bandY = S.h - 300;
+    c.fillStyle = ad.ink; c.fillRect(0, bandY, S.w, 300);
+    c.fillStyle = ad.accent; c.fillRect(0, bandY, S.w, 6);
+    caps(c, 'call or text', M, bandY + 54, { size: 16, fill: 'rgba(255,255,255,.55)', track: 3.6 });
+    let sz = 96;
+    while (measure(c, HOUSE.phone, FN(700, sz), -3) > S.w - M * 2 && sz > 40) sz -= 2;
+    text(c, HOUSE.phone, M, bandY + 130, { font: FN(700, sz), fill: '#fff', base: 'middle', track: -3 });
+    caps(c, HOUSE.agent + ' · ' + HOUSE.role, M, bandY + 200, {
+      size: 15, fill: 'rgba(255,255,255,.72)', track: 3
+    });
+    caps(c, HOUSE.site + '  ·  ' + HOUSE.dre, M, bandY + 240, {
+      size: 12, fill: 'rgba(255,255,255,.45)', track: 2.6
+    });
+    (rows || []).slice(0, 2).forEach((r, i) => {
+      const x = M + (S.w - M * 2) * .55 * i;
+      text(c, r[0], x, bandY - 60, { font: FN(700, 40), fill: ad.ink, base: 'middle', track: -1 });
+      caps(c, r[1], x, bandY - 24, { size: 12, fill: ad.muted, track: 2.4 });
+    });
+    return;
+  }
+
+  /* Atelier and Dossier close on a ruled plate, the way a printed page would */
+  if (ad.id === 'atelier' || ad.id === 'dossier') {
+    const top = S.h - 330;
+    rule(c, M, top, S.w - M * 2, ad.rule, 1.5);
+    rule(c, M, top + 5, S.w - M * 2, ad.ruleSoft, 1);
+    let y = top + 56;
+    (rows || []).slice(0, 2).forEach(r => {
+      caps(c, r[1], M, y, { size: 16, fill: ad.muted, track: 3.2 });
+      text(c, r[0], S.w - M, y, { font: FS(600, 40), fill: ad.ink, align: 'right', base: 'middle' });
+      y += 62;
+      rule(c, M, y - 26, S.w - M * 2, ad.ruleSoft, 1);
+    });
+    if (cta) ctaMark(c, ad, cta, S.w / 2, S.h - 176, { size: 27, h: 82, pad: 48 });
+    caps(c, HOUSE.agent + '   ·   ' + HOUSE.phone + '   ·   ' + HOUSE.site, S.w / 2, S.h - 62,
+      { size: 15, fill: ad.muted, align: 'center', track: 3.2 });
+    return;
+  }
+
   const ctaTop = S.h - 212;
   const rowsBottom = cta ? ctaTop - 34 : S.h - 118;
   let y = rowsBottom - n * 96;

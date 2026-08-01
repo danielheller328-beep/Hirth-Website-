@@ -120,7 +120,12 @@ WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
     poster: true, who: 'dh',
+    /* the cut turns independently of the statement — twelve weeks before a
+       statement meets the same portrait treatment twice */
+    cutIndex: WEEK_N,
+    cutName: posterCut(WEEK_N).name,
     title: stripRich(P.line),
+    adName: 'Press · ' + posterCut(WEEK_N).name,
     stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
   });
 })();
@@ -139,7 +144,7 @@ WEEK.stories = (function () {
   const pp = WEEK.poster;
   out.push({
     id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
-    adName: 'Press', cap: pp.cap, tags: pp.tags, stats: pp.stats,
+    adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
     draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
   });
 
@@ -330,7 +335,7 @@ const TABS = {
     items: () => WEEK.content.concat([WEEK.poster]),
     build: (P, i) => P.poster
       ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
-        'POSTER · THE HOUSE · ' + P.kicker.toUpperCase())
+        'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
       : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
   },
   stories: {

@@ -181,32 +181,58 @@ const L_atelier = {
   },
 
   ask(c, ad, P, S) {
+    /* An engraved calling card, struck on the sheet. The whole close is one
+       object rather than a row of faces and a button. */
     const cx = S.w / 2;
     const B = stage(c, ad, S, {
       label: 'Contact',
-      art: () => engravedRings(c, cx, S.h * .52, 300, 470, 9, rgba('#1C5C86', .06), 1)
+      art: () => guilloche(c, cx, S.h * .52, S.w * .44, {
+        rings: 8, petals: 11, inner: .7, arm: .22,
+        color: rgba('#1C5C86', .14), weight: 1
+      })
     });
-    let y = B.y + 22;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 16, fill: ad.accent, align: 'center', track: 4.4 });
-    y += 40;
-    const head = fitBlock(c, P.cta, { w: B.w * .86, h: 190 }, {
-      weight: 600, family: SERIF, style: 'italic', max: 66, min: 38, leading: 1.14, maxLines: 3
+    const cardW = B.w * .86, cardH = B.h * .82;
+    const cardX = cx - cardW / 2, cardY = B.y + (B.h - cardH) / 2;
+    c.save();
+    c.shadowColor = 'rgba(60,50,32,.20)'; c.shadowBlur = 40; c.shadowOffsetY = 14;
+    c.fillStyle = '#FAF6EE'; c.fillRect(cardX, cardY, cardW, cardH);
+    c.restore();
+    c.save();
+    c.strokeStyle = rgba('#1C5C86', .5); c.lineWidth = 1;
+    c.strokeRect(hair(cardX + 14), hair(cardY + 14), cardW - 28, cardH - 28);
+    c.strokeStyle = ad.rule; c.lineWidth = 1;
+    c.strokeRect(hair(cardX + 20), hair(cardY + 20), cardW - 40, cardH - 40);
+    c.restore();
+    /* corner fleurons */
+    [[cardX + 20, cardY + 20], [cardX + cardW - 20, cardY + 20],
+     [cardX + 20, cardY + cardH - 20], [cardX + cardW - 20, cardY + cardH - 20]]
+      .forEach(pt => diamond(c, pt[0], pt[1], 4, ad.accent2));
+
+    const head = fitRich(c, P.cta, { w: cardW - 130, h: 190 }, {
+      roman: s => FS(600, s, 'italic'), italic: s => FS(600, s),
+      max: 54, min: 30, leading: 1.16, maxLines: 3
     });
-    y = drawBlock(c, head, cx, y, { fill: ad.ink, align: 'center' });
-    y += 30;
-    diamond(c, cx, y, 4, ad.accent2);
-    y += 40;
-    const cw = B.w / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + cw * i + cw / 2, face = IMG[t.key];
-      if (face) circleImg(c, face, px, y + 62, 58, ad.rule, 1.5);
-      else { c.fillStyle = ad.panel; c.beginPath(); c.arc(px, y + 62, 58, 0, 7); c.fill(); }
-      text(c, t.name, px, y + 158, { font: FS(600, 28), fill: ad.ink, align: 'center', base: 'middle' });
-      caps(c, t.role, px, y + 188, { size: 12, fill: ad.accent, align: 'center', track: 2.6 });
-      text(c, t.phone, px, y + 218, { font: FN(400, 19), fill: ad.muted, align: 'center', base: 'middle' });
+    const groupH = 42 + head.height + 34 + 44 + 128 + 74 + 34;
+    let y = cardY + Math.max(54, (cardH - groupH) / 2);
+    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, {
+      size: 14, fill: ad.muted, align: 'center', track: 4.2
     });
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, cx, B.bottom - 96, { size: 26 });
-  }
+    y += 42;
+    y = drawRich(c, head, cx, y, { fill: ad.ink, emFill: ad.accent, align: 'center' });
+    y += 34;
+    rule(c, cx - 44, y, 88, ad.accent, 2);
+    y += 44;
+    const face = IMG.dh;
+    if (face) circleImg(c, face, cx, y + 52, 50, ad.rule, 1.5);
+    y += 128;
+    text(c, HOUSE.agent, cx, y, { font: FS(600, 40), fill: ad.ink, align: 'center', base: 'middle' });
+    caps(c, HOUSE.role, cx, y + 34, { size: 12, fill: ad.accent, align: 'center', track: 3 });
+    y += 74;
+    text(c, HOUSE.phone, cx, y, { font: FN(600, 30), fill: ad.ink, align: 'center', base: 'middle' });
+    caps(c, HOUSE.site + '   ·   ' + HOUSE.dre, cx, y + 34, {
+      size: 11, fill: ad.muted, align: 'center', track: 2.8
+    });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -333,38 +359,38 @@ const L_midnight = {
   },
 
   ask(c, ad, P, S) {
-    const B = stage(c, ad, S, {
-      label: 'Contact',
-      art: () => contourField(c, 0, 0, S.w, S.h * .42, S.seed + 11, {
-        lines: 20, color: t => rgba('#79BDEA', .03 + t * .05), amp: .3
-      })
-    });
-    let y = B.y + 16;
+    /* One portrait, printed on a pale plate down the right, rather than three
+       thumbnails in a row. The person you are calling, not the org chart. */
+    const B = stage(c, ad, S, { label: 'Contact' });
+    const px = S.w * .58, face = IMG.dh;
+    if (face) {
+      portraitPlate(c, face, px, 0, S.w - px, S.h, {
+        key: 'dh-mid', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
+        zoom: 1.02, fy: .46, paper: '#DDE6ED', ink: '#0B1620',
+        plateAlpha: .18, plate: ['#0B1620', '#DDE6ED']
+      });
+      c.fillStyle = ad.accent; c.fillRect(px - 3, 0, 3, S.h);
+      const g = c.createLinearGradient(px, 0, px + 90, 0);
+      g.addColorStop(0, 'rgba(5,9,13,.55)'); g.addColorStop(1, 'rgba(5,9,13,0)');
+      c.fillStyle = g; c.fillRect(px, 0, 90, S.h);
+    }
+    let y = B.y + 26;
     kicker(c, ad, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8);
-    y += 54;
-    const head = fitRich(c, P.cta, { w: B.w * .88, h: 210 }, {
+    y += 58;
+    const head = fitRich(c, P.cta, { w: px - B.x - 54, h: 300 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-      max: 74, min: 40, leading: 1.1, maxLines: 3
+      max: 66, min: 34, leading: 1.08, maxLines: 5
     });
     y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
-    y += 58;
-    const gap = 22, sq = (B.w - gap * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + (sq + gap) * i, face = IMG[t.key];
-      c.save(); c.beginPath(); c.rect(px, y, sq, sq); c.clip();
-      if (face) coverImg(c, face, px, y, sq, sq, .34);
-      else { c.fillStyle = ad.panel; c.fillRect(px, y, sq, sq); }
-      const g = c.createLinearGradient(0, y + sq * .45, 0, y + sq);
-      g.addColorStop(0, 'rgba(5,9,13,0)'); g.addColorStop(1, 'rgba(5,9,13,.85)');
-      c.fillStyle = g; c.fillRect(px, y, sq, sq);
-      c.restore();
-      c.save(); c.strokeStyle = ad.ruleSoft; c.lineWidth = 1; c.strokeRect(hair(px), hair(y), sq, sq); c.restore();
-      text(c, t.name.split(' ')[0], px + 16, y + sq - 44, { font: FS(600, 26), fill: '#fff', base: 'middle' });
-      caps(c, t.role, px + 16, y + sq - 18, { size: 11, fill: ad.accent, track: 2.2 });
-    });
-    y += sq + 44;
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, S.w / 2, Math.min(y, B.bottom - 88), { size: 26 });
-  }
+    y += 56;
+    rule(c, B.x, y, px - B.x - 54, ad.rule, 1);
+    y += 46;
+    text(c, HOUSE.agent, B.x, y, { font: FS(600, 44), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.role, B.x, y + 38, { size: 13, fill: ad.accent, track: 3.2 });
+    y += 86;
+    text(c, HOUSE.phone, B.x, y, { font: FN(600, 40), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.site + '  ·  ' + HOUSE.dre, B.x, y + 38, { size: 12, fill: ad.muted, track: 2.8 });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -651,31 +677,45 @@ const L_signal = {
   },
 
   ask(c, ad, P, S) {
+    /* No portraits here. In this world the close is the number, set as large
+       as the sheet allows, on a flat field. */
     const B = stage(c, ad, S, { label: 'Contact' });
-    let y = B.y + 12;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8, { size: 15, fill: ad.accent, track: 3.6 });
-    y += 50;
-    const head = fitRich(c, P.cta, { w: B.w * .94, h: 210 }, {
+    const colW = B.w / 12;
+    c.fillStyle = ad.accent;
+    c.fillRect(B.x + colW * 8, 0, colW * 4 + S.M, B.y - 22);
+    halftone(c, B.x + colW * 8, B.y - 22, colW * 4 + S.M, 150, {
+      color: ad.accent, pitch: 15, maxR: 6, alpha: .55,
+      density: (u, v) => Math.pow(1 - v, 1.35)
+    });
+    let y = B.y + 18;
+    caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y, { size: 15, fill: ad.accent, track: 3.6 });
+    y += 46;
+    const head = fitRich(c, P.cta, { w: colW * 9, h: 190 }, {
       roman: s => FN(700, s), italic: s => FN(500, s, 'italic'),
-      max: 72, min: 38, leading: 1.04, maxLines: 3, track: -1.4
+      max: 60, min: 32, leading: 1.06, maxLines: 3, track: -1.2
     });
-    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
-    y += 40;
-    rule(c, B.x, y, B.w, ad.ink, 3); y += 40;
-    const gap = 20, sq = (B.w - gap * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = B.x + (sq + gap) * i, face = IMG[t.key];
-      if (face) { c.save(); c.beginPath(); c.rect(px, y, sq, sq * .92); c.clip(); coverImg(c, face, px, y, sq, sq * .92, .3); c.restore(); }
-      else { c.fillStyle = ad.panel; c.fillRect(px, y, sq, sq * .92); }
-      text(c, t.name, px, y + sq * .92 + 34, { font: FN(700, 23), fill: ad.ink, base: 'middle' });
-      caps(c, t.role, px, y + sq * .92 + 62, { size: 11, fill: ad.muted, track: 2.2 });
+    drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
+    /* the lower half hangs off the foot of the field, not off the headline */
+    let sz = 150;
+    while (measure(c, HOUSE.phone, FN(700, sz), -5) > B.w && sz > 60) sz -= 4;
+    const cellY = B.bottom - 52;
+    const numY = cellY - 46 - sz * .52;
+    rule(c, B.x, cellY - 34, B.w, ad.rule, 1);
+    text(c, HOUSE.phone, B.x, numY, {
+      font: FN(700, sz), fill: ad.ink, base: 'middle', track: -5
     });
-    y += sq * .92 + 96;
-    const bh = 84, by = Math.min(y, B.bottom - bh);
-    c.fillStyle = ad.accent; c.fillRect(B.x, by, B.w, bh);
-    text(c, 'Call or text ' + HOUSE.phone, B.x + 30, by + bh / 2, { font: FN(700, 28), fill: '#fff', base: 'middle' });
-    icon(c, 'arrow', B.x + B.w - 44, by + bh / 2, 26, '#fff', 2);
-  }
+    caps(c, 'call or text', B.x, numY - sz * .56, { size: 14, fill: ad.muted, track: 3.4 });
+    rule(c, B.x, numY - sz * .56 - 40, B.w, ad.ink, 3);
+    y = cellY;
+    const cells = [[HOUSE.agent, HOUSE.role], [HOUSE.site, 'Web'], [HOUSE.dre.replace('CA DRE ', ''), 'Licence']];
+    const cw = B.w / 3;
+    cells.forEach((cell, i) => {
+      const x = B.x + cw * i;
+      if (i) vrule(c, x - 20, y - 10, 60, ad.ruleSoft, 1);
+      text(c, cell[0], x, y + 12, { font: FN(700, 22), fill: ad.ink, base: 'middle' });
+      caps(c, cell[1], x, y + 42, { size: 11, fill: ad.muted, track: 2.4 });
+    });
+  },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -981,34 +1021,44 @@ const L_nocturne = {
   },
 
   ask(c, ad, P, S) {
-    ad.ground(c, S.w, S.h, S.seed);
+    /* Photography closes this world, the same way it opens it — not a row of
+       circular headshots on a flat ground. */
+    nocturneField(c, ad, S, P.photo || 'olive');
     const M = S.M, cx = S.w / 2;
-    guilloche(c, cx, S.h * .44, S.w * .46, {
-      rings: 7, petals: 13, inner: .68, arm: .24, color: rgba('#C6A461', .10), weight: 1
-    });
-    let y = logoLockup(c, cx, M - 4, 236, 'white', 'center') + 34;
-    caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 15, fill: ad.accent, align: 'center', track: 4.2 });
-    y += 44;
-    const head = fitRich(c, P.cta, { w: (S.w - M * 2) * .9, h: 210 }, {
+    c.save();
+    c.fillStyle = 'rgba(4,16,24,.42)'; c.fillRect(0, 0, S.w, S.h);
+    c.restore();
+    logoLockup(c, M, LOGO_Y, 204, 'white');
+    caps(c, 'Contact', S.w - M, LOGO_Y + 40, { size: 14, fill: ad.accent, align: 'right', track: 4 });
+
+    const bottom = S.h - 152;
+    const head = fitRich(c, P.cta, { w: S.w - M * 2, h: 320 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
-      max: 74, min: 40, leading: 1.1, maxLines: 3
+      max: 88, min: 42, leading: 1.04, maxLines: 4
     });
-    y = drawRich(c, head, cx, y, { fill: ad.ink, emFill: '#E4C98A', align: 'center' });
-    y += 34;
-    foilRule(c, cx - 46, y, 92, 2, '#C6A461', '#F0DFAE');
-    y += 46;
-    const cw = (S.w - M * 2) / 3;
-    TEAM.forEach((t, i) => {
-      const px = M + cw * i + cw / 2, face = IMG[t.key];
-      if (face) circleImg(c, face, px, y + 62, 60, rgba('#C6A461', .7), 2);
-      text(c, t.name, px, y + 162, { font: FS(600, 27), fill: ad.ink, align: 'center', base: 'middle' });
-      caps(c, t.role, px, y + 192, { size: 11, fill: ad.accent, align: 'center', track: 2.4 });
-      text(c, t.phone, px, y + 220, { font: FN(400, 19), fill: ad.muted, align: 'center', base: 'middle' });
+    let y = bottom - 250 - head.height;
+    caps(c, P.ctaKicker || 'Thinking about a deal?', M, y - 40, { size: 15, fill: ad.accent, track: 4.2 });
+    y = drawRich(c, head, M, y, {
+      fill: ad.ink, emFill: '#E4C98A', shadow: ['rgba(0,0,0,.6)', 26, 8]
     });
-    y += 262;
-    ctaMark(c, ad, 'Call or text ' + HOUSE.phone, cx, Math.min(y, S.h - 152 - 92), { size: 26 });
-    ad.footer(c, S.w, S.h, { M });
-  }
+    y += 40;
+    foilRule(c, M, y, 132, 3, '#C6A461', '#F0DFAE');
+    y += 44;
+    const face = IMG.dh;
+    if (face) circleImg(c, face, M + 46, y + 40, 46, rgba('#C6A461', .75), 2);
+    text(c, HOUSE.agent, M + 116, y + 26, { font: FS(600, 34), fill: ad.ink, base: 'middle' });
+    caps(c, HOUSE.role, M + 116, y + 58, { size: 12, fill: ad.accent, track: 2.8 });
+    text(c, HOUSE.phone, S.w - M, y + 30, {
+      font: FN(600, 42), fill: ad.ink, align: 'right', base: 'middle',
+      shadow: ['rgba(0,0,0,.5)', 18, 4]
+    });
+    caps(c, HOUSE.site, S.w - M, y + 64, { size: 13, fill: ad.accent, align: 'right', track: 3 });
+    /* no house footer on this one — the block above already carries the number,
+       and printing it twice on one frame reads as an oversight */
+    rule(c, M, S.h - 92, S.w - M * 2, rgba('#C6A461', .3), 1);
+    caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm + '  ·  ' + HOUSE.market, M, S.h - 58,
+      { size: 11, fill: ad.muted, track: 2.6 });
+  },
 };
 
 const LAYOUT = {
