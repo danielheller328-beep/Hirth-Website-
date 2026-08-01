@@ -285,32 +285,3 @@ function sheetCoords(c, x, y, w, h, col) {
     caps(c, String(i + 1), x - 16, y + (h / n) * (i + .5), { size: 11, fill: col, align: 'center', track: 1.6 });
   }
 }
-
-/* ── foil type ────────────────────────────────────────────────────────────
-   A number set in flat gold is a number in a yellow-brown colour. Stamped
-   foil catches the light across its width, so the fill is a gradient with a
-   bright band running through it and the edges dropping back.
-   ─────────────────────────────────────────────────────────────────────── */
-function foilFill(c, x, w, base, hi) {
-  const g = c.createLinearGradient(x, 0, x + w, 0);
-  g.addColorStop(0, base);
-  g.addColorStop(0.22, hi);
-  g.addColorStop(0.40, base);
-  g.addColorStop(0.58, hi);
-  g.addColorStop(0.78, base);
-  g.addColorStop(1, hi);
-  return g;
-}
-function foilText(c, str, x, y, o) {
-  o = o || {};
-  const f = o.font, tr = o.track || 0;
-  const w = measure(c, str, f, tr);
-  let dx = 0;
-  if (o.align === 'center') dx = -w / 2;
-  else if (o.align === 'right') dx = -w;
-  text(c, str, x, y, Object.assign({}, o, {
-    align: 'left',
-    fill: foilFill(c, x + dx, w, o.foilBase || '#B08D4A', o.foilHi || '#F6E7BC')
-  }));
-  return w;
-}

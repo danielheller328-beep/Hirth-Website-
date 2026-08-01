@@ -42,10 +42,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
    from the week number plus the slot, so a post that does come round again
    comes round in a different world.
    ─────────────────────────────────────────────────────────────────────── */
-/* Three, not five. Twenty pieces of abstract advice a week is itself the tell
-   — no working broker produces that much and none of it is about a building.
-   The real inventory leads instead. */
-const WEEK_CONTENT_N = 1;
+const WEEK_CONTENT_N = 5;
 function pickContent() {
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
@@ -54,13 +51,8 @@ function pickContent() {
   }
   return out;
 }
-/* The listings are the only genuinely specific material in the whole system —
-   a real address, a real price, a real photograph, a deal that actually
-   happened. They lead the week now instead of sitting in a tab. */
-function pickListings() {
-  return LISTINGS.map((L, i) =>
-    Object.assign({}, L, { ad: AD[AD_ORDER[(WEEK_N * 5 + i + 3) % AD_ORDER.length]] }));
-}
+/* Listings are kept in the bank but are not surfaced as their own section.
+   To bring them back, add a `listings` entry to TABS below. */
 function pickLinkedIn() {
   const out = [];
   for (let i = 0; i < 7; i++) {
@@ -106,12 +98,6 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
-/* One frame per post. Three posts that each have to stand on their own beats
-   twenty frames of filler, and it is the only way every frame gets composed
-   rather than filled. */
-function featureSlides(L) {
-  return [paint(c => (L.closed ? featureClosing : featureListing)(c, L, frameMeta(L, 0, 1, FW, FH)), FW, FH)];
-}
 function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
   return [
@@ -124,35 +110,35 @@ function contentSlides(P) {
   ];
 }
 
-/* ── the week: three posts, four stories ──────────────────────────────── */
+/* ── the week, assembled ──────────────────────────────────────────────── */
 const WEEK = {
-  listings: pickListings(),
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-
+/* the poster — the house piece, one statement a week */
 WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
     poster: true, who: 'dh',
-    cutIndex: WEEK_N, cutName: posterCut(WEEK_N).name,
+    /* the cut turns independently of the statement — twelve weeks before a
+       statement meets the same portrait treatment twice */
+    cutIndex: WEEK_N,
+    cutName: posterCut(WEEK_N).name,
     title: stripRich(P.line),
     adName: 'Press · ' + posterCut(WEEK_N).name,
     stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
   });
 })();
 
-/* three posts: the live listing, the closing, the house poster */
-WEEK.posts = WEEK.listings.concat([WEEK.poster]);
-
-/* four stories: the same three, plus the team */
+/* the stories — their own section again: one for every post in the week,
+   plus the poster, the team and the review */
 WEEK.stories = (function () {
-  const out = WEEK.listings.map(L => ({
-    id: 'st-' + L.id, title: L.title, story: true,
-    adName: L.closed ? 'Certificate' : 'Full bleed',
-    kind: L.closed ? 'Just Closed' : 'Just Listed',
-    cap: L.cap, tags: L.tags, stats: L.stats,
-    draw: c => (L.closed ? featureClosingStory : featureListingStory)(c, L, frameMeta(L, 8, 1, SW, SH))
+  const out = WEEK.content.map((P, i) => ({
+    id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
+    kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
+    draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+      : i % 2 ? storyFigure(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
+        : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
   }));
 
   const pp = WEEK.poster;
@@ -172,7 +158,7 @@ WEEK.stories = (function () {
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
-    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #HirthGroup #KWCommercial #SoldByHirth'
+    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
   });
   return out;
 })();
@@ -345,16 +331,15 @@ function liCard(i, P) {
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
   posts: {
-    name: 'Posts', head: 'Three · 1080 × 1080',
-    items: () => WEEK.posts,
+    name: 'Posts', head: 'Five carousels and the poster · 1080 × 1080',
+    items: () => WEEK.content.concat([WEEK.poster]),
     build: (P, i) => P.poster
       ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
-        'POSTER · ' + P.cutName.toUpperCase() + ' CUT')
-      : postCard(i, P, featureSlides(P),
-        (P.closed ? 'JUST CLOSED' : 'JUST LISTED') + ' · ' + P.cityline.toUpperCase())
+        'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
+      : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
   },
   stories: {
-    name: 'Stories', head: 'Four · 1080 × 1920',
+    name: 'Stories', head: 'Vertical · 1080 × 1920',
     items: () => WEEK.stories,
     build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · ' + String(P.kind).toUpperCase())
   },

@@ -29,7 +29,7 @@ const PRESS = {
    file itself: drop a 1500px headshot into assets/dh.png and every plate in
    every cut gets correspondingly bigger on its own, with no other change.
    ─────────────────────────────────────────────────────────────────────── */
-const MAX_UPSCALE = 2.2;
+const MAX_UPSCALE = 1.95;
 
 function plateSize(img, want) {
   if (!img) return want;
@@ -47,7 +47,60 @@ function plateShape(c, shape, x, y, w, h) {
   } else c.rect(x, y, w, h);
 }
 
-/* o.shape 'circle'|'rect'|'arch' · o.zoom · o.fx/fy focus point */
+/* ── clarity ──────────────────────────────────────────────────────────────
+   A 240px headshot drawn at 460px is a 1.9x enlargement, and bicubic
+   enlargement is soft by construction — it invents the in-between pixels by
+   averaging, which is exactly what "blurry" means.
+
+   An unsharp mask puts the edge contrast back: blur a copy, subtract it from
+   the original to isolate the edges, then add those edges back at strength.
+   It is the last step in every print workflow and the reason a scanned
+   photograph looks sharp on the page. Applied once, cached, so it costs
+   nothing after the first frame.
+   ─────────────────────────────────────────────────────────────────────── */
+const _faceCache = {};
+function sharpFace(img, key, w, h, zoom, fx, fy) {
+  const ck = [key, Math.round(w), Math.round(h), zoom, fx, fy].join('|');
+  if (_faceCache[ck]) return _faceCache[ck];
+  const W = Math.ceil(w), H = Math.ceil(h);
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const c = cv.getContext('2d');
+  c.imageSmoothingEnabled = true;
+  c.imageSmoothingQuality = 'high';
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const scale = Math.max(W / iw, H / ih) * (zoom || 1);
+  const dw = iw * scale, dh = ih * scale;
+  c.drawImage(img, W / 2 - dw * fx, H / 2 - dh * fy, dw, dh);
+
+  const im = c.getImageData(0, 0, W, H), d = im.data;
+  const src = new Uint8ClampedArray(d);
+  const amount = 0.85, radius = 1;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = (y * W + x) * 4;
+      if (src[i + 3] < 8) continue;
+      for (let k = 0; k < 3; k++) {
+        /* 3x3 box blur of the neighbourhood */
+        let sum = 0, n = 0;
+        for (let dy = -radius; dy <= radius; dy++) {
+          const yy = y + dy; if (yy < 0 || yy >= H) continue;
+          for (let dx = -radius; dx <= radius; dx++) {
+            const xx = x + dx; if (xx < 0 || xx >= W) continue;
+            sum += src[(yy * W + xx) * 4 + k]; n++;
+          }
+        }
+        const blur = sum / n;
+        d[i + k] = clamp(src[i + k] + (src[i + k] - blur) * amount, 0, 255);
+      }
+    }
+  }
+  c.putImageData(im, 0, 0);
+  _faceCache[ck] = cv;
+  return cv;
+}
+
+/* o.shape 'circle'|'rect'|'arch' · o.zoom · o.fx/fy focus point · o.key */
 function portraitPhoto(c, img, x, y, w, h, o) {
   o = o || {};
   c.save();
@@ -66,13 +119,8 @@ function portraitPhoto(c, img, x, y, w, h, o) {
   if (o.paper) { c.fillStyle = o.paper; c.fillRect(x, y, w, h); }
 
   const zoom = o.zoom || 1;
-  const iw = img.naturalWidth, ih = img.naturalHeight;
-  const scale = Math.max(w / iw, h / ih) * zoom;
-  const dw = iw * scale, dh = ih * scale;
   const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy;
-  c.imageSmoothingEnabled = true;
-  c.imageSmoothingQuality = 'high';
-  c.drawImage(img, x + w / 2 - dw * fx, y + h / 2 - dh * fy, dw, dh);
+  c.drawImage(sharpFace(img, o.key || 'dh', w, h, zoom, fx, fy), x, y);
   c.restore();
 
   if (o.edge) {
@@ -163,7 +211,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 528), x = w - d * .72, y = h - d * .74;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 54, 3, rgba('#C6A461', .22), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
           shadow: ['rgba(0,0,0,.65)', 46, 14]
         });
       }
@@ -179,7 +227,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 528), x = w - d * .78, y = h - d - 300;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 20, d / 2 + 62, 3, rgba('#C6A461', .22), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
           shadow: ['rgba(0,0,0,.65)', 50, 16]
         });
       }
@@ -207,7 +255,7 @@ const POSTER_CUTS = [
       if (face) {
         const d = plateSize(face, 300);
         portraitPhoto(c, face, cx + (cw - d) / 2, cy + 44, d, d, {
-          shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
+          key: 'dh', shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
         });
       }
       let ty = cy + 44 + plateSize(face, 300) + 62;
@@ -240,7 +288,7 @@ const POSTER_CUTS = [
       c.restore();
       const d = plateSize(face, 320);
       if (face) portraitPhoto(c, face, cx + 56, cy + (ch - d) / 2, d, d, {
-        shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
+        key: 'dh', shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
       });
       const tx = cx + 56 + d + 48;
       text(c, HOUSE.agent, tx, cy + ch / 2 - 52, { font: FS(600, 46), fill: '#14222B', base: 'middle' });
@@ -264,7 +312,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 528), x = -d * .18, y = h - d * .92;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 52, 3, rgba('#9A7A3E', .28), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
           shadow: ['rgba(70,58,38,.30)', 42, 12]
         });
       }
@@ -286,7 +334,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 528), x = -d * .16, y = h - d - 300;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 20, d / 2 + 58, 3, rgba('#9A7A3E', .28), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
           shadow: ['rgba(70,58,38,.30)', 46, 14]
         });
       }
@@ -314,7 +362,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 384), x = w - d - 92, y = h - d - 168;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 16, d / 2 + 60, 4, rgba('#C6A461', .3), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
           shadow: ['rgba(0,0,0,.6)', 42, 12]
         });
       }
@@ -333,7 +381,7 @@ const POSTER_CUTS = [
         const d = plateSize(face, 440), x = (w - d) / 2, y = h - d - 470;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 70, 4, rgba('#C6A461', .3), 1);
         portraitPhoto(c, face, x, y, d, d, {
-          shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
+          key: 'dh', shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
           shadow: ['rgba(0,0,0,.6)', 46, 14]
         });
       }

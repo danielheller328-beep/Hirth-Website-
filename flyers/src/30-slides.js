@@ -367,7 +367,7 @@ const L_midnight = {
     const px = S.w - pw;
     if (face) {
       portraitPhoto(c, face, px, S.h - ph, pw, ph, {
-        shape: 'rect', zoom: 1.06, fy: .46, paper: '#0A1119',
+        key: 'dh', shape: 'rect', zoom: 1.06, fy: .46, paper: '#0A1119',
         shadow: ['rgba(0,0,0,.6)', 40, 12]
       });
       c.fillStyle = ad.accent; c.fillRect(px - 3, S.h - ph, 3, ph);
@@ -1022,7 +1022,7 @@ const L_nocturne = {
   ask(c, ad, P, S) {
     /* Photography closes this world, the same way it opens it — not a row of
        circular headshots on a flat ground. */
-    nocturneField(c, ad, S, P.photo || 'olive');
+    nocturneField(c, ad, S, P.photo);
     const M = S.M, cx = S.w / 2;
     c.save();
     c.fillStyle = 'rgba(4,16,24,.42)'; c.fillRect(0, 0, S.w, S.h);

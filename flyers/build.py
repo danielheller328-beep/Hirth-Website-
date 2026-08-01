@@ -31,9 +31,7 @@ ASSET_MAP = {
     "dh": "dh.png",
     "ar": "ar.png",
     "ed": "ed.png",
-    # No property photography. People yes, buildings no — the frames are
-    # engraved rather than photographic, so nothing is embedded that could
-    # end up on a post by accident.
+    # people yes, buildings no
 }
 
 FONT_FACES = [
@@ -43,7 +41,7 @@ FONT_FACES = [
 ]
 
 # concatenated in this order; the numeric prefixes are the dependency order
-SCRIPTS = ["10-lib.js", "15-graphics.js", "20-brand.js", "30-slides.js", "40-listings.js", "45-poster.js", "47-featured.js",
+SCRIPTS = ["10-lib.js", "15-graphics.js", "20-brand.js", "30-slides.js", "40-listings.js", "45-poster.js",
            "50-content.js", "60-app.js"]
 
 
