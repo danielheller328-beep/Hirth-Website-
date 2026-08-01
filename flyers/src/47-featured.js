@@ -9,97 +9,59 @@
    with.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── grading ──────────────────────────────────────────────────────────────
-   Not a filter. A contrast curve, a little saturation and a split tone —
-   what any photographer does to a raw frame before it goes to print. The
-   building still looks like the building.
-
-   `src` crops the source before anything else, which is how the Hirth
-   watermark and the dark disc baked into the corner of olive.jpg are kept
-   out of frame.
-   ─────────────────────────────────────────────────────────────────────── */
-const _gradeCache = {};
-function gradePhoto(img, key, w, h, o) {
-  o = o || {};
-  const ck = [key, w, h, o.contrast, o.sat, o.focusY, (o.src || []).join(',')].join('|');
-  if (_gradeCache[ck]) return _gradeCache[ck];
-
-  const cv = document.createElement('canvas');
-  cv.width = Math.ceil(w); cv.height = Math.ceil(h);
-  const c = cv.getContext('2d');
-  c.imageSmoothingEnabled = true;
-  c.imageSmoothingQuality = 'high';
-
-  const s = o.src || [0, 0, img.naturalWidth, img.naturalHeight];
-  const sc = Math.max(w / s[2], h / s[3]);
-  const dw = s[2] * sc, dh = s[3] * sc;
-  const fy = o.focusY == null ? .5 : o.focusY, fx = o.focusX == null ? .5 : o.focusX;
-  c.drawImage(img, s[0], s[1], s[2], s[3],
-    (w - dw) * fx, (h - dh) * fy, dw, dh);
-
-  const im = c.getImageData(0, 0, cv.width, cv.height), d = im.data;
-  const contrast = o.contrast == null ? 1.22 : o.contrast;
-  const sat = o.sat == null ? 1.14 : o.sat;
-  const shadow = hex2rgb(o.shadow || '#0B2233');     /* cool shadows  */
-  const high = hex2rgb(o.highlight || '#FFF6E4');    /* warm highlights */
-  const split = o.split == null ? .16 : o.split;
-  for (let i = 0; i < d.length; i += 4) {
-    let r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
-    /* contrast about mid grey */
-    r = clamp((r - .5) * contrast + .5, 0, 1);
-    g = clamp((g - .5) * contrast + .5, 0, 1);
-    b = clamp((b - .5) * contrast + .5, 0, 1);
-    /* saturation about luminance */
-    const l = r * .299 + g * .587 + b * .114;
-    r = clamp(l + (r - l) * sat, 0, 1);
-    g = clamp(l + (g - l) * sat, 0, 1);
-    b = clamp(l + (b - l) * sat, 0, 1);
-    /* split tone: cool into the shadows, warm into the highlights */
-    const t = l * l;
-    r = clamp(r + ((1 - t) * (shadow[0] / 255 - .5) + t * (high[0] / 255 - .5)) * split, 0, 1);
-    g = clamp(g + ((1 - t) * (shadow[1] / 255 - .5) + t * (high[1] / 255 - .5)) * split, 0, 1);
-    b = clamp(b + ((1 - t) * (shadow[2] / 255 - .5) + t * (high[2] / 255 - .5)) * split, 0, 1);
-    d[i] = r * 255; d[i + 1] = g * 255; d[i + 2] = b * 255;
-  }
-  c.putImageData(im, 0, 0);
-  _gradeCache[ck] = cv;
-  return cv;
-}
-
-/* olive.jpg carries a logo and a dark disc burned into the top of the frame;
-   everything below them is the photograph */
-const OLIVE_SRC = [0, 150, 478, 610];
-
 const GOLD = '#C6A461', GOLD_HI = '#F0DFAE', CREAM = '#F5F0E6';
+const FOIL = '#B08D4A', FOIL_HI = '#F6E7BC';
 
-/* the scrim that lets type sit on a photograph without a box behind it */
-function cineScrim(c, w, h, o) {
+/* ── the ground every announcement is struck on ───────────────────────────
+   No photography of any building, ever. A property photograph is either a
+   drone frame nobody has, a street capture with a pole through it, or a stock
+   image that cannot be licensed for a commercial post — so the frames are
+   engraved instead, the way a tombstone or a share certificate is.
+   ─────────────────────────────────────────────────────────────────────── */
+function engravedGround(c, w, h, seed, o) {
   o = o || {};
-  let g = c.createLinearGradient(0, 0, 0, h * (o.topStop || .34));
-  g.addColorStop(0, 'rgba(4,14,22,' + (o.top == null ? .74 : o.top) + ')');
-  g.addColorStop(1, 'rgba(4,14,22,0)');
-  c.fillStyle = g; c.fillRect(0, 0, w, h * (o.topStop || .34));
-  const bs = o.botStop == null ? .34 : o.botStop;
-  g = c.createLinearGradient(0, h * bs, 0, h);
-  g.addColorStop(0, 'rgba(4,14,22,0)');
-  g.addColorStop(.34, 'rgba(4,14,22,.42)');
-  g.addColorStop(.62, 'rgba(4,14,22,.80)');
-  g.addColorStop(1, 'rgba(4,14,22,' + (o.bot == null ? .96 : o.bot) + ')');
-  c.fillStyle = g; c.fillRect(0, h * bs, w, h * (1 - bs));
-  /* a wash in from the left so the flush-left type never fights the picture */
-  g = c.createLinearGradient(0, 0, w * .72, 0);
-  g.addColorStop(0, 'rgba(4,14,22,.52)');
-  g.addColorStop(1, 'rgba(4,14,22,0)');
-  c.fillStyle = g; c.fillRect(0, h * (bs - .06), w, h * (1 - bs + .06));
-  if (o.vignette !== false) vignette(c, w, h, .34);
+  const g = c.createLinearGradient(0, 0, w * .45, h);
+  g.addColorStop(0, o.a || '#143852'); g.addColorStop(.48, o.b || '#0A2032');
+  g.addColorStop(1, o.c || '#04101A');
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  bloom(c, w, h, GOLD, w * (o.bx == null ? .5 : o.bx), h * (o.by == null ? .42 : o.by), w * .9, .14);
+  bloom(c, w, h, '#3E93C4', w * .08, h * .06, w * .7, .12);
+  vignette(c, w, h, .48);
+  grain(c, w, h, .11, true);
 }
 
-/* the rail of numbers along the foot of a listing */
+/* the double engraved border a certificate carries */
+function engravedBorder(c, w, h, inset) {
+  const i = inset == null ? 40 : inset;
+  c.save();
+  c.strokeStyle = rgba(GOLD, .38); c.lineWidth = 1;
+  c.strokeRect(hair(i), hair(i), w - i * 2, h - i * 2);
+  c.strokeStyle = rgba(GOLD, .16); c.lineWidth = 1;
+  c.strokeRect(hair(i + 12), hair(i + 12), w - (i + 12) * 2, h - (i + 12) * 2);
+  c.restore();
+  [[i, i, 1, 1], [w - i, i, -1, 1], [i, h - i, 1, -1], [w - i, h - i, -1, -1]]
+    .forEach(m => {
+      line(c, m[0], m[1], m[0] + m[2] * 26, m[1], rgba(GOLD, .6), 1.5);
+      line(c, m[0], m[1], m[0], m[1] + m[3] * 26, rgba(GOLD, .6), 1.5);
+    });
+}
+
+/* a label with a foil rule either side, centred */
+function struckLabel(c, str, cx, y, o) {
+  o = o || {};
+  const size = o.size || 20, tr = o.track || 9;
+  const lw = measure(c, str.toUpperCase(), FN(700, size), tr);
+  foilRule(c, cx - lw / 2 - 62, y - 7, 46, 2, FOIL, FOIL_HI);
+  foilRule(c, cx + lw / 2 + 16, y - 7, 46, 2, FOIL, FOIL_HI);
+  caps(c, str, cx, y, { size, weight: 700, fill: GOLD, align: 'center', track: tr });
+}
+
+/* the rail of numbers along the foot */
 function dealRail(c, stats, y, w, h) {
   c.save();
-  c.fillStyle = 'rgba(3,12,19,.72)'; c.fillRect(0, y, w, h);
+  c.fillStyle = 'rgba(2,9,15,.72)'; c.fillRect(0, y, w, h);
   c.restore();
-  foilRule(c, 0, y, w, 2, GOLD, GOLD_HI);
+  foilRule(c, 0, y, w, 2, FOIL, FOIL_HI);
   const n = stats.length, cw = w / n;
   stats.forEach((s, i) => {
     const cx = cw * i + cw / 2;
@@ -112,57 +74,110 @@ function dealRail(c, stats, y, w, h) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   POST 1 · the listing — the photograph carries it
+   POST 1 · the listing — struck, asymmetric, flush left
+
+   Deliberately not the same composition as the closing. That one is centred
+   and symmetrical because a closing is a record; this one runs off a heavy
+   foil rule down the left because a listing is an offer.
    ══════════════════════════════════════════════════════════════════════════ */
 function featureListing(c, L, S) {
-  const w = S.w, h = S.h, M = 72;
-  const img = L.photo && IMG[L.photo];
-  if (img) {
-    c.drawImage(gradePhoto(img, L.photo + '-feed', w, h, {
-      src: L.photoSrc, focusY: L.photoFocus == null ? .78 : L.photoFocus,
-      contrast: 1.26, sat: 1.18
-    }), 0, 0);
-  } else {
-    AD.nocturne.ground(c, w, h, S.seed);
-  }
+  const w = S.w, h = S.h, M = 96;
+  engravedGround(c, w, h, S.seed, { bx: .78, by: .34 });
+  /* the seal sits high and right, where the field would otherwise be dead */
+  guilloche(c, w * .74, h * .34, w * .40, {
+    rings: 9, petals: 13, inner: .69, arm: .23, color: rgba(GOLD, .28), weight: 1
+  });
+  engravedRings(c, w * .74, h * .34, w * .29, w * .38, 4, rgba(GOLD, .20), 1);
+  isoMassing(c, w * .74, h * .34, 44, 4, 4, S.seed, {
+    top: 'rgba(198,164,97,.30)', left: 'rgba(20,58,84,.52)', right: 'rgba(10,34,52,.58)',
+    edge: 'rgba(198,164,97,.22)', alpha: .95
+  });
   const railH = 156, bottom = h - railH;
-  cineScrim(c, w, h, { botStop: .30, bot: .96 });
-  grain(c, w, h, .07, true);
+  let g = c.createLinearGradient(0, 0, w * .78, 0);
+  g.addColorStop(0, 'rgba(3,12,20,.82)'); g.addColorStop(1, 'rgba(3,12,20,0)');
+  c.fillStyle = g; c.fillRect(0, 0, w, bottom);
 
-  logoLockup(c, M, 56, 214, 'white');
-  const label = L.closed ? 'JUST CLOSED' : 'JUST LISTED';
-  const lw = measure(c, label, FN(700, 22), 7);
-  caps(c, label, w - M, 92, { size: 22, weight: 700, fill: GOLD, align: 'right', track: 7 });
-  foilRule(c, w - M - lw, 114, lw, 2, GOLD, GOLD_HI);
+  engravedBorder(c, w, h, 40);
+  /* the spine */
+  foilRule(c, M - 34, 200, 4, bottom - 300, FOIL, FOIL_HI);
 
-  /* the address, set as large as two lines will allow */
+  logoLockup(c, M, 84, 214, 'white');
+
+  const label = L.closed ? 'JUST CLOSED' : 'NOW AVAILABLE';
+  const lw = measure(c, label, FN(700, 20), 8);
+  caps(c, label, w - M, 138, { size: 20, weight: 700, fill: GOLD, align: 'right', track: 8 });
+  foilRule(c, w - M - lw, 160, lw, 2, FOIL, FOIL_HI);
+
   const num = (String(L.addr).match(/^[\d\s–-]+/) || [''])[0].trim();
   const street = String(L.addr).slice(num.length).trim();
-  let y = bottom - 62;
 
-  text(c, L.price, M, y, {
-    font: FS(600, 76), fill: GOLD, base: 'alphabetic', shadow: ['rgba(0,0,0,.7)', 24, 6]
-  });
-  const pw = measure(c, L.price, FS(600, 76), 0);
-  caps(c, L.closed ? 'sale price' : 'offered at', M + pw + 26, y - 12,
-    { size: 14, fill: 'rgba(245,240,230,.72)', track: 3.6 });
-  y -= 104;
+  let y = bottom - 74;
+  const pf = FS(600, 92);
+  foilText(c, L.price, M, y, { font: pf, base: 'alphabetic' });
+  const pw = measure(c, L.price, pf, 0);
+  caps(c, 'offered at', M + pw + 28, y - 16, { size: 14, fill: 'rgba(245,240,230,.6)', track: 3.8 });
+  y -= 128;
 
-  let ss = 74;
+  let ss = 78;
   while (measure(c, street, FS(600, ss), 0) > w - M * 2 && ss > 34) ss -= 2;
-  text(c, street, M, y, { font: FS(600, ss), fill: CREAM, base: 'alphabetic', shadow: ['rgba(0,0,0,.6)', 22, 6] });
-  y -= ss * 1.02;
-  let ns = 152;
-  while (measure(c, num, FS(600, ns), 0) > w - M * 2 && ns > 50) ns -= 3;
-  text(c, num, M, y, { font: FS(600, ns), fill: CREAM, base: 'alphabetic', shadow: ['rgba(0,0,0,.6)', 30, 8] });
-  y -= ns * .82;
-  foilRule(c, M, y, 150, 3, GOLD, GOLD_HI);
-  y -= 28;
-  caps(c, L.cityline + '   ·   ' + L.useShort, M, y, {
-    size: 15, fill: 'rgba(245,240,230,.8)', track: 4.2, base: 'alphabetic'
-  });
+  text(c, street, M, y, { font: FS(600, ss), fill: CREAM, base: 'alphabetic' });
+  y -= ss * 1.04;
+  let ns = 168;
+  while (measure(c, num, FS(600, ns), 0) > w - M * 2 && ns > 54) ns -= 3;
+  text(c, num, M, y, { font: FS(600, ns), fill: CREAM, base: 'alphabetic' });
+  y -= ns * .86;
+  caps(c, L.cityline, M, y, { size: 16, fill: GOLD, track: 4.6, base: 'alphabetic' });
+  y -= 36;
+  caps(c, L.useShort, M, y, { size: 14, fill: 'rgba(245,240,230,.6)', track: 4, base: 'alphabetic' });
 
   dealRail(c, L.stats.slice(0, 5), bottom, w, railH);
+}
+
+/* ── the listing as a story ───────────────────────────────────────────── */
+function featureListingStory(c, L, S) {
+  const w = S.w, h = S.h, M = 104;
+  engravedGround(c, w, h, S.seed, { bx: .5, by: .30 });
+  guilloche(c, w / 2, h * .30, w * .60, {
+    rings: 9, petals: 13, inner: .69, arm: .23, color: rgba(GOLD, .16), weight: 1
+  });
+  isoMassing(c, w * .5, h * .80, 84, 5, 5, S.seed, {
+    top: 'rgba(198,164,97,.15)', left: 'rgba(20,58,84,.32)', right: 'rgba(10,34,52,.38)',
+    edge: 'rgba(198,164,97,.11)', alpha: .75
+  });
+  const railH = 190, bottom = h - railH;
+  const g = c.createLinearGradient(0, h * .34, 0, bottom);
+  g.addColorStop(0, 'rgba(3,12,20,0)'); g.addColorStop(1, 'rgba(3,12,20,.9)');
+  c.fillStyle = g; c.fillRect(0, h * .34, w, bottom - h * .34);
+  engravedBorder(c, w, h, 46);
+
+  logoLockup(c, w / 2, 150, 280, 'white', 'center');
+  struckLabel(c, L.closed ? 'Just Closed' : 'Now Available', w / 2, 330, { size: 22, track: 10 });
+
+  const num = (String(L.addr).match(/^[\d\s–-]+/) || [''])[0].trim();
+  const street = String(L.addr).slice(num.length).trim();
+
+  let y = bottom - 96;
+  const pf = FS(600, 116);
+  const pw = measure(c, L.price, pf, 0);
+  foilText(c, L.price, w / 2, y, { font: pf, base: 'alphabetic', align: 'center' });
+  caps(c, 'offered at', w / 2, y + 48, { size: 15, fill: 'rgba(245,240,230,.6)', align: 'center', track: 4 });
+  y -= 150;
+
+  let ss = 86;
+  while (measure(c, street, FS(600, ss), 0) > w - M * 2 && ss > 36) ss -= 2;
+  text(c, street, w / 2, y, { font: FS(600, ss), fill: CREAM, align: 'center', base: 'alphabetic' });
+  y -= ss * 1.04;
+  let ns = 196;
+  while (measure(c, num, FS(600, ns), 0) > w - M * 2 && ns > 60) ns -= 4;
+  text(c, num, w / 2, y, { font: FS(600, ns), fill: CREAM, align: 'center', base: 'alphabetic' });
+  y -= ns * .88;
+  foilRule(c, w / 2 - 90, y - 14, 180, 2, FOIL, FOIL_HI);
+  y -= 44;
+  caps(c, L.cityline + '   ·   ' + L.useShort, w / 2, y, {
+    size: 16, fill: GOLD, align: 'center', track: 4.4, base: 'alphabetic'
+  });
+
+  dealRail(c, L.stats.slice(0, 3), bottom, w, railH);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -174,32 +189,17 @@ function featureListing(c, L, S) {
    ══════════════════════════════════════════════════════════════════════════ */
 function featureClosing(c, L, S) {
   const w = S.w, h = S.h, M = 84, cx = w / 2;
-  const g = c.createLinearGradient(0, 0, w * .4, h);
-  g.addColorStop(0, '#123246'); g.addColorStop(.5, '#0A1F2E'); g.addColorStop(1, '#050F18');
-  c.fillStyle = g; c.fillRect(0, 0, w, h);
-  bloom(c, w, h, GOLD, cx, h * .42, w * .8, .13);
+  engravedGround(c, w, h, S.seed, { bx: .5, by: .44 });
   guilloche(c, cx, h * .45, w * .42, {
     rings: 8, petals: 13, inner: .69, arm: .23, color: rgba(GOLD, .16), weight: 1
   });
   engravedRings(c, cx, h * .45, w * .30, w * .40, 4, rgba(GOLD, .13), 1);
-  vignette(c, w, h, .45);
-  grain(c, w, h, .10, true);
-
-  c.save();
-  c.strokeStyle = rgba(GOLD, .35); c.lineWidth = 1;
-  c.strokeRect(hair(40), hair(40), w - 80, h - 80);
-  c.strokeStyle = rgba(GOLD, .16); c.lineWidth = 1;
-  c.strokeRect(hair(52), hair(52), w - 104, h - 104);
-  c.restore();
+  engravedBorder(c, w, h, 40);
 
   logoLockup(c, cx, 96, 236, 'white', 'center');
 
   let y = 300;
-  const lab = 'CLOSED';
-  const lw = measure(c, lab, FN(700, 20), 9);
-  foilRule(c, cx - lw / 2 - 60, y - 7, 44, 2, GOLD, GOLD_HI);
-  foilRule(c, cx + lw / 2 + 16, y - 7, 44, 2, GOLD, GOLD_HI);
-  caps(c, lab, cx, y, { size: 20, weight: 700, fill: GOLD, align: 'center', track: 9 });
+  struckLabel(c, 'Closed', cx, y, { size: 20, track: 9 });
 
   y += 78;
   const addr = fitBlock(c, L.addr, { w: w - M * 2, h: 200 }, {
@@ -214,10 +214,7 @@ function featureClosing(c, L, S) {
   let ps = 156;
   while (measure(c, L.price, FS(600, ps), 0) > w - M * 2 && ps > 60) ps -= 3;
   const priceY = y + ps * .36;
-  text(c, L.price, cx, priceY, {
-    font: FS(600, ps), fill: CREAM, align: 'center', base: 'middle',
-    shadow: ['rgba(0,0,0,.5)', 30, 8]
-  });
+  foilText(c, L.price, cx, priceY, { font: FS(600, ps), align: 'center', base: 'middle' });
   y = priceY + ps * .50;
   caps(c, L.closedNote || 'Represented seller and buyer', cx, y, {
     size: 16, fill: GOLD, align: 'center', track: 4
@@ -298,32 +295,17 @@ function featureListingStory(c, L, S) {
    ══════════════════════════════════════════════════════════════════════════ */
 function featureClosingStory(c, L, S) {
   const w = S.w, h = S.h, M = 96, cx = w / 2;
-  const g = c.createLinearGradient(0, 0, w * .5, h);
-  g.addColorStop(0, '#123246'); g.addColorStop(.5, '#0A1F2E'); g.addColorStop(1, '#050F18');
-  c.fillStyle = g; c.fillRect(0, 0, w, h);
-  bloom(c, w, h, GOLD, cx, h * .46, w, .14);
+  engravedGround(c, w, h, S.seed, { bx: .5, by: .46 });
   guilloche(c, cx, h * .48, w * .56, {
     rings: 9, petals: 13, inner: .69, arm: .23, color: rgba(GOLD, .15), weight: 1
   });
   engravedRings(c, cx, h * .48, w * .40, w * .54, 4, rgba(GOLD, .12), 1);
-  vignette(c, w, h, .46);
-  grain(c, w, h, .10, true);
-
-  c.save();
-  c.strokeStyle = rgba(GOLD, .35); c.lineWidth = 1;
-  c.strokeRect(hair(46), hair(46), w - 92, h - 92);
-  c.strokeStyle = rgba(GOLD, .16); c.lineWidth = 1;
-  c.strokeRect(hair(60), hair(60), w - 120, h - 120);
-  c.restore();
+  engravedBorder(c, w, h, 46);
 
   logoLockup(c, cx, 150, 280, 'white', 'center');
 
   let y = 430;
-  const lab = 'CLOSED';
-  const lw = measure(c, lab, FN(700, 22), 10);
-  foilRule(c, cx - lw / 2 - 66, y - 8, 48, 2, GOLD, GOLD_HI);
-  foilRule(c, cx + lw / 2 + 18, y - 8, 48, 2, GOLD, GOLD_HI);
-  caps(c, lab, cx, y, { size: 22, weight: 700, fill: GOLD, align: 'center', track: 10 });
+  struckLabel(c, 'Closed', cx, y, { size: 22, track: 10 });
 
   y += 96;
   const addr = fitBlock(c, L.addr, { w: w - M * 2, h: 260 }, {
@@ -336,9 +318,7 @@ function featureClosingStory(c, L, S) {
   y += 150;
   let ps = 186;
   while (measure(c, L.price, FS(600, ps), 0) > w - M * 2 && ps > 70) ps -= 4;
-  text(c, L.price, cx, y, {
-    font: FS(600, ps), fill: CREAM, align: 'center', base: 'middle', shadow: ['rgba(0,0,0,.5)', 34, 10]
-  });
+  foilText(c, L.price, cx, y, { font: FS(600, ps), align: 'center', base: 'middle' });
   y += ps * .54;
   caps(c, L.closedNote || 'Represented seller and buyer', cx, y,
     { size: 18, fill: GOLD, align: 'center', track: 4.2 });

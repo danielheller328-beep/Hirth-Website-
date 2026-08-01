@@ -53,6 +53,16 @@ one composition with six palettes.
 | **Dossier** | pulled file, stamped | manila, punch holes | oxide red | Fraunces |
 | **Nocturne** | photography-led | duotone / deep teal | gold | Fraunces |
 
+### No photographs of property. Ever.
+
+Not a style preference — a rule the build enforces. `ASSET_MAP` in `build.py`
+carries the logo and the headshots and nothing else, so no building photograph
+can reach a frame even by accident. Property photography is either a drone
+frame nobody has, a street capture with a pole through it, or a stock image
+that cannot be licensed for a commercial post carrying a DRE number. The
+announcements are engraved instead — guilloché seals, foil rules, isometric
+massing, a struck border — the way a tombstone or a share certificate is.
+
 ### The imagery is drawn, not sourced
 
 There is no stock photography and there never will be — the page has to work

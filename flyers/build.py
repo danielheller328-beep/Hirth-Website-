@@ -31,8 +31,9 @@ ASSET_MAP = {
     "dh": "dh.png",
     "ar": "ar.png",
     "ed": "ed.png",
-    "olive": "olive.jpg",
-    "saviers": "saviers.jpg",
+    # No property photography. People yes, buildings no — the frames are
+    # engraved rather than photographic, so nothing is embedded that could
+    # end up on a post by accident.
 }
 
 FONT_FACES = [

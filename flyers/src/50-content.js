@@ -457,8 +457,7 @@ Thinking about selling? 310.300.2838`,
    LISTINGS
    ══════════════════════════════════════════════════════════════════════════ */
 const LISTINGS = [
-{ id: 'olive', photo: 'olive', photoSrc: OLIVE_SRC, photoFocus: .82,
-  kind: 'Just Listed', title: '2221 – 2225 Olive Avenue',
+{ id: 'olive', kind: 'Just Listed', title: '2221 – 2225 Olive Avenue',
   addr: '2221 – 2225 Olive Avenue', city: 'Burbank, CA 91506',
   cityline: 'Burbank · Media District', price: '$3,750,000', useShort: 'Mixed-Use · 18 Units',
   stats: [['$3.75M', 'Offered At'], ['18', 'Units'], ['±7,478', 'Building SF'], ['±10,100', 'Lot SF'], ['6.53%', 'Current Cap']],
@@ -481,7 +480,7 @@ Ethan Donel · Alex Reyhan · Daniel Hirth
 Call or text 310.300.2838, or DM for the OM.`,
   tags: '#JustListed #CommercialRealEstate #CRE #BurbankCA #MixedUse #MediaDistrict #InvestmentProperty #LosAngelesRealEstate #SanFernandoValley #CapRate #MultiTenant #1031Exchange #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #RetailRealEstate #PassiveIncome #LARealEstate #ValueAdd' },
 
-{ id: 'saviers', photo: 'saviers', kind: 'Just Closed', title: '1177 Saviers Road', closed: true,
+{ id: 'saviers', kind: 'Just Closed', title: '1177 Saviers Road', closed: true,
   addr: '1177 Saviers Road', city: 'Oxnard, CA 93033',
   cityline: 'Oxnard · Ventura County', price: '$1,200,000', useShort: 'Car Dealership',
   closedNote: 'Represented seller and buyer',
