@@ -1858,28 +1858,27 @@ const L_midnight = {
     /* One portrait, printed on a pale plate down the right, rather than three
        thumbnails in a row. The person you are calling, not the org chart. */
     const B = stage(c, ad, S, { label: 'Contact' });
-    const px = S.w * .58, face = IMG.dh;
+    const face = IMG.dh;
+    const pw = plateSize(face, 420), ph = pw * 1.24;
+    const px = S.w - pw;
     if (face) {
-      portraitPlate(c, face, px, 0, S.w - px, S.h, {
-        key: 'dh-mid', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
-        zoom: 1.02, fy: .46, paper: '#DDE6ED', ink: '#0B1620',
-        plateAlpha: .18, plate: ['#0B1620', '#DDE6ED']
+      portraitPhoto(c, face, px, S.h - ph, pw, ph, {
+        shape: 'rect', zoom: 1.06, fy: .46, paper: '#0A1119',
+        shadow: ['rgba(0,0,0,.6)', 40, 12]
       });
-      c.fillStyle = ad.accent; c.fillRect(px - 3, 0, 3, S.h);
-      const g = c.createLinearGradient(px, 0, px + 90, 0);
-      g.addColorStop(0, 'rgba(5,9,13,.55)'); g.addColorStop(1, 'rgba(5,9,13,0)');
-      c.fillStyle = g; c.fillRect(px, 0, 90, S.h);
+      c.fillStyle = ad.accent; c.fillRect(px - 3, S.h - ph, 3, ph);
+      c.fillStyle = ad.accent; c.fillRect(px, S.h - ph - 3, pw, 3);
     }
     let y = B.y + 26;
     kicker(c, ad, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8);
     y += 58;
-    const head = fitRich(c, P.cta, { w: px - B.x - 54, h: 300 }, {
+    const head = fitRich(c, P.cta, { w: B.w * .82, h: 300 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
       max: 66, min: 34, leading: 1.08, maxLines: 5
     });
     y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 56;
-    rule(c, B.x, y, px - B.x - 54, ad.rule, 1);
+    rule(c, B.x, y, px - B.x - 40, ad.rule, 1);
     y += 46;
     text(c, HOUSE.agent, B.x, y, { font: FS(600, 44), fill: ad.ink, base: 'middle' });
     caps(c, HOUSE.role, B.x, y + 38, { size: 13, fill: ad.accent, track: 3.2 });
@@ -2986,13 +2985,12 @@ function storyReview(c, ad, P, S) {
    The house piece. Daniel set large and bleeding off a corner, big type on
    the open field, the mark top-left and the contact line along the foot.
 
-   On the treatment: the headshot on file is 240px square and already masked
-   to a circle, so blowing it up straight would be visibly soft. It is printed
-   instead — a duotone plate under a coarse halftone screen, the way a
-   portrait gets reproduced on a press. At this dot pitch the source
-   resolution stops mattering and the softness reads as ink, not as a bad
-   crop. Drop a larger headshot into assets/ and the same code prints it finer;
-   nothing else has to change.
+   The photograph runs as shot — no screen, no duotone, no filter. The frame
+   masks it to a shape and crops it, and that is the whole treatment.
+
+   The one constraint is resolution: the headshot on file is 240 x 240, so the
+   plates are capped at roughly 2x that. Drop a larger headshot into
+   assets/dh.png and every plate in every cut grows on its own.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PRESS = {
@@ -3003,13 +3001,22 @@ const PRESS = {
 };
 
 /* ── the plate ────────────────────────────────────────────────────────────
-   Printed as a positive on a cream rondel: the disc is inked flat, then dark
-   dots are laid over it with radius tracking darkness, which is how a
-   portrait actually reproduces on a press. The earlier negative screen made
-   the bright office window behind him print solid while his face dropped out
-   — on a light ground the window simply falls away to clean paper and the
-   face carries the tone, so no cutout is needed at all.
+   The photograph, as shot. No screen, no duotone, no filter — the frame just
+   masks it to a shape and crops it.
+
+   The only processing is a size cap. The headshot on file is 240 x 240, and
+   an unedited photograph blown up past roughly 2x starts to look soft, so
+   plateSize() refuses to draw one larger than that. It reads the cap off the
+   file itself: drop a 1500px headshot into assets/dh.png and every plate in
+   every cut gets correspondingly bigger on its own, with no other change.
    ─────────────────────────────────────────────────────────────────────── */
+const MAX_UPSCALE = 2.2;
+
+function plateSize(img, want) {
+  if (!img) return want;
+  return Math.min(want, img.naturalWidth * MAX_UPSCALE);
+}
+
 function plateShape(c, shape, x, y, w, h) {
   c.beginPath();
   if (shape === 'circle') c.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, 6.284);
@@ -3021,85 +3028,32 @@ function plateShape(c, shape, x, y, w, h) {
   } else c.rect(x, y, w, h);
 }
 
-/* o.shape 'circle'|'rect'|'arch' · o.zoom · o.fx/fy focus · o.invert polarity */
-function portraitPlate(c, img, x, y, w, h, o) {
+/* o.shape 'circle'|'rect'|'arch' · o.zoom · o.fx/fy focus point */
+function portraitPhoto(c, img, x, y, w, h, o) {
   o = o || {};
-  const pitch = o.pitch || 6;
-  const sw = Math.ceil(w), sh = Math.ceil(h);
-  const off = document.createElement('canvas');
-  off.width = sw; off.height = sh;
-  const oc = off.getContext('2d');
-
-  /* crop: scale the source about a focus point so the face can be framed
-     tight on one cut and loose on the next */
-  const zoom = o.zoom || 1;
-  const iw = img.naturalWidth, ih = img.naturalHeight;
-  const scale = Math.max(sw / iw, sh / ih) * zoom;
-  const dw = iw * scale, dh = ih * scale;
-  const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy;
-  oc.drawImage(img, sw / 2 - dw * fx, sh / 2 - dh * fy, dw, dh);
-  const px = oc.getImageData(0, 0, sw, sh).data;
-
-  const sample = (ix, iy) => {
-    const i = ((iy | 0) * sw + (ix | 0)) * 4;
-    if (px[i + 3] < 90) return null;
-    return (px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) / 255;
-  };
-
-  /* Auto-levels off the plate's own histogram. A headshot lit for a website
-     occupies maybe half the available range; printed straight, the skin sits
-     in a band too narrow for the screen to describe a face with, and the whole
-     portrait collapses to hair-and-suit. Stretching the 2nd–98th percentile
-     across the range is what a platemaker would do before burning it. */
-  const hist = new Uint32Array(256);
-  let count = 0;
-  for (let i = 0; i < px.length; i += 4) {
-    if (px[i + 3] < 90) continue;
-    hist[(px[i] * 0.299 + px[i + 1] * 0.587 + px[i + 2] * 0.114) | 0]++;
-    count++;
-  }
-  let lo = 0, hi = 255, acc = 0;
-  for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc > count * 0.02) { lo = i; break; } }
-  acc = 0;
-  for (let i = 255; i >= 0; i--) { acc += hist[i]; if (acc > count * 0.02) { hi = i; break; } }
-  const loN = lo / 255, hiN = Math.max(loN + 0.05, hi / 255);
-  const levels = v => clamp((v - loN) / (hiN - loN), 0, 1);
-
   c.save();
+  if (o.shadow) {
+    c.save();
+    c.shadowColor = o.shadow[0]; c.shadowBlur = o.shadow[1]; c.shadowOffsetY = o.shadow[2] || 0;
+    c.fillStyle = 'rgba(0,0,0,1)';
+    plateShape(c, o.shape || 'circle', x, y, w, h);
+    c.fill();
+    c.restore();
+  }
   plateShape(c, o.shape || 'circle', x, y, w, h);
   c.clip();
 
+  /* the mount the photograph sits on, where the source has transparency */
   if (o.paper) { c.fillStyle = o.paper; c.fillRect(x, y, w, h); }
 
-  if (o.plateAlpha) {
-    c.globalAlpha = o.plateAlpha;
-    const duo = duotone(off, (o.plate || PRESS.plate)[0], (o.plate || PRESS.plate)[1],
-      (o.key || 'dh') + '|' + zoom + '|' + fx + '|' + fy, sw, sh);
-    c.drawImage(duo, x, y, w, h);
-    c.globalAlpha = 1;
-  }
-
-  c.fillStyle = o.ink || '#0B1E2B';
-  const ang = o.angle == null ? -0.38 : o.angle;
-  const cos = Math.cos(ang), sin = Math.sin(ang);
-  const span = Math.hypot(sw, sh);
-  const lift = o.lift == null ? 0.06 : o.lift;
-  const invert = !!o.invert;                 /* light ink on a dark ground */
-  for (let v = -span; v < span; v += pitch) {
-    for (let u = -span; u < span; u += pitch) {
-      const ix = sw / 2 + u * cos - v * sin, iy = sh / 2 + u * sin + v * cos;
-      if (ix < 0 || iy < 0 || ix >= sw || iy >= sh) continue;
-      const lum = sample(ix, iy);
-      if (lum === null) continue;
-      const t = invert ? levels(lum) : 1 - levels(lum);
-      const d = clamp(Math.pow(t, o.gamma == null ? 0.95 : o.gamma) - lift, 0, 1);
-      const rr = pitch * 0.72 * d;
-      if (rr < 0.4) continue;
-      c.beginPath();
-      c.arc(x + ix, y + iy, rr, 0, 6.284);
-      c.fill();
-    }
-  }
+  const zoom = o.zoom || 1;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  const scale = Math.max(w / iw, h / ih) * zoom;
+  const dw = iw * scale, dh = ih * scale;
+  const fx = o.fx == null ? .5 : o.fx, fy = o.fy == null ? .5 : o.fy;
+  c.imageSmoothingEnabled = true;
+  c.imageSmoothingQuality = 'high';
+  c.drawImage(img, x + w / 2 - dw * fx, y + h / 2 - dh * fy, dw, dh);
   c.restore();
 
   if (o.edge) {
@@ -3145,7 +3099,8 @@ function pressSig(c, x, y, o) {
   const ink = o.ink || PRESS.ink, dim = o.body || PRESS.body, faint = o.muted || PRESS.muted;
   const sh = o.shadow || ['rgba(2,10,16,.7)', 18, 4];
   const align = o.align || 'left';
-  rule(c, align === 'right' ? x - 300 : x, y, 300, o.accentRule || rgba('#C6A461', .55), 1);
+  rule(c, align === 'right' ? x - 300 : align === 'center' ? x - 150 : x, y, 300,
+    o.accentRule || rgba('#C6A461', .55), 1);
   text(c, HOUSE.agent, x, y + 46, {
     font: FS(600, o.size || 42), fill: ink, base: 'middle', align, shadow: sh
   });
@@ -3180,162 +3135,193 @@ function pressHead(c, P, x, y, boxW, maxSize, o) {
    ══════════════════════════════════════════════════════════════════════════ */
 const POSTER_CUTS = [
 
-  /* 1 · RONDEL — a struck coin, bleeding off the bottom-right */
+  /* 1 · RONDEL — the photograph large, bleeding off the bottom-right */
   { id: 'rondel', name: 'Rondel',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
       if (face) {
-        const d = 664, x = 548, y = 540;
-        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 16, d / 2 + 46, 3, rgba('#C6A461', .20), 1);
-        portraitPlate(c, face, x, y, d, d, {
-          key: P.who || 'dh', shape: 'circle', pitch: 5, gamma: .95, lift: .075,
-          paper: '#F1EBDF', plateAlpha: .22, edge: rgba('#C6A461', .8), edgeWidth: 3
+        const d = plateSize(face, 528), x = w - d * .72, y = h - d * .74;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 54, 3, rgba('#C6A461', .22), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
+          shadow: ['rgba(0,0,0,.65)', 46, 14]
         });
       }
       logoLockup(c, M, LOGO_Y, 210, 'white');
       caps(c, P.kicker, w - M, LOGO_Y + 46, { size: 14, fill: PRESS.accent, align: 'right', track: 4 });
-      pressHead(c, P, M, 246, w - M * 2 - 24, 104, { boxH: 300, maxLines: 3 });
-      pressSig(c, M, h - 150);
+      pressHead(c, P, M, 250, w - M * 2 - 24, 100, { boxH: 300, maxLines: 3 });
+      pressSig(c, M, h - 200);
     },
     story(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
       if (face) {
-        const d = 864, x = 474, y = h - 804;
-        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 54, 3, rgba('#C6A461', .20), 1);
-        portraitPlate(c, face, x, y, d, d, {
-          key: P.who || 'dh', shape: 'circle', pitch: 6, gamma: .95, lift: .075,
-          paper: '#F1EBDF', plateAlpha: .22, edge: rgba('#C6A461', .8), edgeWidth: 3
+        const d = plateSize(face, 528), x = w - d * .78, y = h - d - 300;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 20, d / 2 + 62, 3, rgba('#C6A461', .22), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#C6A461', .85), edgeWidth: 3,
+          shadow: ['rgba(0,0,0,.65)', 50, 16]
         });
       }
       logoLockup(c, M, 120, 250, 'white');
       caps(c, P.kicker, M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
-      pressHead(c, P, M, 486, w - M * 2, 138, { boxH: 560, maxLines: 4 });
-      pressSig(c, M, h - 300);
+      pressHead(c, P, M, 470, w - M * 2, 132, { boxH: 500, maxLines: 4 });
+      pressSig(c, M, h - 230);
     } },
 
-  /* 2 · COLUMN — a full-height plate down the right, cropped tight to the face */
-  { id: 'column', name: 'Column',
+  /* 2 · CARD — the photograph mounted on a printed card laid on the sheet.
+     The card carries the contact details, so the poster does not repeat them. */
+  { id: 'card', name: 'Card',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
-      const px = 588;
+      const cw = 396, ch = 620, cx = w - cw - 56, cy = h - ch - 56;
+      c.save();
+      c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 48; c.shadowOffsetY = 16;
+      c.fillStyle = '#F2ECE0'; c.fillRect(cx, cy, cw, ch);
+      c.restore();
+      c.save();
+      c.strokeStyle = rgba('#9A7A3E', .55); c.lineWidth = 1;
+      c.strokeRect(hair(cx + 14), hair(cy + 14), cw - 28, ch - 28);
+      c.restore();
       if (face) {
-        portraitPlate(c, face, px, 0, w - px, h, {
-          key: P.who || 'dh', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
-          zoom: 1.02, fy: .46, paper: '#F1EBDF', plateAlpha: .22
+        const d = plateSize(face, 300);
+        portraitPhoto(c, face, cx + (cw - d) / 2, cy + 44, d, d, {
+          shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
         });
-        foilRule(c, px - 2, 0, 4, h, '#C6A461', '#F0DFAE');
       }
-      logoLockup(c, M, LOGO_Y, 196, 'white');
-      caps(c, P.kicker, M, LOGO_Y + 150, { size: 14, fill: PRESS.accent, track: 4 });
-      pressHead(c, P, M, 306, px - M - 40, 78, { boxH: 470, maxLines: 6 });
-      pressSig(c, M, h - 200, { size: 36 });
+      let ty = cy + 44 + plateSize(face, 300) + 62;
+      text(c, HOUSE.agent, cx + cw / 2, ty, {
+        font: FS(600, 36), fill: '#14222B', align: 'center', base: 'middle'
+      });
+      caps(c, HOUSE.role, cx + cw / 2, ty + 34, { size: 12, fill: '#9A7A3E', align: 'center', track: 3 });
+      rule(c, cx + 70, ty + 60, cw - 140, 'rgba(20,34,43,.18)', 1);
+      text(c, HOUSE.phone, cx + cw / 2, ty + 92, {
+        font: FN(600, 26), fill: '#14222B', align: 'center', base: 'middle'
+      });
+      caps(c, HOUSE.site, cx + cw / 2, ty + 124, { size: 11, fill: '#6A7480', align: 'center', track: 2.8 });
+
+      logoLockup(c, M, LOGO_Y, 200, 'white');
+      caps(c, P.kicker, M, LOGO_Y + 152, { size: 14, fill: PRESS.accent, track: 4 });
+      pressHead(c, P, M, 300, cx - M - 46, 74, { boxH: 470, maxLines: 6 });
+      caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, M, h - 96, { size: 11, fill: PRESS.muted, track: 2.6 });
     },
     story(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
-      const py = 1010;
-      if (face) {
-        portraitPlate(c, face, 0, py, w, h - py, {
-          key: P.who || 'dh', shape: 'rect', pitch: 6, gamma: .95, lift: .06,
-          zoom: 1.0, fy: .40, paper: '#F1EBDF', plateAlpha: .22
-        });
-        foilRule(c, 0, py - 2, w, 4, '#C6A461', '#F0DFAE');
-      }
+      const cw = w - M * 2, ch = 470, cx = M, cy = h - ch - 150;
+      c.save();
+      c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 52; c.shadowOffsetY = 18;
+      c.fillStyle = '#F2ECE0'; c.fillRect(cx, cy, cw, ch);
+      c.restore();
+      c.save();
+      c.strokeStyle = rgba('#9A7A3E', .55); c.lineWidth = 1;
+      c.strokeRect(hair(cx + 16), hair(cy + 16), cw - 32, ch - 32);
+      c.restore();
+      const d = plateSize(face, 320);
+      if (face) portraitPhoto(c, face, cx + 56, cy + (ch - d) / 2, d, d, {
+        shape: 'circle', edge: rgba('#14222B', .18), edgeWidth: 2
+      });
+      const tx = cx + 56 + d + 48;
+      text(c, HOUSE.agent, tx, cy + ch / 2 - 52, { font: FS(600, 46), fill: '#14222B', base: 'middle' });
+      caps(c, HOUSE.role, tx, cy + ch / 2 - 8, { size: 14, fill: '#9A7A3E', track: 3 });
+      rule(c, tx, cy + ch / 2 + 22, cw - (tx - cx) - 56, 'rgba(20,34,43,.18)', 1);
+      text(c, HOUSE.phone, tx, cy + ch / 2 + 66, { font: FN(600, 34), fill: '#14222B', base: 'middle' });
+      caps(c, HOUSE.site, tx, cy + ch / 2 + 104, { size: 12, fill: '#6A7480', track: 2.8 });
+
       logoLockup(c, M, 130, 250, 'white');
       caps(c, P.kicker, M, 310, { size: 16, fill: PRESS.accent, track: 4.4 });
-      pressHead(c, P, M, 420, w - M * 2, 128, { boxH: 480, maxLines: 4 });
-      pressSig(c, M, py - 190);
+      pressHead(c, P, M, 430, w - M * 2, 122, { boxH: 460, maxLines: 4 });
+      caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, M, h - 88, { size: 12, fill: PRESS.muted, track: 2.6 });
     } },
 
-  /* 3 · INVERSE — printed on paper: dark ink, cream stock, the plate on the left */
+  /* 3 · INVERSE — printed on paper: cream stock, dark type, photograph left */
   { id: 'inverse', name: 'Inverse',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGroundLight(c, w, h, S.seed);
-      const pw = 470;
       if (face) {
-        portraitPlate(c, face, -30, 0, pw, h, {
-          key: P.who || 'dh', shape: 'rect', pitch: 5, gamma: 1.0, lift: .05,
-          zoom: 1.04, fx: .50, fy: .47, ink: '#12303F', plateAlpha: .16,
-          plate: ['#12303F', '#EFE8DA']
+        const d = plateSize(face, 528), x = -d * .18, y = h - d * .92;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 52, 3, rgba('#9A7A3E', .28), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
+          shadow: ['rgba(70,58,38,.30)', 42, 12]
         });
-        foilRule(c, pw - 32, 0, 3, h, '#9A7A3E', '#D8BE84');
       }
-      logoLockup(c, w - M, LOGO_Y, 196, 'color', 'right');
-      caps(c, P.kicker, w - M, LOGO_Y + 150, { size: 14, fill: '#9A7A3E', align: 'right', track: 4 });
-      pressHead(c, P, w - M, 292, w - pw - M - 40, 82, {
-        boxH: 440, maxLines: 6, align: 'right', ink: '#14222B', em: '#1C5C86',
+      logoLockup(c, w - M, LOGO_Y, 200, 'color', 'right');
+      caps(c, P.kicker, w - M, LOGO_Y + 152, { size: 14, fill: '#9A7A3E', align: 'right', track: 4 });
+      pressHead(c, P, w - M, 300, w - M * 2 - 24, 94, {
+        boxH: 340, maxLines: 3, align: 'right', ink: '#14222B', em: '#1C5C86',
         foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
       });
-      pressSig(c, w - M, h - 200, {
-        align: 'right', size: 36, ink: '#14222B', body: '#4A5560', muted: '#8A9299',
+      pressSig(c, w - M, h - 210, {
+        align: 'right', size: 38, ink: '#14222B', body: '#4A5560', muted: '#8A9299',
         accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
       });
     },
     story(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGroundLight(c, w, h, S.seed);
-      const py = 980;
       if (face) {
-        portraitPlate(c, face, 0, py, w, h - py, {
-          key: P.who || 'dh', shape: 'rect', pitch: 6, gamma: 1.0, lift: .05,
-          zoom: 1.0, fy: .40, ink: '#12303F', plateAlpha: .16, plate: ['#12303F', '#EFE8DA']
+        const d = plateSize(face, 528), x = -d * .16, y = h - d - 300;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 20, d / 2 + 58, 3, rgba('#9A7A3E', .28), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
+          shadow: ['rgba(70,58,38,.30)', 46, 14]
         });
-        foilRule(c, 0, py - 3, w, 3, '#9A7A3E', '#D8BE84');
       }
       logoLockup(c, M, 130, 250, 'color');
       caps(c, P.kicker, M, 306, { size: 16, fill: '#9A7A3E', track: 4.4 });
-      pressHead(c, P, M, 420, w - M * 2, 128, {
+      pressHead(c, P, M, 430, w - M * 2, 126, {
         boxH: 460, maxLines: 4, ink: '#14222B', em: '#1C5C86',
         foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
       });
-      pressSig(c, M, py - 200, {
+      pressSig(c, M, h - 240, {
         ink: '#14222B', body: '#4A5560', muted: '#8A9299',
         accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
       });
     } },
 
-  /* 4 · ECLIPSE — no paper at all: he is screened straight onto the ground in
-     light ink, under an arch, and emerges out of the dark */
-  { id: 'eclipse', name: 'Eclipse',
+  /* 4 · MEDALLION — smaller, centred, ringed; the words take the frame */
+  { id: 'medallion', name: 'Medallion',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
+      guilloche(c, w * .78, h * .70, 330, {
+        rings: 7, petals: 11, inner: .68, arm: .24, color: rgba('#C6A461', .16), weight: 1
+      });
       if (face) {
-        const pw = 470, ph = 566;
-        portraitPlate(c, face, w - pw - 40, h - ph, pw, ph, {
-          key: P.who || 'dh', shape: 'arch', pitch: 5, gamma: 1.0, lift: .06,
-          zoom: 1.0, fy: .46, paper: '#EDE4D2', ink: '#14384C',
-          plateAlpha: .18, plate: ['#14384C', '#EDE4D2']
+        const d = plateSize(face, 384), x = w - d - 92, y = h - d - 168;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 16, d / 2 + 60, 4, rgba('#C6A461', .3), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
+          shadow: ['rgba(0,0,0,.6)', 42, 12]
         });
-        c.save(); c.strokeStyle = rgba('#C6A461', .55); c.lineWidth = 2;
-        plateShape(c, 'arch', w - pw - 40, h - ph, pw, ph); c.stroke(); c.restore();
       }
       logoLockup(c, M, LOGO_Y, 210, 'white');
       caps(c, P.kicker, w - M, LOGO_Y + 46, { size: 14, fill: PRESS.accent, align: 'right', track: 4 });
-      pressHead(c, P, M, 250, w - M * 2 - 24, 88, { boxH: 300, maxLines: 3 });
-      pressSig(c, M, h - 210, { size: 38 });
+      pressHead(c, P, M, 250, w - M * 2 - 24, 96, { boxH: 320, maxLines: 3 });
+      pressSig(c, M, h - 230, { size: 38 });
     },
     story(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGround(c, w, h, S.seed);
+      guilloche(c, w / 2, h * .62, 420, {
+        rings: 8, petals: 13, inner: .68, arm: .24, color: rgba('#C6A461', .14), weight: 1
+      });
       if (face) {
-        const pw = 700, ph = 840;
-        portraitPlate(c, face, (w - pw) / 2, h - ph - 260, pw, ph, {
-          key: P.who || 'dh', shape: 'arch', pitch: 6, gamma: 1.0, lift: .06,
-          zoom: 1.0, fy: .46, paper: '#EDE4D2', ink: '#14384C',
-          plateAlpha: .18, plate: ['#14384C', '#EDE4D2']
+        const d = plateSize(face, 440), x = (w - d) / 2, y = h - d - 470;
+        engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 70, 4, rgba('#C6A461', .3), 1);
+        portraitPhoto(c, face, x, y, d, d, {
+          shape: 'circle', edge: rgba('#C6A461', .9), edgeWidth: 3,
+          shadow: ['rgba(0,0,0,.6)', 46, 14]
         });
-        c.save(); c.strokeStyle = rgba('#C6A461', .5); c.lineWidth = 2;
-        plateShape(c, 'arch', (w - pw) / 2, h - ph - 260, pw, ph); c.stroke(); c.restore();
       }
-      logoLockup(c, M, 120, 250, 'white');
-      caps(c, P.kicker, M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
-      pressHead(c, P, M, 430, w - M * 2, 122, { boxH: 380, maxLines: 3 });
-      pressSig(c, M, h - 200);
+      logoLockup(c, w / 2, 120, 250, 'white', 'center');
+      caps(c, P.kicker, w / 2, 300, { size: 16, fill: PRESS.accent, align: 'center', track: 4.4 });
+      pressHead(c, P, w / 2, 400, w - M * 2, 116, { boxH: 400, maxLines: 3, align: 'center' });
+      pressSig(c, w / 2, h - 220, { align: 'center' });
     } }
 ];
 

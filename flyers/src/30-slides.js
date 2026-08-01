@@ -362,28 +362,27 @@ const L_midnight = {
     /* One portrait, printed on a pale plate down the right, rather than three
        thumbnails in a row. The person you are calling, not the org chart. */
     const B = stage(c, ad, S, { label: 'Contact' });
-    const px = S.w * .58, face = IMG.dh;
+    const face = IMG.dh;
+    const pw = plateSize(face, 420), ph = pw * 1.24;
+    const px = S.w - pw;
     if (face) {
-      portraitPlate(c, face, px, 0, S.w - px, S.h, {
-        key: 'dh-mid', shape: 'rect', pitch: 5, gamma: .95, lift: .06,
-        zoom: 1.02, fy: .46, paper: '#DDE6ED', ink: '#0B1620',
-        plateAlpha: .18, plate: ['#0B1620', '#DDE6ED']
+      portraitPhoto(c, face, px, S.h - ph, pw, ph, {
+        shape: 'rect', zoom: 1.06, fy: .46, paper: '#0A1119',
+        shadow: ['rgba(0,0,0,.6)', 40, 12]
       });
-      c.fillStyle = ad.accent; c.fillRect(px - 3, 0, 3, S.h);
-      const g = c.createLinearGradient(px, 0, px + 90, 0);
-      g.addColorStop(0, 'rgba(5,9,13,.55)'); g.addColorStop(1, 'rgba(5,9,13,0)');
-      c.fillStyle = g; c.fillRect(px, 0, 90, S.h);
+      c.fillStyle = ad.accent; c.fillRect(px - 3, S.h - ph, 3, ph);
+      c.fillStyle = ad.accent; c.fillRect(px, S.h - ph - 3, pw, 3);
     }
     let y = B.y + 26;
     kicker(c, ad, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8);
     y += 58;
-    const head = fitRich(c, P.cta, { w: px - B.x - 54, h: 300 }, {
+    const head = fitRich(c, P.cta, { w: B.w * .82, h: 300 }, {
       roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
       max: 66, min: 34, leading: 1.08, maxLines: 5
     });
     y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 56;
-    rule(c, B.x, y, px - B.x - 54, ad.rule, 1);
+    rule(c, B.x, y, px - B.x - 40, ad.rule, 1);
     y += 46;
     text(c, HOUSE.agent, B.x, y, { font: FS(600, 44), fill: ad.ink, base: 'middle' });
     caps(c, HOUSE.role, B.x, y + 38, { size: 13, fill: ad.accent, track: 3.2 });

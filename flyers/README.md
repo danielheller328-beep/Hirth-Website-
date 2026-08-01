@@ -78,13 +78,27 @@ top-left, the contact line along the foot. Six statements rotate, one a week,
 so it changes with everything else. It appears in both sections — 1:1 in Posts,
 9:16 in Stories.
 
-The headshot on file is 240px and already masked to a circle, so blowing it up
-straight would be visibly soft. It is printed instead: a cream rondel, a faint
-duotone to hold the modelling, then a halftone screen laid over it with dot
-radius tracking darkness, auto-levelled off the plate's own histogram. At that
-pitch the source resolution stops mattering and the softness reads as ink.
-A larger headshot dropped into `assets/dh.png` prints finer with no code change
-— worth doing if one exists.
+**The photograph runs as shot** — no screen, no duotone, no filter. The frame
+masks it and crops it, and that is the whole treatment.
+
+Two things follow from the source file, which is 240 x 240 and already masked
+to a circle:
+
+- **Plates are capped at about 2x the source.** An unedited photograph blown up
+  past that looks soft. `plateSize()` reads the cap off the file, so dropping a
+  larger headshot into `assets/dh.png` makes every plate in every cut grow on
+  its own, with no other change.
+- **The mount is circular in every cut.** The source has a circular alpha mask,
+  so a rectangular or arched plate shows the cut-out edge and reads as a sticker
+  pasted on. A proper rectangular headshot on a plain background would unlock
+  full-bleed treatments — worth shooting if it comes up.
+
+Four cuts rotate independently of the statement, so the portrait is not in the
+same place two weeks running: **Rondel** (large, bleeding off the bottom-right),
+**Card** (mounted on a printed card that carries the contact details),
+**Inverse** (cream stock, dark type, photograph left) and **Medallion**
+(smaller, ringed, the words taking the frame). Twelve weeks before a statement
+meets the same cut twice.
 
 New statements go in `POSTERS` in `src/45-poster.js`: `kicker`, `line`
 (`*emphasis*` allowed), `cap`, `tags`.
@@ -151,7 +165,7 @@ flyers/
     20-brand.js   house details, the mark, the six art directions
     30-slides.js  the twenty-four compositions
     40-listings.js listing frames, the site plan, the stories
-    45-poster.js  the Press poster and the screen-printed portrait plate
+    45-poster.js  the Press poster, its four cuts and the portrait mount
     50-content.js the bank
     60-app.js     the week's rotation and the page around it
 ```
