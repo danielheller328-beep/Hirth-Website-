@@ -208,12 +208,13 @@ function storyCeiling(S, rowCount, hasCta) {
 function storyStatement(c, ad, P, S) {
   const B = storyStage(c, ad, S, P.storyLabel || P.topic);
   const serif = ad.id !== 'signal';
-  const head = fitBlock(c, P.storyTitle || P.title, { w: B.w, h: 520 }, {
-    weight: serif ? 600 : 700, family: serif ? SERIF : SANS,
+  const head = fitRich(c, P.storyTitle || P.title, { w: B.w, h: 520 }, {
+    roman: s => serif ? FS(600, s) : FN(700, s),
+    italic: s => serif ? FS(600, s, 'italic') : FN(500, s, 'italic'),
     max: 108, min: 46, leading: serif ? 1.06 : 1.0, maxLines: 6, track: serif ? 0 : -1.4
   });
   let y = B.y + 90;
-  drawBlock(c, head, S.w / 2, y, { fill: ad.ink, align: 'center', track: serif ? 0 : -1.4 });
+  drawRich(c, head, S.w / 2, y, { fill: ad.ink, emFill: ad.accent, align: 'center' });
   y += head.height + 40;
   rule(c, S.w / 2 - 60, y, 120, ad.accent, 3);
   y += 56;

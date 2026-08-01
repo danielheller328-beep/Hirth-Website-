@@ -51,10 +51,8 @@ function pickContent() {
   }
   return out;
 }
-function pickListings() {
-  return LISTINGS.map((L, i) =>
-    Object.assign({}, L, { ad: AD[AD_ORDER[(WEEK_N * 5 + i + 3) % AD_ORDER.length]] }));
-}
+/* Listings are kept in the bank but are not surfaced as their own section.
+   To bring them back, add a `listings` entry to TABS below. */
 function pickLinkedIn() {
   const out = [];
   for (let i = 0; i < 7; i++) {
@@ -100,71 +98,43 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
-function contentSlides(P) {
+/* Four feed frames, then the same post cut for stories — one carousel, so
+   the vertical never has to be hunted for in a separate section. */
+function contentSlides(P, idx) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
+  const story = P.review ? (c => storyReview(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
+    : (idx % 2 ? (c => storyFigure(c, ad, P, frameMeta(P, 9, 1, SW, SH)))
+      : (c => storyStatement(c, ad, P, frameMeta(P, 9, 1, SW, SH))));
   return [
     paint(c => L.cover(c, ad, P, frameMeta(P, 0, total, FW, FH)), FW, FH),
     paint(c => (P.review ? quoteSlide(c, ad, P, frameMeta(P, 1, total, FW, FH))
       : L.points(c, ad, P, frameMeta(P, 1, total, FW, FH))), FW, FH),
     paint(c => (P.review ? L.points(c, ad, P, frameMeta(P, 2, total, FW, FH))
       : L.figure(c, ad, P, frameMeta(P, 2, total, FW, FH))), FW, FH),
-    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH)
+    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH),
+    paint(story, SW, SH)
   ];
-}
-function listingSlides(L) {
-  const ad = L.ad;
-  const n = L.closed ? 3 : 4;
-  const out = [paint(c => listingHero(c, L, frameMeta(L, 0, n, FW, FH)), FW, FH)];
-  out.push(paint(c => listingCase(c, ad, L, frameMeta(L, 1, n, FW, FH)), FW, FH));
-  if (!L.closed) out.push(paint(c => listingSite(c, L, frameMeta(L, 2, n, FW, FH)), FW, FH));
-  out.push(paint(c => listingAsk(c, ad, L, frameMeta(L, n - 1, n, FW, FH)), FW, FH));
-  return out;
 }
 
 /* ── the week, assembled ──────────────────────────────────────────────── */
 const WEEK = {
   content: pickContent(),
-  listings: pickListings(),
   linkedin: pickLinkedIn()
 };
-WEEK.stories = (function () {
-  const s = [];
-  /* one statement and one number, drawn from the week's first two posts */
-  WEEK.content.slice(0, 2).forEach((P, i) => {
-    s.push({
-      id: 'st-' + P.id, kind: 'Story', title: P.title, ad: P.ad, story: true,
-      cap: P.cap, tags: P.tags,
-      draw: c => (i === 0 ? storyStatement : storyFigure)(c, P.ad, P, frameMeta(P, 9 + i, 1, SW, SH))
-    });
-  });
-  /* every live listing gets a story */
-  WEEK.listings.forEach(L => {
-    s.push({
-      id: 'st-' + L.id, kind: 'Story', title: L.title + ' — Story', ad: AD.nocturne, story: true,
-      cap: L.cap, tags: L.tags,
-      draw: c => storyListing(c, L, frameMeta(L, 8, 1, SW, SH))
-    });
-  });
-  /* the house pieces */
-  const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-  s.push({
-    id: 'st-team', kind: 'Story', title: 'The Team', ad: teamAd, story: true,
-    draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
+/* the house piece — the team, as a story */
+WEEK.house = (function () {
+  const ad = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
+  return [{
+    id: 'team', kind: 'Story', title: 'The Team', ad, story: true,
+    stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
+    draw: c => storyTeam(c, ad, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
     cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
 
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
     tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-  });
-  const revAd = AD[AD_ORDER[(WEEK_N * 3 + 4) % AD_ORDER.length]];
-  const rev = CONTENT.find(p => p.review);
-  s.push({
-    id: 'st-review', kind: 'Story', title: 'Client Review', ad: revAd, story: true,
-    draw: c => storyReview(c, revAd, rev, frameMeta({ id: 'rev' }, 0, 1, SW, SH)),
-    cap: rev.cap, tags: rev.tags
-  });
-  return s;
+  }];
 })();
 
 /* ══ page ═════════════════════════════════════════════════════════════════ */
@@ -258,14 +228,14 @@ function postCard(i, P, cvs, eyebrow) {
   const a = document.createElement('article');
   a.className = 'card' + (P.story ? ' story' : '');
   a.id = 'post-' + (P.id || i);
-  a.appendChild(carousel(cvs, P.title));
+  a.appendChild(carousel(cvs, stripRich(P.title)));
   const b = document.createElement('div');
   b.className = 'body';
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
     '<span class="eyebrow">' + esc(eyebrow) + '</span>' +
     (P.ad ? '<span class="adtag" title="Art direction">' + esc(P.ad.name) + '</span>' : '') + '</div>' +
-    '<h2>' + esc(P.title) + '</h2>';
+    '<h2>' + esc(stripRich(P.title)) + '</h2>';
   if (P.stats) {
     const s = document.createElement('div');
     s.className = 'strip';
@@ -284,8 +254,9 @@ function postCard(i, P, cvs, eyebrow) {
     dlBtn.disabled = true;
     const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
     for (let k = 0; k < cvs.length; k++)
-      await saveCanvas(cvs[k], 'hirth-' + slug(P.title) + (cvs.length > 1 ? '-' + (k + 1) : '') + '.png');
-    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), 'hirth-' + slug(P.title) + '-caption.txt');
+      await saveCanvas(cvs[k], 'hirth-' + slug(stripRich(P.title)) +
+        (k === cvs.length - 1 && cvs[k].height > cvs[k].width ? '-story' : '-' + (k + 1)) + '.png');
+    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), 'hirth-' + slug(stripRich(P.title)) + '-caption.txt');
     dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
     setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
   };
@@ -332,21 +303,13 @@ function liCard(i, P) {
 
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
-  content: {
-    name: 'Content', head: 'Five content carousels · four frames each',
-    items: () => WEEK.content,
-    build: (P, i) => postCard(i, P, contentSlides(P), 'CONTENT · 4 FRAMES · ' + P.topic.toUpperCase())
-  },
-  listings: {
-    name: 'Listings', head: 'Live inventory',
-    items: () => WEEK.listings,
-    build: (L, i) => postCard(i, L, listingSlides(L),
-      (L.closed ? 'JUST CLOSED' : 'JUST LISTED') + ' · ' + (L.closed ? 3 : 4) + ' FRAMES')
-  },
-  stories: {
-    name: 'Stories', head: 'Vertical · 1080 × 1920',
-    items: () => WEEK.stories,
-    build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16')
+  posts: {
+    name: 'Posts', head: 'Five carousels · four feed frames and a story each',
+    items: () => WEEK.content.concat(WEEK.house),
+    build: (P, i) => P.story
+      ? postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · THE HOUSE')
+      : postCard(i, P, contentSlides(P, i),
+        'CAROUSEL · 4 FRAMES + STORY · ' + P.topic.toUpperCase())
   },
   linkedin: {
     name: 'LinkedIn', head: 'One post a day, Monday to Sunday',
@@ -354,7 +317,7 @@ const TABS = {
     build: (P, i) => liCard(i, P)
   }
 };
-let active = 'content';
+let active = 'posts';
 const built = {};
 
 function buildTab(key) {

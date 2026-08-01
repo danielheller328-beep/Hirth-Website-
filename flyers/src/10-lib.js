@@ -471,3 +471,113 @@ function railMarks(c, x, y, w, marks, o) {
     caps(c, m.k, mx, y + 40, { size: 15, fill: o.kCol || 'rgba(255,255,255,.55)', align: 'center', track: 2.4 });
   });
 }
+
+/* ══ MIXED-STYLE DISPLAY TYPE ═════════════════════════════════════════════
+   A headline set in one weight of one face is a headline a machine set. Real
+   editorial display type shifts voice mid-sentence — the clause that carries
+   the argument goes italic, or picks up the accent. Wrap a phrase in
+   *asterisks* in the copy and it is set in the emphasis style, with the line
+   breaker measuring each run in its own font so the rag stays honest.
+   ═══════════════════════════════════════════════════════════════════════ */
+function parseRich(str) {
+  const toks = [];
+  String(str).split('*').forEach((chunk, i) => {
+    const em = i % 2 === 1;
+    chunk.split(/\s+/).forEach(w => { if (w) toks.push({ w, em }); });
+  });
+  return toks;
+}
+function stripRich(str) { return String(str).replace(/\*/g, ''); }
+
+function richBreak(c, toks, maxW, roman, italic, track) {
+  const n = toks.length;
+  if (!n) return [];
+  c.save();
+  setTrack(c, track || 0);
+  const tr = track || 0;
+  const tw = toks.map(t => { c.font = t.em ? italic : roman; return c.measureText(t.w).width - tr; });
+  c.font = roman;
+  const spaceW = c.measureText(' ').width - tr;
+  c.restore();
+
+  const lineW = (i, j) => {
+    let w = 0;
+    for (let k = i; k <= j; k++) w += tw[k];
+    return w + spaceW * (j - i);
+  };
+  const INF = 1e18, cost = new Array(n + 1).fill(INF), back = new Array(n + 1).fill(0);
+  cost[n] = 0;
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = i; j < n; j++) {
+      const w = lineW(i, j);
+      if (w > maxW && j > i) break;
+      const isLast = j === n - 1;
+      let bad;
+      if (w > maxW) bad = 1e12;
+      else if (isLast) bad = (j === i && n > 2) ? 4e5 : 0;
+      else { const slack = maxW - w; bad = slack * slack; }
+      const tot = bad + cost[j + 1];
+      if (tot < cost[i]) { cost[i] = tot; back[i] = j + 1; }
+    }
+  }
+  const out = [];
+  let i = 0, guard = 0;
+  while (i < n && guard++ < 200) {
+    const j = back[i] || (i + 1);
+    out.push({ toks: toks.slice(i, j), w: lineW(i, j - 1) });
+    i = j;
+  }
+  return out;
+}
+
+/* fit a mixed-style headline into a box.
+   o.roman(size) / o.italic(size) build the two fonts. */
+function fitRich(c, str, box, o) {
+  o = o || {};
+  const roman = o.roman || (s => FS(600, s));
+  const italic = o.italic || (s => FS(600, s, 'italic'));
+  const lead = o.leading || 1.05, maxLines = o.maxLines || 6, track = o.track || 0;
+  const toks = parseRich(str);
+  let size = o.max || 120;
+  const min = o.min || 30;
+  while (size > min) {
+    const lines = richBreak(c, toks, box.w, roman(size), italic(size), track);
+    if (lines.length <= maxLines && lines.length * size * lead <= box.h &&
+      !lines.some(l => l.w > box.w + 0.5)) {
+      return { size, lines, leading: size * lead, height: lines.length * size * lead, roman, italic, track };
+    }
+    size -= 2;
+  }
+  const lines = richBreak(c, toks, box.w, roman(min), italic(min), track);
+  return { size: min, lines, leading: min * lead, height: lines.length * min * lead, roman, italic, track };
+}
+
+function drawRich(c, blk, x, y, o) {
+  o = o || {};
+  const fill = o.fill || '#fff', emFill = o.emFill || fill;
+  let yy = y;
+  c.save();
+  setTrack(c, blk.track || 0);
+  const spaceW = (function () {
+    c.font = blk.roman(blk.size);
+    return c.measureText(' ').width - (blk.track || 0);
+  })();
+  blk.lines.forEach(line => {
+    let px = x;
+    if (o.align === 'center') px = x - line.w / 2;
+    else if (o.align === 'right') px = x - line.w;
+    line.toks.forEach((t, i) => {
+      const f = t.em ? blk.italic(blk.size) : blk.roman(blk.size);
+      text(c, t.w, px, yy, {
+        font: f, fill: t.em ? emFill : fill, base: 'top',
+        track: blk.track || 0, shadow: o.shadow
+      });
+      c.font = f;
+      setTrack(c, blk.track || 0);
+      px += c.measureText(t.w).width - (blk.track || 0) + (i < line.toks.length - 1 ? spaceW : 0);
+    });
+    yy += blk.leading;
+  });
+  c.restore();
+  return yy;
+}

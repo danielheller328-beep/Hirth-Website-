@@ -6,9 +6,13 @@
        cover   the statement          points  the enumerated detail
        figure  the number             ask     the close
 
-   Each of the six art directions composes all four its own way. That is 24
-   distinct compositions rather than one template with six colour schemes,
-   which is the whole point: two posts in the same week never rhyme.
+   Each of the six art directions composes all four its own way, on its own
+   drawn imagery, with its own ornament. Twenty-four compositions, not one
+   composition recoloured six times.
+
+   Headlines are set mixed-style: the clause carrying the argument is wrapped
+   in *asterisks* in the copy and comes out italic and in the accent, with the
+   line breaker measuring each run in its own font.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const M0 = 68;                       /* page margin at 1080 */
@@ -18,7 +22,7 @@ function stage(c, ad, S, o) {
   o = o || {};
   const w = S.w, h = S.h, M = S.M;
   ad.ground(c, w, h, S.seed);
-  if (o.beforeChrome) o.beforeChrome();
+  if (o.art) o.art();                       /* imagery goes under the furniture */
   if (o.header !== false) ad.header(c, w, h, { M, label: o.label, sheet: S.sheetNo });
   if (o.footer !== false) ad.footer(c, w, h, { M, sheet: S.sheetNo, ref: o.ref });
   const top = { atelier: 222, signal: 226, dossier: 224, blueprint: 214, midnight: 208, nocturne: 208 }[ad.id];
@@ -26,52 +30,102 @@ function stage(c, ad, S, o) {
   return { x: M, y: top, w: w - M * 2, h: (h - botMap[ad.id]) - top, bottom: h - botMap[ad.id] };
 }
 
+/* a two-line raised initial, set on the cap height of the first line */
+function dropCap(c, str, x, y, maxW, o) {
+  o = o || {};
+  const size = o.size || 27, lead = o.leading || 41;
+  const first = str.trim()[0];
+  const rest = str.trim().slice(1);
+  const capSize = o.capSize || lead * 2.05;
+  const capW = measure(c, first, FS(600, capSize), 0);
+  text(c, first, x, y + lead * 1.62, { font: FS(600, capSize), fill: o.capFill || o.fill, base: 'alphabetic' });
+  const indent = capW + 14;
+  /* the first two lines are set short to clear the initial */
+  const lines = breakLines(c, rest, maxW - indent, FN(400, size), 0);
+  let yy = y, used = 0;
+  const head = [];
+  while (used < 2 && lines.length) { head.push(lines.shift()); used++; }
+  head.forEach(l => {
+    text(c, l, x + indent, yy, { font: FN(400, size), fill: o.fill, base: 'top' });
+    yy += lead;
+  });
+  if (lines.length) {
+    const remainder = lines.join(' ');
+    yy = para(c, remainder, x, yy, maxW, { font: FN(400, size), fill: o.fill, leading: lead });
+  }
+  return yy;
+}
+
+/* the emphasis colour each world uses inside a headline */
+function emColour(ad) {
+  return { atelier: ad.accent, midnight: ad.accent, blueprint: ad.accent, signal: ad.accent, dossier: ad.accent, nocturne: ad.accent }[ad.id];
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    1 · ATELIER — the printed prospectus
+   guilloché rosette · raised initial · marginalia · hanging folio
    ══════════════════════════════════════════════════════════════════════════ */
 const L_atelier = {
   cover(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.topic });
-    /* oversized folio, set behind everything */
-    text(c, S.no, S.w - S.M + 6, B.bottom - 70, {
-      font: FS(600, 280), fill: rgba('#1C5C86', .07), align: 'right', base: 'alphabetic'
+    const B = stage(c, ad, S, {
+      label: P.topic,
+      art: () => {
+        /* the engraving runs off the bottom-right corner, as it would on a
+           certificate — cropped, not centred and decorative */
+        guilloche(c, S.w * 1.0, S.h * 0.86, S.w * 0.50, {
+          rings: 7, petals: 13, inner: .66, arm: .27,
+          color: rgba('#1C5C86', .26), weight: 1
+        });
+        guilloche(c, S.w * 1.0, S.h * 0.86, S.w * 0.33, {
+          rings: 5, petals: 8, inner: .58, arm: .34,
+          color: rgba('#B08447', .24), weight: 1
+        });
+      }
     });
-    kicker(c, ad, P.kicker || 'The Brief', B.x, B.y + 18, { fill: ad.accent });
-    const head = fitBlock(c, P.title, { w: B.w * .94, h: B.h * .52 }, {
-      weight: 600, family: SERIF, max: 128, min: 48, leading: 1.02, maxLines: 5
+    const head = fitRich(c, P.title, { w: B.w * .94, h: B.h * .50 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 126, min: 46, leading: 1.02, maxLines: 5
     });
-    let y = B.y + 66;
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
-    y += 34;
-    rule(c, B.x, y, 128, ad.accent, 3); y += 40;
-    y = para(c, P.sub, B.x, y, B.w * .68, {
-      font: FN(400, 29), fill: ad.body, leading: 43
+    /* the whole block is set as one optical unit and centred in the field —
+       a short deck must not leave a dead band above the furniture */
+    const deckH = paraHeight(c, P.sub, B.w * .70, { font: FN(400, 27), leading: 41 }) + 41;
+    const groupH = head.height + 32 + 3 + 42 + deckH;
+    let y = B.y + Math.max(52, (B.h - 60 - groupH) / 2);
+    kicker(c, ad, P.kicker || 'The Brief', B.x, y - 42, { fill: ad.accent });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
+    y += 32;
+    rule(c, B.x, y, 128, ad.accent, 3);
+    y += 42;
+    dropCap(c, P.sub, B.x, y, B.w * .70, {
+      size: 27, leading: 41, fill: ad.body, capFill: ad.accent
     });
-    /* the printer's furniture at the foot of the field */
-    const bits = [P.topic.toUpperCase(), 'THE HIRTH GROUP', HOUSE.market];
+    /* marginalia, set vertically in the outer margin */
+    c.save();
+    c.translate(S.w - 30, B.bottom - 66); c.rotate(-Math.PI / 2);
+    caps(c, 'The Hirth Group · ' + HOUSE.market, 0, 0, { size: 12, fill: ad.muted, track: 3.4 });
+    c.restore();
+    /* the folio, hung below the furniture rule */
     rule(c, B.x, B.bottom - 46, B.w, ad.ruleSoft, 1);
-    let x = B.x;
-    bits.forEach((b, i) => {
-      const bw = caps(c, b, x, B.bottom - 20, { size: 13, fill: ad.muted, track: 3 });
-      x += bw + 26;
-      if (i < bits.length - 1) { diamond(c, x - 13, B.bottom - 21, 2.5, ad.accent2); }
+    caps(c, P.topic, B.x, B.bottom - 20, { size: 13, fill: ad.muted, track: 3 });
+    text(c, S.no + ' / ' + S.total, B.x + B.w, B.bottom - 20, {
+      font: FS(600, 17), fill: ad.accent, align: 'right', base: 'middle'
     });
   },
 
   points(c, ad, P, S) {
     const B = stage(c, ad, S, { label: 'The Detail' });
-    let y = B.y + 10;
-    text(c, P.pointsTitle || 'In practice', B.x, y, { font: FS(600, 58), fill: ad.ink, base: 'top' });
-    y += 78;
+    let y = B.y + 6;
+    text(c, P.pointsTitle || 'In practice', B.x, y, { font: FS(600, 56), fill: ad.ink, base: 'top' });
+    y += 74;
     rule(c, B.x, y, B.w, ad.rule, 1.5); y += 8;
     const rows = P.points.slice(0, 6);
-    const avail = B.bottom - y - 12;
-    const rowH = avail / rows.length;
+    const rowH = (B.bottom - y - 12) / rows.length;
     rows.forEach((r, i) => {
       const ry = y + rowH * i;
       if (i) rule(c, B.x, ry, B.w, ad.ruleSoft, 1);
+      /* oldstyle folio in the margin, hung outside the text column */
       text(c, String(i + 1).padStart(2, '0'), B.x, ry + rowH / 2, {
-        font: FS(600, 30), fill: ad.accent, base: 'middle'
+        font: FS(600, 30), fill: ad.accent, base: 'middle', alpha: .9
       });
       const tx = B.x + 76, tw = B.w - 76;
       const lead = measure(c, r[0], FN(700, 26), 0);
@@ -88,8 +142,14 @@ const L_atelier = {
   },
 
   figure(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.figureLabel || 'The Number' });
     const cx = S.w / 2;
+    const B = stage(c, ad, S, {
+      label: P.figureLabel || 'The Number',
+      art: () => guilloche(c, cx, S.h * .44, S.w * .40, {
+        rings: 7, petals: 9, inner: .7, arm: .22,
+        color: rgba('#1C5C86', .13), weight: 1
+      })
+    });
     const pullH = paraHeight(c, '“' + P.pull + '”', B.w * .82, { font: FS(400, 34, 'italic'), leading: 50 });
     const figH = P.figurePair ? 430 : 400;
     let y = B.y + Math.max(20, (B.h - (figH + 112 + pullH)) / 2);
@@ -121,8 +181,11 @@ const L_atelier = {
   },
 
   ask(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: 'Contact' });
     const cx = S.w / 2;
+    const B = stage(c, ad, S, {
+      label: 'Contact',
+      art: () => engravedRings(c, cx, S.h * .52, 300, 470, 9, rgba('#1C5C86', .06), 1)
+    });
     let y = B.y + 22;
     caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 16, fill: ad.accent, align: 'center', track: 4.4 });
     y += 40;
@@ -148,26 +211,52 @@ const L_atelier = {
 
 /* ══════════════════════════════════════════════════════════════════════════
    2 · MIDNIGHT — quiet, low-anchored, one accent
+   contour field · outlined word bleeding off the frame · volumetric light
    ══════════════════════════════════════════════════════════════════════════ */
+function outlineWord(c, str, x, y, size, col, weight, track) {
+  c.save();
+  c.font = FS(600, size);
+  setTrack(c, track || 0);
+  c.strokeStyle = col;
+  c.lineWidth = weight || 1.5;
+  c.textBaseline = 'alphabetic';
+  c.strokeText(str, x, y);
+  c.restore();
+}
 const L_midnight = {
   cover(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.topic });
+    const B = stage(c, ad, S, {
+      label: P.topic,
+      art: () => {
+        contourField(c, 0, S.h * .10, S.w, S.h * .46, S.seed, {
+          lines: 30, color: t => rgba('#79BDEA', .04 + t * .07), amp: .30, weight: 1
+        });
+        /* the topic, set enormous in outline and cropped by the right edge */
+        const word = (P.figure && String(P.figure).length <= 5 ? P.figure : P.topic.split(' ')[0]).toUpperCase();
+        outlineWord(c, word, S.w * .30, S.h * .40, 300, rgba('#FFFFFF', .055), 2, 4);
+      }
+    });
     vrule(c, B.x - 26, B.y, B.h, ad.ruleSoft, 1);
-    const head = fitBlock(c, P.title, { w: B.w * .92, h: B.h * .5 }, {
-      weight: 600, family: SERIF, max: 120, min: 46, leading: 1.03, maxLines: 5
+    const head = fitRich(c, P.title, { w: B.w * .92, h: B.h * .5 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 118, min: 46, leading: 1.03, maxLines: 5
     });
     const subH = paraHeight(c, P.sub, B.w * .66, { font: FN(400, 28), leading: 42 });
-    /* anchored to the foot of the field: the air sits above the type */
     let y = B.bottom - subH - 46 - head.height;
     c.fillStyle = ad.accent; c.fillRect(B.x - 26, y + 14, 3, head.height - 8);
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 46;
     para(c, P.sub, B.x, y, B.w * .66, { font: FN(400, 28), fill: ad.body, leading: 42 });
     caps(c, S.no + ' / ' + S.total, S.w - S.M, B.y + 2, { size: 14, fill: ad.muted, align: 'right', track: 3 });
   },
 
   points(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: 'The Detail' });
+    const B = stage(c, ad, S, {
+      label: 'The Detail',
+      art: () => contourField(c, 0, S.h * .52, S.w, S.h * .48, S.seed + 7, {
+        lines: 22, color: t => rgba('#79BDEA', .02 + t * .04), amp: .22
+      })
+    });
     let y = B.y + 6;
     text(c, P.pointsTitle || 'In practice', B.x, y, { font: FS(600, 52), fill: ad.ink, base: 'top' });
     y += 90;
@@ -195,12 +284,27 @@ const L_midnight = {
   },
 
   figure(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.figureLabel || 'The Number', footer: true });
     const split = S.w * .50;
-    /* left field carries the number, right field the reasoning */
-    c.save(); c.fillStyle = 'rgba(255,255,255,.028)'; c.fillRect(0, B.y - 40, split, B.bottom - B.y + 80); c.restore();
+    const B = stage(c, ad, S, {
+      label: P.figureLabel || 'The Number',
+      art: () => {
+        c.save();
+        c.fillStyle = 'rgba(255,255,255,.028)';
+        c.fillRect(0, 0, split, S.h);
+        c.restore();
+        /* a shaft of light across the left panel */
+        const g = c.createLinearGradient(0, S.h * .1, split, S.h * .8);
+        g.addColorStop(0, 'rgba(121,189,234,.10)');
+        g.addColorStop(.5, 'rgba(121,189,234,.02)');
+        g.addColorStop(1, 'rgba(121,189,234,0)');
+        c.fillStyle = g; c.fillRect(0, 0, split, S.h);
+        contourField(c, split, 0, S.w - split, S.h, S.seed + 3, {
+          lines: 18, color: t => rgba('#79BDEA', .02 + t * .035), amp: .3
+        });
+      }
+    });
     vrule(c, split, B.y - 40, B.bottom - B.y + 80, ad.rule, 1);
-    const cy = (B.y + B.bottom) / 2;
+    const cy = (B.y + B.bottom) / 2 - (P.bars ? 70 : 0);
     if (P.figurePair) {
       text(c, P.figurePair[0], split / 2, cy - 62, { font: FS(600, 128), fill: ad.ink, align: 'center', base: 'middle' });
       caps(c, P.figurePairLabels[0], split / 2, cy + 12, { size: 14, fill: ad.accent, align: 'center', track: 3.2 });
@@ -229,16 +333,21 @@ const L_midnight = {
   },
 
   ask(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: 'Contact' });
+    const B = stage(c, ad, S, {
+      label: 'Contact',
+      art: () => contourField(c, 0, 0, S.w, S.h * .42, S.seed + 11, {
+        lines: 20, color: t => rgba('#79BDEA', .03 + t * .05), amp: .3
+      })
+    });
     let y = B.y + 16;
     kicker(c, ad, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8);
     y += 54;
-    const head = fitBlock(c, P.cta, { w: B.w * .88, h: 210 }, {
-      weight: 600, family: SERIF, max: 74, min: 40, leading: 1.1, maxLines: 3
+    const head = fitRich(c, P.cta, { w: B.w * .88, h: 210 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 74, min: 40, leading: 1.1, maxLines: 3
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 58;
-    /* square crops, flush to the grid — no circles anywhere in this world */
     const gap = 22, sq = (B.w - gap * 2) / 3;
     TEAM.forEach((t, i) => {
       const px = B.x + (sq + gap) * i, face = IMG[t.key];
@@ -260,8 +369,9 @@ const L_midnight = {
 
 /* ══════════════════════════════════════════════════════════════════════════
    3 · BLUEPRINT — the drawing set
+   isometric massing · dimension lines · north arrow · scale bar · coordinates
    ══════════════════════════════════════════════════════════════════════════ */
-function dimLine(c, x1, y, x2, col, label, labelCol) {
+function dimLine(c, x1, y, x2, col, label, labelCol, ground) {
   line(c, x1, y, x2, y, col, 1);
   [[x1, 1], [x2, -1]].forEach(e => {
     line(c, e[0], y - 7, e[0], y + 7, col, 1);
@@ -270,38 +380,54 @@ function dimLine(c, x1, y, x2, col, label, labelCol) {
   });
   if (label) {
     const w = measure(c, label.toUpperCase(), FN(600, 13), 2.6) + 22;
-    c.save(); c.fillStyle = '#0A2437'; c.fillRect((x1 + x2) / 2 - w / 2, y - 11, w, 22); c.restore();
+    c.save(); c.fillStyle = ground || '#0A2437'; c.fillRect((x1 + x2) / 2 - w / 2, y - 11, w, 22); c.restore();
     caps(c, label, (x1 + x2) / 2, y, { size: 13, fill: labelCol || col, align: 'center', track: 2.6 });
   }
 }
 const L_blueprint = {
   cover(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.topic });
-    cropMarks(c, S.w, S.h, 26, 22, rgba('#59C6F2', .45), 1);
-    let y = B.y + 40;
-    dimLine(c, B.x, y, B.x + B.w, ad.accent, 'sheet width', ad.body);
-    y += 46;
-    const head = fitBlock(c, P.title, { w: B.w - 40, h: B.h * .46 }, {
-      weight: 600, family: SERIF, max: 112, min: 44, leading: 1.05, maxLines: 5
+    const B = stage(c, ad, S, {
+      label: P.topic,
+      art: () => {
+        /* the block, extruded — the subject of every one of these posts */
+        isoMassing(c, S.w * .52, 512, 70, 6, 6, S.seed, {
+          top: 'rgba(89,198,242,.30)', left: 'rgba(20,66,96,.72)', right: 'rgba(12,42,62,.80)',
+          heroTop: 'rgba(89,198,242,.62)', heroLeft: 'rgba(30,92,132,.85)', heroRight: 'rgba(18,58,84,.9)',
+          edge: 'rgba(140,205,240,.22)', alpha: .95
+        });
+        /* fade the tops into the sheet rather than letting the header crop them */
+        let g = c.createLinearGradient(0, 150, 0, 330);
+        g.addColorStop(0, 'rgba(9,33,50,.96)'); g.addColorStop(1, 'rgba(9,33,50,0)');
+        c.fillStyle = g; c.fillRect(0, 140, S.w, 200);
+        g = c.createLinearGradient(0, 330, 0, 660);
+        g.addColorStop(0, 'rgba(7,26,40,0)'); g.addColorStop(1, 'rgba(7,26,40,.92)');
+        c.fillStyle = g; c.fillRect(0, 330, S.w, 340);
+      }
     });
-    /* the headline is drawn as a component, boxed and dimensioned */
-    const boxH = head.height + 56;
+    cropMarks(c, S.w, S.h, 26, 22, rgba('#59C6F2', .45), 1);
+    sheetCoords(c, B.x, B.y - 8, B.w, B.h, rgba('#8CCDF0', .30));
+    northArrow(c, S.w - S.M - 22, B.y + 40, 22, rgba('#59C6F2', .7), ad.body);
+
+    const head = fitRich(c, P.title, { w: B.w - 40, h: 300 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 96, min: 42, leading: 1.05, maxLines: 4
+    });
+    const noteH = paraHeight(c, P.sub, B.w * .74, { font: FN(400, 26), leading: 40 });
+    const boxH = head.height + 52;
+    let y = B.bottom - noteH - 56 - boxH - 40;
     c.save(); c.strokeStyle = ad.rule; c.lineWidth = 1;
     c.strokeRect(hair(B.x), hair(y), B.w, boxH);
-    c.fillStyle = rgba('#59C6F2', .05); c.fillRect(B.x, y, B.w, boxH); c.restore();
+    c.fillStyle = 'rgba(7,26,40,.72)'; c.fillRect(B.x + 1, y + 1, B.w - 2, boxH - 2); c.restore();
     line(c, B.x, y, B.x + 26, y + 26, ad.rule, 1);
-    drawBlock(c, head, B.x + 26, y + 28, { fill: ad.ink });
-    /* the note is hung off the foot of the field, not stacked under the box —
-       otherwise a short headline leaves a dead band across the middle */
-    const noteH = paraHeight(c, P.sub, B.w * .78, { font: FN(400, 27), leading: 41 });
-    y = Math.max(y + boxH + 40, B.bottom - noteH - 34);
-    caps(c, 'note', B.x, y - 26, { size: 13, fill: ad.accent, track: 3 });
-    rule(c, B.x + 66, y - 26, B.w - 66, ad.ruleSoft, 1);
-    para(c, P.sub, B.x, y, B.w * .78, { font: FN(400, 27), fill: ad.body, leading: 41 });
-    /* left-hand scale rail */
-    const rt = B.y + 40, rb = B.bottom - 10;
-    vrule(c, B.x - 30, rt, rb - rt, ad.rule, 1);
-    for (let t = rt; t <= rb; t += (rb - rt) / 8) line(c, B.x - 36, t, B.x - 24, t, ad.ruleSoft, 1);
+    drawRich(c, head, B.x + 26, y + 26, { fill: ad.ink, emFill: ad.accent });
+    y += boxH + 14;
+    dimLine(c, B.x, y + 14, B.x + B.w, ad.accent, 'block frontage', ad.body, '#0B2739');
+    y += 54;
+    caps(c, 'note', B.x, y, { size: 13, fill: ad.accent, track: 3 });
+    rule(c, B.x + 66, y, B.w - 66, ad.ruleSoft, 1);
+    y += 26;
+    para(c, P.sub, B.x, y, B.w * .74, { font: FN(400, 26), fill: ad.body, leading: 40 });
+    scaleBar(c, B.x + B.w - 150, B.bottom - 24, 150, rgba('#59C6F2', .6), ad.muted, 'not to scale');
   },
 
   points(c, ad, P, S) {
@@ -334,24 +460,29 @@ const L_blueprint = {
   },
 
   figure(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.figureLabel || 'Measure' });
-    const cx = S.w / 2, cy = B.y + B.h * .36;
+    const B = stage(c, ad, S, {
+      label: P.figureLabel || 'Measure',
+      art: () => isoMassing(c, S.w * .5, S.h - 150, 58, 5, 5, S.seed + 5, {
+        top: 'rgba(89,198,242,.10)', left: 'rgba(20,66,96,.28)', right: 'rgba(12,42,62,.32)',
+        edge: 'rgba(140,205,240,.10)', alpha: .8
+      })
+    });
+    const cx = S.w / 2, cy = B.y + B.h * .34;
     if (P.figurePair) {
       [0, 1].forEach(i => {
         const px = cx + (i ? 1 : -1) * S.w * .20;
         text(c, P.figurePair[i], px, cy, { font: FS(600, 168), fill: ad.ink, align: 'center', base: 'middle' });
         caps(c, P.figurePairLabels[i], px, cy + 116, { size: 14, fill: ad.accent, align: 'center', track: 3.2 });
       });
-      dimLine(c, cx - S.w * .32, cy + 168, cx + S.w * .32, ad.accent, 'the window', ad.body);
+      dimLine(c, cx - S.w * .32, cy + 168, cx + S.w * .32, ad.accent, 'the window', ad.body, '#0B2739');
     } else {
       let sz = 208;
       while (measure(c, P.figure, FS(600, sz), 0) > B.w * .82 && sz > 70) sz -= 5;
       const tw = measure(c, P.figure, FS(600, sz), 0);
       text(c, P.figure, cx, cy, { font: FS(600, sz), fill: ad.ink, align: 'center', base: 'middle' });
-      /* extension lines out to the measured value */
       vrule(c, cx - tw / 2 - 30, cy - sz * .42, sz * .84, ad.ruleSoft, 1);
       vrule(c, cx + tw / 2 + 30, cy - sz * .42, sz * .84, ad.ruleSoft, 1);
-      dimLine(c, cx - tw / 2 - 30, cy + sz * .60, cx + tw / 2 + 30, ad.accent, P.figureSub, ad.body);
+      dimLine(c, cx - tw / 2 - 30, cy + sz * .60, cx + tw / 2 + 30, ad.accent, P.figureSub, ad.body, '#0B2739');
     }
     let y = cy + (P.figurePair ? 226 : 200);
     if (P.bars) {
@@ -370,12 +501,12 @@ const L_blueprint = {
     let y = B.y + 10;
     caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y + 10, { size: 15, fill: ad.accent, track: 3.6 });
     y += 48;
-    const head = fitBlock(c, P.cta, { w: B.w * .9, h: 200 }, {
-      weight: 600, family: SERIF, max: 70, min: 38, leading: 1.1, maxLines: 3
+    const head = fitRich(c, P.cta, { w: B.w * .9, h: 200 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 70, min: 38, leading: 1.1, maxLines: 3
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 50;
-    /* the roster, drawn as a component schedule */
     const cellH = 132, cw = B.w / 3;
     c.save(); c.strokeStyle = ad.rule; c.lineWidth = 1;
     c.strokeRect(hair(B.x), hair(y), B.w, cellH); c.restore();
@@ -397,36 +528,53 @@ const L_blueprint = {
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
-   4 · SIGNAL — Swiss grid, sans headline, one flat accent field
+   4 · SIGNAL — Swiss grid, sans headline, flat colour, halftone screen
    ══════════════════════════════════════════════════════════════════════════ */
 const L_signal = {
   cover(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.topic });
-    const colW = B.w / 12;
-    /* the accent field: a full-bleed column block, position varies by post */
-    const slot = 8 + (S.rnd() > .5 ? 1 : 0);
-    c.fillStyle = ad.accent;
-    c.fillRect(B.x + colW * slot, 0, colW * (12 - slot) + S.M, B.y - 22);
-    let y = B.y + 14;
+    const colW = (S.w - M0 * 2) / 12;
+    const slot = 7;
+    const B = stage(c, ad, S, {
+      label: P.topic,
+      art: () => {
+        /* the flat field: full-bleed to the top-right corner */
+        c.fillStyle = ad.accent;
+        c.fillRect(M0 + colW * slot, 0, colW * (12 - slot) + M0, 372);
+        /* screened tint stepping down out of it */
+        halftone(c, M0 + colW * slot, 372, colW * (12 - slot) + M0, 196, {
+          color: ad.accent, pitch: 15, maxR: 6.0, alpha: .6,
+          density: (u, v) => Math.pow(1 - v, 1.35)
+        });
+      }
+    });
+    /* an oversized ordinal cropped by the right edge, sitting in the field */
+    text(c, S.no, S.w - 18, 300, {
+      font: FN(700, 250), fill: 'rgba(255,255,255,.22)', align: 'right', base: 'alphabetic', track: -10
+    });
+    let y = B.y + 180;
     caps(c, P.kicker || 'The Brief', B.x, y, { size: 15, fill: ad.accent, track: 3.6 });
     y += 40;
-    const head = fitBlock(c, P.title, { w: B.w * .96, h: B.h * .56 }, {
-      weight: 700, family: SANS, max: 104, min: 40, leading: .99, maxLines: 5, track: -1.6
+    const head = fitRich(c, P.title, { w: colW * 11, h: 400 }, {
+      roman: s => FN(700, s), italic: s => FN(500, s, 'italic'),
+      max: 100, min: 40, leading: .99, maxLines: 5, track: -1.6
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink, track: -1.6 });
-    y += 40;
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
+    y += 36;
     rule(c, B.x, y, B.w, ad.ink, 3);
-    y += 34;
-    /* deck sits in the right six columns only — the grid stays visible */
+    y += 32;
     para(c, P.sub, B.x + colW * 6, y, colW * 6, { font: FN(400, 25), fill: ad.body, leading: 38 });
     caps(c, S.no + ' — ' + S.total, B.x, y + 8, { size: 14, fill: ad.muted, track: 3 });
-    /* the figures fill the left half rather than leaving it dead */
+    /* the figures take the left half only — the deck already owns columns 7–12,
+       and two figures set large read better here than three set small */
     if (P.stats) {
-      const sy = B.bottom - 96;
-      rule(c, B.x, sy - 24, colW * 5, ad.rule, 1);
-      P.stats.slice(0, 3).forEach((st, i) => {
-        const sx = B.x + colW * 1.7 * i;
-        text(c, st[0], sx, sy + 22, { font: FN(700, 38), fill: ad.ink, base: 'middle', track: -1 });
+      const half = colW * 5.4, sy = B.bottom - 84, cw = half / 2;
+      rule(c, B.x, sy - 26, half, ad.rule, 1);
+      P.stats.slice(0, 2).forEach((st, i) => {
+        const sx = B.x + cw * i;
+        if (i) vrule(c, sx - 22, sy - 12, 76, ad.ruleSoft, 1);
+        let sz = 40;
+        while (measure(c, st[0], FN(700, sz), -1) > cw - 34 && sz > 18) sz -= 1;
+        text(c, st[0], sx, sy + 22, { font: FN(700, sz), fill: ad.ink, base: 'middle', track: -1 });
         caps(c, st[1], sx, sy + 58, { size: 12, fill: ad.muted, track: 2.4 });
       });
     }
@@ -465,7 +613,13 @@ const L_signal = {
   },
 
   figure(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.figureLabel || 'The Number' });
+    const B = stage(c, ad, S, {
+      label: P.figureLabel || 'The Number',
+      art: () => halftone(c, 0, S.h * .40, S.w, S.h * .52, {
+        color: ad.accent, pitch: 17, maxR: 7.4, alpha: .5,
+        density: (u, v) => clamp(1 - v * 1.25, 0, 1)
+      })
+    });
     let y = B.y + 16;
     caps(c, P.figureKicker || P.topic, B.x, y, { size: 15, fill: ad.accent, track: 3.6 });
     y += 46;
@@ -501,11 +655,12 @@ const L_signal = {
     let y = B.y + 12;
     caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8, { size: 15, fill: ad.accent, track: 3.6 });
     y += 50;
-    const head = fitBlock(c, P.cta, { w: B.w * .94, h: 210 }, {
-      weight: 700, family: SANS, max: 72, min: 38, leading: 1.04, maxLines: 3, track: -1.4
+    const head = fitRich(c, P.cta, { w: B.w * .94, h: 210 }, {
+      roman: s => FN(700, s), italic: s => FN(500, s, 'italic'),
+      max: 72, min: 38, leading: 1.04, maxLines: 3, track: -1.4
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink, track: -1.4 });
-    y += 44;
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
+    y += 40;
     rule(c, B.x, y, B.w, ad.ink, 3); y += 40;
     const gap = 20, sq = (B.w - gap * 2) / 3;
     TEAM.forEach((t, i) => {
@@ -516,9 +671,8 @@ const L_signal = {
       caps(c, t.role, px, y + sq * .92 + 62, { size: 11, fill: ad.muted, track: 2.2 });
     });
     y += sq * .92 + 96;
-    const bh = 84;
-    c.fillStyle = ad.accent; c.fillRect(B.x, Math.min(y, B.bottom - bh), B.w, bh);
-    const by = Math.min(y, B.bottom - bh);
+    const bh = 84, by = Math.min(y, B.bottom - bh);
+    c.fillStyle = ad.accent; c.fillRect(B.x, by, B.w, bh);
     text(c, 'Call or text ' + HOUSE.phone, B.x + 30, by + bh / 2, { font: FN(700, 28), fill: '#fff', base: 'middle' });
     icon(c, 'arrow', B.x + B.w - 44, by + bh / 2, 26, '#fff', 2);
   }
@@ -526,6 +680,7 @@ const L_signal = {
 
 /* ══════════════════════════════════════════════════════════════════════════
    5 · DOSSIER — the file
+   paperclip · index tab · oxide seal · redaction · ruled table
    ══════════════════════════════════════════════════════════════════════════ */
 function punchHoles(c, ad, h) {
   [0.28, 0.5, 0.72].forEach(t => {
@@ -539,26 +694,42 @@ function punchHoles(c, ad, h) {
 }
 const L_dossier = {
   cover(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.topic, beforeChrome: null });
+    const B = stage(c, ad, S, {
+      label: P.topic,
+      art: () => {
+        /* the seal, struck off the right edge */
+        guilloche(c, S.w * .86, S.h * .68, 250, {
+          rings: 7, petals: 7, inner: .60, arm: .30,
+          color: rgba('#A6432B', .26), weight: 1
+        });
+        engravedRings(c, S.w * .86, S.h * .68, 228, 256, 3, rgba('#A6432B', .3), 1);
+        caps(c, 'THE HIRTH GROUP', S.w * .86, S.h * .68, {
+          size: 13, fill: rgba('#A6432B', .34), align: 'center', track: 4
+        });
+      }
+    });
     punchHoles(c, ad, S.h);
+    fileTab(c, 300, 6, 176, 44, 'FILE ' + S.no, rgba('#A6432B', .82), '#F2ECE1');
+    paperclip(c, B.x + 6, 6, 46, 'rgba(90,84,72,.75)');
     let y = B.y + 24;
-    /* typed reference line */
     caps(c, 'SUBJECT', B.x, y, { size: 12, fill: ad.muted, track: 3 });
     rule(c, B.x + 96, y, B.w - 96, ad.ruleSoft, 1);
     y += 38;
-    const head = fitBlock(c, P.title, { w: B.w * .94, h: B.h * .48 }, {
-      weight: 600, family: SERIF, max: 116, min: 44, leading: 1.03, maxLines: 5
+    const head = fitRich(c, P.title, { w: B.w * .94, h: B.h * .44 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 112, min: 44, leading: 1.03, maxLines: 5
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 12;
-    /* the oxide swipe under the headline */
+    /* the oxide swipe, struck with a slight taper as a roller would leave it */
     c.save(); c.fillStyle = rgba('#A6432B', .82);
     c.beginPath(); c.moveTo(B.x, y + 6); c.lineTo(B.x + B.w * .46, y);
     c.lineTo(B.x + B.w * .46, y + 15); c.lineTo(B.x, y + 21); c.closePath(); c.fill(); c.restore();
     y += 62;
     caps(c, 'summary', B.x, y, { size: 12, fill: ad.accent, track: 3 });
     y += 28;
-    vrule(c, B.x, y, paraHeight(c, P.sub, B.w * .70 - 26, { font: FN(400, 27), leading: 41 }), ad.rule, 2);
+    const subH = paraHeight(c, P.sub, B.w * .70 - 26, { font: FN(400, 27), leading: 41 });
+    vrule(c, B.x, y, subH, ad.rule, 2);
     para(c, P.sub, B.x + 26, y, B.w * .70 - 26, { font: FN(400, 27), fill: ad.body, leading: 41 });
     if (P.stats) {
       const sy = B.bottom - 86;
@@ -581,7 +752,6 @@ const L_dossier = {
     y += 84;
     const rows = P.points.slice(0, 6);
     const headH = 42, rowH = (B.bottom - y - headH) / rows.length;
-    /* table head */
     c.fillStyle = rgba('#1F1D19', .085); c.fillRect(B.x, y, B.w, headH);
     caps(c, 'item', B.x + 20, y + headH / 2, { size: 12, fill: ad.muted, track: 3 });
     caps(c, 'note', B.x + 120, y + headH / 2, { size: 12, fill: ad.muted, track: 3 });
@@ -610,15 +780,20 @@ const L_dossier = {
   },
 
   figure(c, ad, P, S) {
-    const B = stage(c, ad, S, { label: P.figureLabel || 'Exhibit' });
-    punchHoles(c, ad, S.h);
     const cx = S.w / 2;
+    const B = stage(c, ad, S, {
+      label: P.figureLabel || 'Exhibit',
+      art: () => guilloche(c, cx, S.h * .44, 300, {
+        rings: 5, petals: 9, inner: .64, arm: .28,
+        color: rgba('#1F1D19', .07), weight: 1
+      })
+    });
+    punchHoles(c, ad, S.h);
     const boxW = B.w * .82, boxH = P.figurePair ? 300 : 268;
     const pullH = paraHeight(c, P.pull, B.w * .82, { font: FS(400, 32, 'italic'), leading: 47 });
     let y = B.y + Math.max(20, (B.h - (52 + boxH + 62 + pullH)) / 2);
     caps(c, P.figureKicker || P.topic, cx, y, { size: 14, fill: ad.muted, align: 'center', track: 3.6 });
     y += 52;
-    /* the stamp */
     c.save();
     c.translate(cx, y + boxH / 2); c.rotate(-0.022);
     c.strokeStyle = rgba('#A6432B', .75); c.lineWidth = 3;
@@ -652,10 +827,11 @@ const L_dossier = {
     let y = B.y + 14;
     caps(c, P.ctaKicker || 'Thinking about a deal?', B.x, y + 8, { size: 14, fill: ad.accent, track: 3.4 });
     y += 46;
-    const head = fitBlock(c, P.cta, { w: B.w * .9, h: 200 }, {
-      weight: 600, family: SERIF, max: 70, min: 38, leading: 1.1, maxLines: 3
+    const head = fitRich(c, P.cta, { w: B.w * .9, h: 200 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 70, min: 38, leading: 1.1, maxLines: 3
     });
-    y = drawBlock(c, head, B.x, y, { fill: ad.ink });
+    y = drawRich(c, head, B.x, y, { fill: ad.ink, emFill: ad.accent });
     y += 42;
     caps(c, 'prepared by', B.x, y, { size: 12, fill: ad.muted, track: 3 });
     rule(c, B.x + 130, y, B.w - 130, ad.ruleSoft, 1);
@@ -676,7 +852,7 @@ const L_dossier = {
 };
 
 /* ══════════════════════════════════════════════════════════════════════════
-   6 · NOCTURNE — photography-led
+   6 · NOCTURNE — photography-led, gold foil, strata
    ══════════════════════════════════════════════════════════════════════════ */
 function nocturneField(c, ad, S, key, focus) {
   const img = key && IMG[key];
@@ -684,10 +860,11 @@ function nocturneField(c, ad, S, key, focus) {
     const duo = duotone(img, ad.duo[0], ad.duo[1], key, S.w, S.h);
     c.drawImage(duo, 0, 0);
     c.save(); c.globalCompositeOperation = 'multiply';
-    c.fillStyle = 'rgba(8,26,38,.42)'; c.fillRect(0, 0, S.w, S.h); c.restore();
+    c.fillStyle = 'rgba(8,26,38,.28)'; c.fillRect(0, 0, S.w, S.h); c.restore();
   } else {
     ad.ground(c, S.w, S.h, S.seed);
-    /* when there is no photograph, an engraved arc carries the field */
+    /* no photograph: an engraved horizon carries the field instead */
+    strata(c, 0, S.h * .30, S.w, S.h * .62, S.seed, { color: '#C6A461', alpha: .10, bands: 8 });
     c.save();
     c.strokeStyle = rgba('#C6A461', .16); c.lineWidth = 1;
     for (let i = 0; i < 22; i++) {
@@ -697,7 +874,6 @@ function nocturneField(c, ad, S, key, focus) {
     }
     c.restore();
   }
-  /* scrims top and bottom so the furniture always has ground to sit on */
   let g = c.createLinearGradient(0, 0, 0, S.h * .30);
   g.addColorStop(0, 'rgba(4,16,24,.78)'); g.addColorStop(1, 'rgba(4,16,24,0)');
   c.fillStyle = g; c.fillRect(0, 0, S.w, S.h * .30);
@@ -713,13 +889,16 @@ const L_nocturne = {
     ad.header(c, S.w, S.h, { M, label: P.topic });
     ad.footer(c, S.w, S.h, { M });
     const bottom = S.h - 152;
-    const head = fitBlock(c, P.title, { w: S.w - M * 2, h: S.h * .40 }, {
-      weight: 600, family: SERIF, max: 118, min: 44, leading: 1.02, maxLines: 5
+    const head = fitRich(c, P.title, { w: S.w - M * 2, h: S.h * .40 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 116, min: 44, leading: 1.02, maxLines: 5
     });
     const subH = paraHeight(c, P.sub, (S.w - M * 2) * .74, { font: FN(400, 27), leading: 41 });
     let y = bottom - subH - 44 - head.height;
-    rule(c, M, y - 34, 118, ad.accent, 3);
-    y = drawBlock(c, head, M, y, { fill: ad.ink, shadow: ['rgba(0,0,0,.55)', 24, 6] });
+    foilRule(c, M, y - 36, 132, 3, '#C6A461', '#F0DFAE');
+    y = drawRich(c, head, M, y, {
+      fill: ad.ink, emFill: '#E4C98A', shadow: ['rgba(0,0,0,.55)', 24, 6]
+    });
     y += 40;
     para(c, P.sub, M, y, (S.w - M * 2) * .74, { font: FN(400, 27), fill: ad.body, leading: 41 });
   },
@@ -727,25 +906,27 @@ const L_nocturne = {
   points(c, ad, P, S) {
     const M = S.M, split = S.w * .42;
     ad.ground(c, S.w, S.h, S.seed);
-    /* photographic column on the left, list on the right */
     const img = P.photo && IMG[P.photo];
     if (img) {
       const duo = duotone(img, ad.duo[0], ad.duo[1], P.photo, split, S.h);
       c.drawImage(duo, 0, 0);
       c.save(); c.globalCompositeOperation = 'multiply';
-      c.fillStyle = 'rgba(8,26,38,.34)'; c.fillRect(0, 0, split, S.h); c.restore();
+      c.fillStyle = 'rgba(8,26,38,.30)'; c.fillRect(0, 0, split, S.h); c.restore();
     } else {
       c.fillStyle = 'rgba(255,255,255,.035)'; c.fillRect(0, 0, split, S.h);
-      hatch(c, 0, 0, split, S.h, rgba('#C6A461', .07), 14, -Math.PI / 3);
+      guilloche(c, split * .5, S.h * .5, split * .66, {
+        rings: 6, petals: 11, inner: .66, arm: .26, color: rgba('#C6A461', .14), weight: 1
+      });
+      strata(c, 0, S.h * .5, split, S.h * .5, S.seed + 2, { color: '#C6A461', alpha: .09, bands: 6 });
     }
-    vrule(c, split, 0, S.h, rgba('#C6A461', .5), 1);
+    foilRule(c, split - 1, 0, 2, S.h, '#C6A461', '#F0DFAE');
     c.save();
     c.translate(56, S.h - 96); c.rotate(-Math.PI / 2);
     caps(c, P.topic, 0, 0, { size: 15, fill: ad.accent, track: 4.4 });
     c.restore();
-    logoLockup(c, split + 44, M - 6, 186, 'white');
+    logoLockup(c, split + 44, LOGO_Y, 186, 'white');
     const rx = split + 44, rw = S.w - M - rx;
-    let y = M + 96;
+    let y = M + 128;
     text(c, P.pointsTitle || 'In practice', rx, y, { font: FS(600, 46), fill: ad.ink, base: 'top' });
     y += 76;
     const rows = P.points.slice(0, 6);
@@ -774,6 +955,7 @@ const L_nocturne = {
     ad.header(c, S.w, S.h, { M, label: P.figureLabel || 'The Number' });
     ad.footer(c, S.w, S.h, { M });
     const cx = S.w / 2, cy = S.h * .46;
+    engravedRings(c, cx, cy, 250, 330, 5, rgba('#C6A461', .13), 1);
     if (P.figurePair) {
       [0, 1].forEach(i => {
         const px = cx + (i ? 1 : -1) * S.w * .20;
@@ -792,7 +974,7 @@ const L_nocturne = {
       caps(c, P.figureSub, cx, cy + sz * .46, { size: 16, fill: ad.accent, align: 'center', track: 4 });
     }
     const y = S.h - 152 - 130;
-    rule(c, cx - 60, y - 40, 120, rgba('#C6A461', .55), 1);
+    foilRule(c, cx - 60, y - 42, 120, 2, '#C6A461', '#F0DFAE');
     para(c, '“' + P.pull + '”', cx, y, (S.w - M * 2) * .88, {
       font: FS(400, 31, 'italic'), fill: ad.body, leading: 46, align: 'center'
     });
@@ -801,19 +983,19 @@ const L_nocturne = {
   ask(c, ad, P, S) {
     ad.ground(c, S.w, S.h, S.seed);
     const M = S.M, cx = S.w / 2;
-    c.save();
-    c.strokeStyle = rgba('#C6A461', .12); c.lineWidth = 1;
-    for (let i = 0; i < 16; i++) { c.beginPath(); c.arc(cx, S.h * .42, 180 + i * 42, 0, 7); c.stroke(); }
-    c.restore();
+    guilloche(c, cx, S.h * .44, S.w * .46, {
+      rings: 7, petals: 13, inner: .68, arm: .24, color: rgba('#C6A461', .10), weight: 1
+    });
     let y = logoLockup(c, cx, M - 4, 236, 'white', 'center') + 34;
     caps(c, P.ctaKicker || 'Thinking about a deal?', cx, y, { size: 15, fill: ad.accent, align: 'center', track: 4.2 });
     y += 44;
-    const head = fitBlock(c, P.cta, { w: (S.w - M * 2) * .9, h: 210 }, {
-      weight: 600, family: SERIF, max: 74, min: 40, leading: 1.1, maxLines: 3
+    const head = fitRich(c, P.cta, { w: (S.w - M * 2) * .9, h: 210 }, {
+      roman: s => FS(600, s), italic: s => FS(600, s, 'italic'),
+      max: 74, min: 40, leading: 1.1, maxLines: 3
     });
-    y = drawBlock(c, head, cx, y, { fill: ad.ink, align: 'center' });
+    y = drawRich(c, head, cx, y, { fill: ad.ink, emFill: '#E4C98A', align: 'center' });
     y += 34;
-    rule(c, cx - 46, y, 92, rgba('#C6A461', .6), 1);
+    foilRule(c, cx - 46, y, 92, 2, '#C6A461', '#F0DFAE');
     y += 46;
     const cw = (S.w - M * 2) / 3;
     TEAM.forEach((t, i) => {

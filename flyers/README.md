@@ -1,9 +1,14 @@
 # The Hirth Group — weekly social kit
 
-A self-contained page that produces the week's posts: five content carousels
-(four frames each), the live listings, a set of 9:16 stories, and seven
-LinkedIn posts. Every frame is drawn on canvas at export resolution — what you
-see on screen is the pixel data that lands in the PNG.
+A self-contained page that produces the week's posts. Two sections:
+
+- **Posts** — five carousels. Each one is four feed frames (1080 × 1080) plus
+  that same post cut as a 9:16 story, in the one carousel, so the vertical
+  never has to be hunted down separately. Plus the house team story.
+- **LinkedIn** — seven written posts, one a day.
+
+Every frame is drawn on canvas at export resolution — what you see on screen is
+the pixel data that lands in the PNG.
 
 **Open `flyers/index.html`.** Nothing to install, nothing to run.
 
@@ -47,8 +52,28 @@ one composition with six palettes.
 | **Dossier** | pulled file, stamped | manila, punch holes | oxide red | Fraunces |
 | **Nocturne** | photography-led | duotone / deep teal | gold | Fraunces |
 
-Listings are art-directed as a sequence rather than four versions of one frame:
-duotone photograph, then the case, then a drawn site plan, then the ask.
+### The imagery is drawn, not sourced
+
+There is no stock photography and there never will be — the page has to work
+offline and every pixel has to be the firm's own. So `src/15-graphics.js` draws
+it: guilloché rosettes off the security-printing tradition (Atelier, Dossier),
+isometric massing the way a developer sketches a block (Blueprint), contour
+fields and volumetric light (Midnight), halftone screens (Signal), engraved
+horizons and gold foil (Nocturne). All parametric and seeded from the post id,
+so a post's picture belongs to that post and is identical on every reload.
+
+### Headlines shift voice mid-sentence
+
+Wrap a phrase in `*asterisks*` in a `title` or `cta` and it is set italic and in
+the accent, with the line breaker measuring each run in its own font. A headline
+set in one weight of one face is a headline a machine set; the clause that
+carries the argument should look like it does.
+
+### Listings
+
+Listing records and their frames (photographic hero, drawn site plan) are still
+in the source, but no longer have their own section. To bring them back, add a
+`listings` entry to `TABS` in `src/60-app.js`.
 
 ---
 
@@ -67,7 +92,7 @@ week that reaches it. The fields:
 | Field | What it drives |
 |---|---|
 | `topic`, `kicker` | the labels in the header and above the headline |
-| `title`, `sub` | frame 1 — the statement and its deck |
+| `title`, `sub` | frame 1 — the statement (`*emphasis*` allowed) and its deck |
 | `pointsTitle`, `points` | frame 2 — six `[lead-in, rest]` pairs |
 | `figure` *or* `figurePair` | frame 3 — one number, or two side by side |
 | `figureSub`, `figureLabel`, `figureKicker` | the labels around it |
@@ -101,7 +126,8 @@ flyers/
   ARCHIVE.md      the running record
   assets/         fonts, logo artwork, headshots, property photography
   src/
-    10-lib.js     canvas typesetting, texture, geometry
+    10-lib.js     canvas typesetting, mixed-style headlines, texture, geometry
+    15-graphics.js the drawn imagery — guilloché, massing, contours, halftone
     20-brand.js   house details, the mark, the six art directions
     30-slides.js  the twenty-four compositions
     40-listings.js listing frames, the site plan, the stories
@@ -117,6 +143,8 @@ generated:
   wrapping is the single clearest tell in machine-set headlines.
 - **`grain` / `paper`** put tooth on every square inch. Flat canvas gradients
   read as digital; print has texture.
+- **`fitRich` / `drawRich`** break a mixed roman-and-italic headline as one
+  paragraph, measuring each run in its own font rather than approximating.
 
 One thing worth knowing if you touch the engine: **canvas does not trigger a
 font download.** `document.fonts.ready` only settles faces the DOM has already

@@ -14,7 +14,7 @@
 const CONTENT = [
 
 { id: 'c1031', topic: '1031 Exchange', kicker: 'The Brief',
-  title: 'The exchange is not the hard part. The calendar is.',
+  title: 'The exchange is not the hard part. *The calendar is.*',
   sub: '45 days to identify. 180 days to close. Weekends and holidays count, and day 46 is not day 45.',
   pointsTitle: 'Where exchanges break',
   points: [
@@ -28,7 +28,7 @@ const CONTENT = [
   figurePair: ['45', '180'], figurePairLabels: ['days to identify', 'days to close'],
   figureLabel: 'The Clock', figureKicker: 'Both run from the same day',
   pull: 'Every failed exchange we have watched failed on day one, not on day 46.',
-  ctaKicker: 'Planning an exchange?', cta: 'We map the timeline before you list, not after.',
+  ctaKicker: 'Planning an exchange?', cta: 'We map the timeline *before* you list, not after.',
   stats: [['45', 'Days to ID'], ['180', 'Days to Close'], ['0', 'Extensions']],
   cap: `The 1031 clock: 45 days to identify, 180 days to close. Weekends and holidays count.
 
@@ -40,7 +40,7 @@ Planning one? Call or text 310.300.2838.`,
   tags: '#1031Exchange #CommercialRealEstate #CRE #CapitalGains #InvestmentProperty #TaxDeferred #RealEstateTips #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #NetLease #RealEstateInvesting #WealthBuilding' },
 
 { id: 'ccap', topic: 'Underwriting', kicker: 'The Brief',
-  title: 'The cap rate on the flyer is not the cap rate.',
+  title: 'The cap rate on the flyer *is not the cap rate.*',
   sub: 'A broker sends you a 6.5%. You run it yourself and get 5.1%. Neither of you is lying — you are counting differently.',
   pointsTitle: 'What the flyer leaves out',
   points: [
@@ -55,7 +55,7 @@ Planning one? Call or text 310.300.2838.`,
   figureKicker: 'Marketing cap vs the real one',
   bars: [{ k: 'Flyer', v: 6.5, t: '6.5%' }, { k: 'Adjusted', v: 5.8, t: '5.8%' }, { k: 'Actual', v: 5.1, t: '5.1%', hi: true }],
   pull: 'That gap is not fraud. It is convention. It is also the difference between the deal you think you bought and the one you own.',
-  ctaKicker: 'Looking at something?', cta: 'Send it over. We will underwrite it honestly.',
+  ctaKicker: 'Looking at something?', cta: 'Send it over. We will underwrite it *honestly.*',
   stats: [['6.5%', 'On the Flyer'], ['5.1%', 'In Reality'], ['80–150', 'Basis Points']],
   cap: `The cap rate on the flyer is not the cap rate.
 
@@ -69,7 +69,7 @@ Ask for the trailing twelve. Not the pro forma.`,
   tags: '#CapRate #CommercialRealEstate #CRE #Underwriting #InvestmentProperty #RealEstateInvesting #DueDiligence #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #NOI #ValueAdd #RealEstateTips' },
 
 { id: 'cwait', topic: 'Pricing', kicker: 'The Brief',
-  title: 'What holding out actually costs.',
+  title: 'What holding out *actually costs.*',
   sub: 'He wanted $2.6M. The market said $2.4M. Fourteen months later he took $2.45M and called it a win.',
   pointsTitle: 'The invoice nobody sent him',
   points: [
@@ -83,7 +83,7 @@ Ask for the trailing twelve. Not the pro forma.`,
   figure: '$50,000', figureSub: 'what he beat the offer by', figureLabel: 'On Paper',
   figureKicker: 'Before the carry',
   pull: 'He did not lose because he was greedy. He lost because nobody put the cost of waiting on the same page as the price.',
-  ctaKicker: 'Own something you are weighing up?', cta: 'Know what your number costs to defend.',
+  ctaKicker: 'Own something you are weighing up?', cta: 'Know what your number *costs to defend.*',
   stats: [['14', 'Months Waited'], ['$50K', 'Paper Gain'], ['$0', 'Real Gain']],
   cap: `What holding out actually costs.
 
@@ -97,7 +97,7 @@ That is the conversation worth having before you list. 310.300.2838`,
   tags: '#CommercialRealEstate #CRE #SellCommercial #PropertyValuation #RealEstateStrategy #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #BrokerOpinionOfValue #RealEstateTips #DaysOnMarket #ThinkingOfSelling' },
 
 { id: 'crent', topic: 'Due Diligence', kicker: 'The Brief',
-  title: 'Read the rent roll before the offering memorandum.',
+  title: 'Read the rent roll *before* the offering memorandum.',
   sub: 'The OM is marketing. The rent roll is a confession. Only one of them is trying to persuade you.',
   pointsTitle: 'What the roll tells you',
   points: [
@@ -123,7 +123,7 @@ Ask for the rent roll and the trailing twelve on day one. How fast they come bac
   tags: '#DueDiligence #RentRoll #CommercialRealEstate #CRE #Underwriting #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #NOI #OfferingMemorandum #RealEstateTips' },
 
 { id: 'coffmkt', topic: 'Deal Flow', kicker: 'The Brief',
-  title: 'The good deals are gone before they are listed.',
+  title: 'The good deals are gone *before they are listed.*',
   sub: 'By the time a property hits the platforms, forty people have already passed on it. That is not a conspiracy. It is just how it moves.',
   pointsTitle: 'How it actually trades',
   points: [
@@ -151,7 +151,7 @@ Say the specific thing, out loud, to people who see deals. 310.300.2838`,
   tags: '#OffMarket #DealFlow #CommercialRealEstate #CRE #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #PocketListing #SanFernandoValley #IndustrialRealEstate #BuyerRepresentation' },
 
 { id: 'cnnn', topic: 'Net Lease', kicker: 'The Brief',
-  title: 'A 4.25% cap is not expensive. It is a different product.',
+  title: 'A 4.25% cap is not expensive. *It is a different product.*',
   sub: 'Every time a new NNN deal prices in the low fours, somebody says the buyer overpaid. They are comparing two things that are not the same thing.',
   pointsTitle: 'Two different questions',
   points: [
@@ -179,7 +179,7 @@ Neither is wrong. They are answers to different questions. 310.300.2838`,
   tags: '#NetLease #NNN #CommercialRealEstate #CRE #CapRate #InvestmentProperty #PassiveIncome #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CreditTenant #ValueAdd' },
 
 { id: 'cprop13', topic: 'Property Tax', kicker: 'The Brief',
-  title: 'The seller’s tax bill is not going to be your tax bill.',
+  title: 'The seller’s tax bill is *not going to be your tax bill.*',
   sub: 'A building held for thirty years carries a thirty-year-old assessment. On sale, that resets — and the pro forma you were handed usually does not.',
   pointsTitle: 'What resets at close',
   points: [
@@ -207,7 +207,7 @@ Not tax advice — talk to your CPA on your specific facts.`,
   tags: '#PropertyTax #Prop13 #CommercialRealEstate #CRE #Underwriting #InvestmentProperty #DueDiligence #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #NOI #RealEstateInvesting #CaliforniaRealEstate' },
 
 { id: 'cdom', topic: 'Days on Market', kicker: 'The Brief',
-  title: 'Nobody buys the third price cut.',
+  title: 'Nobody buys *the third price cut.*',
   sub: 'Overprice by ten percent and you do not lose ten percent. You lose the first three weeks, which is when your real buyers were looking.',
   pointsTitle: 'The ladder down',
   points: [
@@ -236,7 +236,7 @@ Price it for the first three weeks. 310.300.2838`,
   tags: '#DaysOnMarket #CommercialRealEstate #CRE #SellCommercial #PropertyValuation #ListingStrategy #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateStrategy #BrokerOpinionOfValue #ThinkingOfSelling #InvestmentProperty' },
 
 { id: 'cestop', topic: 'Due Diligence', kicker: 'The Brief',
-  title: 'The estoppel is where the story stops matching the file.',
+  title: 'The estoppel is where the story *stops matching the file.*',
   sub: 'The seller tells you the lease. The tenant signs what they believe the lease to be. When those two documents disagree, you have found the real deal.',
   pointsTitle: 'What the tenant confirms',
   points: [
@@ -262,7 +262,7 @@ Collect them from every tenant, not just the easy ones. A tenant who will not si
   tags: '#DueDiligence #Estoppel #CommercialRealEstate #CRE #LeaseAudit #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #Escrow #CommercialLeasing #RealEstateTips' },
 
 { id: 'cula', topic: 'Transfer Tax', kicker: 'The Brief',
-  title: 'In the City of LA, the transfer tax is part of the price.',
+  title: 'In the City of LA, the transfer tax *is part of the price.*',
   sub: 'Measure ULA applies to commercial as well as residential. If your building sits inside city limits, it belongs in the model before you set an ask.',
   pointsTitle: 'What to check first',
   points: [
@@ -290,7 +290,7 @@ Not tax or legal advice. 310.300.2838`,
   tags: '#MeasureULA #TransferTax #CommercialRealEstate #CRE #LosAngelesRealEstate #LARealEstate #SellCommercial #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #RealEstateStrategy #PropertyTax #DueDiligence #1031Exchange' },
 
 { id: 'cmaturity', topic: 'Debt', kicker: 'The Brief',
-  title: 'The maturity date is the real deadline.',
+  title: 'The maturity date is *the real deadline.*',
   sub: 'Owners do not usually sell because they want to. They sell because a loan is coming due and the refinance does not work at today’s rates.',
   pointsTitle: 'Start twenty-four months out',
   points: [
@@ -316,7 +316,7 @@ A seller with two years is negotiating. A seller with two months is being negoti
   tags: '#CommercialRealEstate #CRE #Refinance #DebtMaturity #InvestmentProperty #RealEstateStrategy #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #SellCommercial #CapitalMarkets #RealEstateInvesting #ThinkingOfSelling' },
 
 { id: 'cbov', topic: 'Valuation', kicker: 'The Brief',
-  title: 'An appraisal tells you what it was worth. A broker tells you what it will trade for.',
+  title: 'An appraisal tells you what it *was* worth. A broker tells you what it *will trade for.*',
   sub: 'They are different jobs, and only one of them is looking at the buyers who are actually in the market this quarter.',
   pointsTitle: 'The difference in practice',
   points: [
@@ -342,7 +342,7 @@ Complimentary broker's opinion of value — current market, real comps, no oblig
   tags: '#BrokerOpinionOfValue #PropertyValuation #CommercialRealEstate #CRE #Appraisal #SellCommercial #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateStrategy #ThinkingOfSelling #RealEstateTips' },
 
 { id: 'ccredit', topic: 'Leasing', kicker: 'The Brief',
-  title: 'Ten years from a weak tenant is not ten years.',
+  title: 'Ten years from a weak tenant *is not ten years.*',
   sub: 'Term is only worth what the covenant behind it is worth. Lenders know that. Buyers who skip it find out at renewal.',
   pointsTitle: 'What term is actually worth',
   points: [
@@ -368,7 +368,7 @@ The lease term is the promise. The covenant is whether it is collectable. 310.30
   tags: '#CommercialLeasing #NetLease #CommercialRealEstate #CRE #DueDiligence #CreditTenant #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #NNN #LeaseAudit' },
 
 { id: 'ccapex', topic: 'Capital', kicker: 'The Brief',
-  title: 'Deferred maintenance is a price, not a surprise.',
+  title: 'Deferred maintenance is *a price, not a surprise.*',
   sub: 'Every building has a number attached to it. The only question is whether it shows up in your offer or in your second year.',
   pointsTitle: 'The list that moves the number',
   points: [
@@ -394,7 +394,7 @@ You are buying the capital plan either way. Price it. 310.300.2838`,
   tags: '#DueDiligence #CapEx #CommercialRealEstate #CRE #PropertyManagement #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ValueAdd #BuildingInspection #RealEstateTips' },
 
 { id: 'ccarry', topic: 'Structure', kicker: 'The Brief',
-  title: 'Seller financing is a pricing tool, not a favour.',
+  title: 'Seller financing is *a pricing tool,* not a favour.',
   sub: 'When debt is expensive, the seller who will carry paper is the seller who gets their number. Sometimes more than their number.',
   pointsTitle: 'Why it clears',
   points: [
@@ -422,7 +422,7 @@ Talk to your CPA and counsel on your facts. 310.300.2838`,
   tags: '#SellerFinancing #CommercialRealEstate #CRE #DealStructure #InvestmentProperty #RealEstateInvesting #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #Carryback #CapitalMarkets #SellCommercial #1031Exchange' },
 
 { id: 'creview', topic: 'Client Review', kicker: 'In Their Words', review: true,
-  title: 'It closed exactly the way they said it would.',
+  title: 'It closed *exactly the way* they said it would.',
   sub: 'The part of the job that does not photograph well: telling a seller the number they do not want to hear, early enough for it to help.',
   quote: 'They knew the value of the property better than anyone we spoke to, and they never pushed us toward a number we were not comfortable with. It closed exactly the way they said it would.',
   by: 'Susan K.', byRole: 'Seller · Los Angeles',
