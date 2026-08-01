@@ -42,7 +42,7 @@ FONT_FACES = [
 ]
 
 # concatenated in this order; the numeric prefixes are the dependency order
-SCRIPTS = ["10-lib.js", "15-graphics.js", "20-brand.js", "30-slides.js", "40-listings.js", "45-poster.js",
+SCRIPTS = ["10-lib.js", "15-graphics.js", "20-brand.js", "30-slides.js", "40-listings.js", "45-poster.js", "47-featured.js",
            "50-content.js", "60-app.js"]
 
 

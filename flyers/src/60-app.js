@@ -45,7 +45,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 /* Three, not five. Twenty pieces of abstract advice a week is itself the tell
    — no working broker produces that much and none of it is about a building.
    The real inventory leads instead. */
-const WEEK_CONTENT_N = 3;
+const WEEK_CONTENT_N = 1;
 function pickContent() {
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
@@ -106,13 +106,11 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
-function listingSlides(L) {
-  const ad = L.ad, n = L.closed ? 3 : 4;
-  const out = [paint(c => listingHero(c, L, frameMeta(L, 0, n, FW, FH)), FW, FH)];
-  out.push(paint(c => listingCase(c, ad, L, frameMeta(L, 1, n, FW, FH)), FW, FH));
-  if (!L.closed) out.push(paint(c => listingSite(c, L, frameMeta(L, 2, n, FW, FH)), FW, FH));
-  out.push(paint(c => listingAsk(c, ad, L, frameMeta(L, n - 1, n, FW, FH)), FW, FH));
-  return out;
+/* One frame per post. Three posts that each have to stand on their own beats
+   twenty frames of filler, and it is the only way every frame gets composed
+   rather than filled. */
+function featureSlides(L) {
+  return [paint(c => (L.closed ? featureClosing : featureListing)(c, L, frameMeta(L, 0, 1, FW, FH)), FW, FH)];
 }
 function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = 4;
@@ -126,43 +124,35 @@ function contentSlides(P) {
   ];
 }
 
-/* ── the week, assembled ──────────────────────────────────────────────── */
+/* ── the week: three posts, four stories ──────────────────────────────── */
 const WEEK = {
   listings: pickListings(),
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-/* the poster — the house piece, one statement a week */
+
 WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
     poster: true, who: 'dh',
-    /* the cut turns independently of the statement — twelve weeks before a
-       statement meets the same portrait treatment twice */
-    cutIndex: WEEK_N,
-    cutName: posterCut(WEEK_N).name,
+    cutIndex: WEEK_N, cutName: posterCut(WEEK_N).name,
     title: stripRich(P.line),
     adName: 'Press · ' + posterCut(WEEK_N).name,
     stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
   });
 })();
 
-/* the stories — their own section again: one for every post in the week,
-   plus the poster, the team and the review */
-WEEK.stories = (function () {
-  const out = WEEK.content.map((P, i) => ({
-    id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
-    kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
-    draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
-      : i % 2 ? storyFigure(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
-        : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
-  }));
+/* three posts: the live listing, the closing, the house poster */
+WEEK.posts = WEEK.listings.concat([WEEK.poster]);
 
-  WEEK.listings.forEach(L => out.push({
-    id: 'st-' + L.id, title: L.title, ad: AD.nocturne, story: true,
+/* four stories: the same three, plus the team */
+WEEK.stories = (function () {
+  const out = WEEK.listings.map(L => ({
+    id: 'st-' + L.id, title: L.title, story: true,
+    adName: L.closed ? 'Certificate' : 'Full bleed',
     kind: L.closed ? 'Just Closed' : 'Just Listed',
     cap: L.cap, tags: L.tags, stats: L.stats,
-    draw: c => storyListing(c, L, frameMeta(L, 8, 1, SW, SH))
+    draw: c => (L.closed ? featureClosingStory : featureListingStory)(c, L, frameMeta(L, 8, 1, SW, SH))
   }));
 
   const pp = WEEK.poster;
@@ -182,7 +172,7 @@ WEEK.stories = (function () {
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
-    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
+    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #HirthGroup #KWCommercial #SoldByHirth'
   });
   return out;
 })();
@@ -355,18 +345,16 @@ function liCard(i, P) {
 /* ── tabs ─────────────────────────────────────────────────────────────── */
 const TABS = {
   posts: {
-    name: 'Posts', head: 'The deals first, then the week · 1080 × 1080',
-    items: () => WEEK.listings.concat(WEEK.content, [WEEK.poster]),
+    name: 'Posts', head: 'Three · 1080 × 1080',
+    items: () => WEEK.posts,
     build: (P, i) => P.poster
       ? postCard(i, P, [paint(c => posterFrame(c, P, frameMeta({ id: P.id }, 0, 1, FW, FH)), FW, FH)],
-        'POSTER · ' + P.cutName.toUpperCase() + ' CUT · ' + P.kicker.toUpperCase())
-      : P.addr
-        ? postCard(i, P, listingSlides(P),
-          (P.closed ? 'JUST CLOSED' : 'JUST LISTED') + ' · ' + P.cityline.toUpperCase())
-        : postCard(i, P, contentSlides(P), 'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase())
+        'POSTER · ' + P.cutName.toUpperCase() + ' CUT')
+      : postCard(i, P, featureSlides(P),
+        (P.closed ? 'JUST CLOSED' : 'JUST LISTED') + ' · ' + P.cityline.toUpperCase())
   },
   stories: {
-    name: 'Stories', head: 'Vertical · 1080 × 1920',
+    name: 'Stories', head: 'Four · 1080 × 1920',
     items: () => WEEK.stories,
     build: (P, i) => postCard(i, P, [paint(P.draw, SW, SH)], 'STORY · 9:16 · ' + String(P.kind).toUpperCase())
   },
