@@ -37,12 +37,16 @@ const MAXPOSTS = QS.has('max') ? Math.max(1, parseInt(QS.get('max'), 10) || 1) :
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 /* ── rotation ─────────────────────────────────────────────────────────────
-   Five content posts a week. The step is coprime with the bank size, so the
-   bank is exhausted before anything repeats. The art direction is assigned
-   from the week number plus the slot, so a post that does come round again
-   comes round in a different world.
+   Seven pieces a week, and seven is the whole week: three posts and four
+   stories. Three topics carry it — two of them run as carousels and all
+   three run as stories, which is the split he actually publishes.
+
+   The step is coprime with the bank size, so the bank is exhausted before
+   anything repeats. The art direction is assigned from the week number plus
+   the slot, so a topic that does come round again comes round in a different
+   world.
    ─────────────────────────────────────────────────────────────────────── */
-const WEEK_CONTENT_N = 5;
+const WEEK_CONTENT_N = 3;
 function pickContent() {
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
@@ -141,8 +145,9 @@ WEEK.poster = (function () {
   });
 })();
 
-/* the stories — their own section again: one for every post in the week,
-   plus the poster, the team and the review */
+/* the stories — four of them: one for each of the week's three topics, and a
+   house piece that alternates between the poster and the team, so the fourth
+   slot is never the same thing two weeks running */
 WEEK.stories = (function () {
   const out = WEEK.content.map((P, i) => ({
     id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
@@ -153,24 +158,26 @@ WEEK.stories = (function () {
   }));
 
   const pp = WEEK.poster;
-  out.push({
-    id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
-    adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
-    draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
-  });
-
-  const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-  out.push({
-    id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
-    stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
-    draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
-    cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+  if (WEEK_N % 2 === 0) {
+    out.push({
+      id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
+      adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
+      draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
+    });
+  } else {
+    const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
+    out.push({
+      id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
+      stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
+      draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
+      cap: `197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
 
 We are not the loudest team in the room. We are the one that finds the deal everyone else walked past — and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
 310.300.2838 · HirthGroup.com`,
-    tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-  });
+      tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
+    });
+  }
   return out;
 })();
 
@@ -450,40 +457,49 @@ function liCard(i, P) {
   return a;
 }
 
-/* ── the page: one continuous run ────────────────────────────────────────
-   Posts and stories are not two sections you switch between. They are the
-   week, in order, each one its own card with its own download and its own
-   caption — a story sits next to the post it belongs beside rather than
-   behind a tab.
+/* ── the page ─────────────────────────────────────────────────────────────
+   Two sections. The week is seven pieces — three posts and four stories, in
+   one run, because a story is not a different kind of work from a post and
+   should not sit behind a tab. LinkedIn is its own section underneath: it is
+   written, not designed, and it is published somewhere else.
    ─────────────────────────────────────────────────────────────────────── */
 function buildFeed() {
   const host = document.getElementById('posts');
   host.innerHTML = '';
   let n = 0;
 
-  WEEK.content.slice(0, MAXPOSTS).forEach(P => {
-    P.slideCount = SLIDES_PER_POST;
-    host.appendChild(postCard(n++, P, () => contentSlides(P),
-      'CAROUSEL · ' + SLIDES_PER_POST + ' SLIDES · ' + P.topic.toUpperCase()));
-  });
-
+  /* the poster leads — it is the house piece, and it is the one with his face */
   const pp = WEEK.poster;
   pp.slideCount = 1;
   host.appendChild(postCard(n++, pp,
     () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
     'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
 
-  WEEK.stories.slice(0, MAXPOSTS * 2).forEach(P => {
+  const carousels = WEEK.content.slice(0, Math.min(2, MAXPOSTS));
+  carousels.forEach(P => {
+    P.slideCount = SLIDES_PER_POST;
+    host.appendChild(postCard(n++, P, () => contentSlides(P),
+      'CAROUSEL · ' + SLIDES_PER_POST + ' SLIDES · ' + P.topic.toUpperCase()));
+  });
+
+  const stories = WEEK.stories.slice(0, MAXPOSTS === Infinity ? 4 : MAXPOSTS);
+  stories.forEach(P => {
     P.slideCount = 1;
     host.appendChild(postCard(n++, P, () => [paint(P.draw, SW, SH)],
       'STORY · 9:16 · ' + String(P.kind).toUpperCase()));
   });
 
-  WEEK.linkedin.forEach((P, i) => host.appendChild(liCard(i, P)));
+  const liHost = document.getElementById('liposts');
+  liHost.innerHTML = '';
+  WEEK.linkedin.forEach((P, i) => liHost.appendChild(liCard(i, P)));
 
+  const posts = 1 + carousels.length;
   document.getElementById('sectionHead').textContent =
-    WEEK.content.length + ' carousels · poster · ' + WEEK.stories.length +
-    ' stories · ' + WEEK.linkedin.length + ' LinkedIn';
+    (posts + stories.length) + ' pieces — ' + posts + ' posts, ' + stories.length + ' stories';
+  document.getElementById('weekRange').textContent =
+    weekLabel() + '  ·  next set ' + nextMondayLabel();
+  document.getElementById('liNote').textContent =
+    WEEK.linkedin.length + ' written posts — one a day';
 }
 
 /* ── boot ─────────────────────────────────────────────────────────────── */
@@ -497,9 +513,6 @@ function loadImages() {
   })));
 }
 (async function boot() {
-  document.getElementById('weekRange').textContent = weekLabel();
-  document.getElementById('nextDrop').textContent = nextMondayLabel();
-  document.getElementById('weekNo').textContent = 'WEEK ' + WEEK_N;
   /* Canvas does not trigger a font download. document.fonts.ready only settles
      the faces the DOM has already asked for, so every face the flyers use has
      to be requested explicitly first — otherwise canvas silently falls back to

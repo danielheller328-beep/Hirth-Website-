@@ -26,7 +26,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 
 EPOCH = dt.date(2024, 1, 1)          # a Monday — same anchor as the page
-WEEK_CONTENT_N = 5
+WEEK_CONTENT_N = 3     # three topics a week: two carousels, three stories
 AD_ORDER = ["atelier", "midnight", "blueprint", "signal", "dossier", "nocturne"]
 AD_NAMES = {"atelier": "Atelier", "midnight": "Midnight", "blueprint": "Blueprint",
             "signal": "Signal", "dossier": "Dossier", "nocturne": "Nocturne"}

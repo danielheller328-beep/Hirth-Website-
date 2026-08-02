@@ -6,10 +6,9 @@ What the kit put out, week by week. Written by `flyers/weekly.py`.
 
 | Post | Topic | Art direction |
 |---|---|---|
-| ccarry | Structure | Blueprint |
-| creview | Client Review | Signal |
-| c1031 | 1031 Exchange | Dossier |
-| ccap | Underwriting | Nocturne |
-| cwait | Pricing | Atelier |
+| cwait | Pricing | Blueprint |
+| crent | Due Diligence | Signal |
+| coffmkt | Deal Flow | Dossier |
 
 LinkedIn: In the City of LA, transfer tax is part of the price, The estoppel is where the story stops matching the file, Price is one term, The submarket is not the city, The deal you walk away from, Owner-users are quietly the strongest buyers right now, A quiet escrow is a designed escrow
+
