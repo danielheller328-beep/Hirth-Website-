@@ -4997,10 +4997,14 @@ function shotFile(s) { return new File([shotBlob(s)], s.name, { type: 'image/png
    host to ask, so it falls back to an ordinary link, which is allowed there.
    One function, both places.
 
-   The host allows one prompt at a time, so a three-slide post is saved one
-   file after another rather than all at once, and a decline stops the run
-   instead of asking twice more.
+   The host allows one prompt at a time and rate-limits a burst of them, so a
+   three-slide post is saved one file after another. The important part is
+   what "busy" means: it is the host saying not yet, not the viewer saying no.
+   Treating it as a refusal is how a post that should have produced three
+   files produced one. It waits and asks again, backing off each time, and
+   only an actual decline stops the run.
    ─────────────────────────────────────────────────────────────────────── */
+function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
 function hostSave() {
   return window.claude && window.claude.downloads && window.claude.downloads.save
     ? window.claude.downloads : null;
@@ -5028,21 +5032,31 @@ async function saveShot(s) {
   document.body.appendChild(a); a.click(); a.remove();
   return 'saved';
 }
+/* one file, waiting out a busy host rather than giving up on it */
+async function saveOne(s) {
+  for (let tries = 0; ; tries++) {
+    const r = await saveShot(s);
+    if (r !== 'busy' || tries >= 5) return r;
+    await pause(700 + tries * 500);
+  }
+}
+/* every slide, one after another. Only a decline stops it early. */
 async function saveShots(shots, btn) {
-  const old = btn.textContent;
+  const old = btn.textContent, many = shots.length > 1;
   btn.disabled = true;
   let done = 0, verdict = 'saved';
   for (let i = 0; i < shots.length; i++) {
-    if (shots.length > 1) btn.textContent = 'Saving ' + (i + 1) + ' of ' + shots.length + '…';
-    verdict = await saveShot(shots[i]);
+    if (many) btn.textContent = 'Saving ' + (i + 1) + ' of ' + shots.length + '…';
+    verdict = await saveOne(shots[i]);
     if (verdict !== 'saved') break;
     done++;
+    if (i < shots.length - 1) await pause(450);   /* don't trip the limiter */
   }
   btn.disabled = false;
   btn.textContent = old;
-  flash(btn, verdict === 'saved' ? 'Saved ✓'
-    : verdict === 'declined' ? (done ? done + ' saved' : 'Cancelled')
-      : verdict === 'busy' ? 'One at a time' : 'Could not save');
+  flash(btn, verdict === 'saved' ? (many ? 'All ' + done + ' saved ✓' : 'Saved ✓')
+    : done ? done + ' of ' + shots.length + ' saved'
+      : verdict === 'declined' ? 'Cancelled' : 'Could not save');
 }
 /* synchronous, so it can be asked inside a click without spending it */
 function canShareFiles(files) {
