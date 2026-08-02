@@ -90,20 +90,9 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   cursor:pointer;transition:width .2s ease,background .2s ease,border-radius .2s ease}
 .dot.on{background:var(--gold);width:22px;border-radius:4px}
 
-.body{padding:4px 20px 22px;min-width:0;display:flex;flex-direction:column;flex:1}
-.card.text .body{padding-top:24px}
-.topline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.num{font-family:Fraunces,serif;font-weight:600;font-size:14px;color:var(--gold);opacity:.85}
-.eyebrow{font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:600}
-.adtag{align-self:flex-start;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--dim2);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;margin-bottom:14px}
-.body h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:21px;
-  color:#F3EEE3;margin:9px 0 10px;line-height:1.18}
-.strip{display:flex;gap:20px;flex-wrap:wrap;padding:12px 0 4px;border-top:1px solid var(--line);
-  border-bottom:1px solid var(--line);margin-bottom:14px}
-.strip div{display:flex;flex-direction:column;gap:2px}
-.strip .v{font-family:Fraunces,serif;font-size:18px;font-weight:600;color:var(--accent)}
-.strip .l{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2)}
+.body{padding:2px 20px 22px;min-width:0;display:flex;flex-direction:column;flex:1}
+.card.text .body{padding-top:22px}
+.eyebrow{font-size:10px;letter-spacing:.18em;color:var(--accent);font-weight:600;margin-bottom:10px}
 
 /* the caption, as it will be pasted — long ones scroll inside the card so a
    tile never becomes a page of its own */
@@ -131,7 +120,7 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   display:inline-block;text-decoration:none;line-height:1.35;border:none;text-align:center}
 .row .primary{background:var(--accent);color:#08121B}
 .row .copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
-.row .copy.wide{flex:1 1 100%}
+.row .wide{flex:1 1 100%}
 .row .copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
 .row .copy:hover{color:var(--ink);border-color:var(--accent)}
 .row .primary:hover{filter:brightness(1.07)}

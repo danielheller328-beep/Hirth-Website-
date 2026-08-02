@@ -211,64 +211,12 @@ const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^
    blob URL and a download attribute before the user gets there. Clicking it
    is then an ordinary click on an ordinary link, which nothing blocks.
 
-   One link, one file: a post is a zip of its slides plus the caption, and a
-   single slide is the PNG itself. Firing three saves in a row is the other
-   thing browsers stop — Chrome prompts, Safari keeps the first, phones land
-   nothing.
-
-   The zip is written here rather than pulled from a library — stored, not
-   deflated, because a PNG is already compressed and deflating it again buys
-   nothing but a dependency. Sixty lines and the page stays self-contained.
+   One link, one file, and the file is a PNG. Nothing is zipped — a zip lands
+   in Files rather than Photos and you cannot post from it, which on a phone
+   is the same as the download not working.
    ─────────────────────────────────────────────────────────────────────── */
-const _crc = (function () {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-function crc32(b) {
-  let c = 0xFFFFFFFF;
-  for (let i = 0; i < b.length; i++) c = _crc[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
-  return (c ^ 0xFFFFFFFF) >>> 0;
-}
-function zipBlob(files) {                 /* [{ name, bytes }] */
-  const enc = new TextEncoder(), parts = [], dir = [];
-  let at = 0;
-  files.forEach(f => {
-    const nm = enc.encode(f.name), crc = crc32(f.bytes), n = f.bytes.length;
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
-    lh.setUint32(14, crc, true); lh.setUint32(18, n, true); lh.setUint32(22, n, true);
-    lh.setUint16(26, nm.length, true);
-    parts.push(new Uint8Array(lh.buffer), nm, f.bytes);
-
-    const cd = new DataView(new ArrayBuffer(46));
-    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
-    cd.setUint32(16, crc, true); cd.setUint32(20, n, true); cd.setUint32(24, n, true);
-    cd.setUint16(28, nm.length, true); cd.setUint32(42, at, true);
-    dir.push(new Uint8Array(cd.buffer), nm);
-    at += 30 + nm.length + n;
-  });
-  const dirSize = dir.reduce((a, b) => a + b.length, 0);
-  const eo = new DataView(new ArrayBuffer(22));
-  eo.setUint32(0, 0x06054b50, true);
-  eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true);
-  eo.setUint32(12, dirSize, true); eo.setUint32(16, at, true);
-  return new Blob(parts.concat(dir, [new Uint8Array(eo.buffer)]), { type: 'application/zip' });
-}
-
 function canvasBlob(cv) {
   return new Promise(res => cv.toBlob(res, 'image/png'));
-}
-/* one file if there is one, a zip if there is more than one */
-async function bundle(items, zipName) {       /* [{ name, blob }] -> { blob, name } */
-  if (items.length === 1) return items[0];
-  const files = [];
-  for (const it of items) files.push({ name: it.name, bytes: new Uint8Array(await it.blob.arrayBuffer()) });
-  return { blob: zipBlob(files), name: zipName };
 }
 
 /* ── links ────────────────────────────────────────────────────────────────
@@ -408,20 +356,36 @@ function postCard(i, P, slidesFn, eyebrow) {
   media.innerHTML = '<div class="car placeholder"><span class="spin"></span></div>';
   a.appendChild(media);
 
-  /* the links are created now and given their files the moment the card
-     paints, so by the time anyone clicks one it is an ordinary link */
-  const mainLink = dlLink(P.story ? '↓ Download story' : '↓ Download post', 'primary');
+  /* Every link is one PNG. Nothing is zipped: a zip is the wrong thing to
+     hand a phone — it lands in Files, not Photos, and you cannot post from
+     it. One image per link is what you actually put on Instagram.
+
+     They are armed the moment the card paints, so clicking one is an
+     ordinary click on an ordinary link and nothing has to be permitted. */
   const nSlides = P.slideCount || 1;
-  const allLink = nSlides > 1 ? dlLink('↓ Download all ' + nSlides + ' slides', 'copy wide') : null;
-  const slideLinks = nSlides > 1
-    ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
-    : [];
+  const slideLinks = Array.from({ length: nSlides }, (_, k) =>
+    dlLink(nSlides === 1
+      ? (P.story ? '↓ Download story' : '↓ Download post')
+      : 'Slide ' + (k + 1) + ' ↓',
+      nSlides === 1 ? 'primary' : 'copy slim'));
+
+  /* "all of them" clicks the links that are already sitting there, inside
+     the gesture, with nothing awaited in between — the browser sees three
+     link clicks, not a script deciding to send you three files */
+  const allLink = nSlides > 1 ? document.createElement('button') : null;
+  if (allLink) {
+    allLink.className = 'primary wide';
+    allLink.textContent = '↓ Download all ' + nSlides + ' slides';
+    allLink.disabled = true;
+    allLink.onclick = () => {
+      slideLinks.forEach(l => { if (l.href) l.click(); });
+      flash(allLink, 'Saved ✓');
+    };
+  }
 
   async function armAll(cvs) {
-    const shots = [];
     for (let k = 0; k < cvs.length; k++) {
       const name = slideName(base, cvs, k), blob = await canvasBlob(cvs[k]);
-      shots.push({ name, blob });
       arm(slideLinks[k], blob, name);
       /* and the slide itself becomes a real image rather than a canvas. A
          canvas cannot be saved by right-clicking it and cannot be saved at
@@ -429,18 +393,7 @@ function postCard(i, P, slidesFn, eyebrow) {
          with nothing needing to be permitted. */
       swapToImage(cvs[k], blob, stripRich(P.title) + ' — ' + (k + 1));
     }
-    if (allLink) {
-      const it = await bundle(shots, base + '-slides.zip');
-      arm(allLink, it.blob, it.name);
-    }
-    const whole = P.cap
-      ? shots.concat([{
-        name: base + '-caption.txt',
-        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
-      }])
-      : shots;
-    const it = await bundle(whole, base + '.zip');
-    arm(mainLink, it.blob, it.name);
+    if (allLink) allLink.disabled = false;
   }
 
   whenVisible(a, () => {
@@ -451,19 +404,12 @@ function postCard(i, P, slidesFn, eyebrow) {
 
   const b = document.createElement('div');
   b.className = 'body';
-  b.innerHTML =
-    '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">' + esc(eyebrow) + '</span></div>' +
-    '<h2>' + esc(stripRich(P.title)) + '</h2>' +
-    (P.ad || P.adName ? '<div class="adtag" title="Art direction">' +
-      esc(P.ad ? P.ad.name : P.adName) + '</div>' : '');
-  if (P.stats) {
-    const s = document.createElement('div');
-    s.className = 'strip';
-    s.innerHTML = P.stats.slice(0, 3).map(x =>
-      '<div><span class="v">' + esc(x[0]) + '</span><span class="l">' + esc(x[1]) + '</span></div>').join('');
-    b.appendChild(s);
-  }
+  /* No heading, no numbering, no art-direction tag, no stat strip. The
+     headline is already set on the slide in ninety-point type, and the
+     numbers are already on the slide too — repeating them underneath in
+     grey was the page describing its own work back to you. What is left is
+     what you actually need in order to publish: the caption, the link, the
+     hashtags, the files. */
   if (P.cap) {
     const cap = document.createElement('div');
     cap.className = 'cap';
@@ -483,10 +429,10 @@ function postCard(i, P, slidesFn, eyebrow) {
     b.appendChild(t);
   }
 
-  /* row one — the post as a package, and the two things you paste */
+  /* row one — the file, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
-  row.appendChild(mainLink);
+  row.appendChild(allLink || slideLinks[0]);
   if (P.cap) {
     const cb = document.createElement('button');
     cb.className = 'copy'; cb.textContent = 'Copy caption';
@@ -501,11 +447,10 @@ function postCard(i, P, slidesFn, eyebrow) {
   }
   b.appendChild(row);
 
-  /* row two — the slides on their own, for when you only want frame two */
+  /* row two — the slides one at a time, for when you only want frame two */
   if (allLink) {
     const r2 = document.createElement('div');
     r2.className = 'row slides';
-    r2.appendChild(allLink);
     slideLinks.forEach(l => r2.appendChild(l));
     b.appendChild(r2);
   }
@@ -524,11 +469,9 @@ function liCard(i, P) {
   a.id = 'post-li-' + i;
   const b = document.createElement('div');
   b.className = 'body';
-  b.innerHTML =
-    '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">LINKEDIN · ' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span></div>' +
-    '<h2>' + esc(P.title) + '</h2>' +
-    '<div class="adtag">Written</div>';
+  /* the one label that survives, because it is the only thing here that is
+     not already in the copy: which day it goes out */
+  b.innerHTML = '<div class="eyebrow">' + esc(P.day.toUpperCase()) + '</div>';
 
   /* a LinkedIn card reads the same as a carousel card — caption, link,
      hashtags, buttons — so the page has one shape, not two */
