@@ -146,13 +146,14 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   background:rgba(255,255,255,.05);color:var(--ink);font-size:15px;line-height:1}
 .sheetx:hover{border-color:var(--accent)}
 .sheethint{margin:0 0 18px;color:var(--dim);font-size:13px;line-height:1.6}
-.sheetfig{margin:0 0 18px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.row.sheetsave{margin-top:0;margin-bottom:16px}
+.sheetfig{margin:0 0 22px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .sheetfig img{width:100%;height:auto;display:block;border-radius:10px;
   box-shadow:0 20px 44px -24px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07)}
-a.sheetdl{align-self:flex-start;font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
-  padding:8px 14px;text-decoration:none;background:transparent;color:var(--dim);
-  border:1px solid var(--line2)}
-a.sheetdl:hover{color:var(--ink);border-color:var(--accent)}
+.row.sheetfigrow{margin-top:0;align-items:center}
+a.sheetdl{text-decoration:none}
+.signum{margin-left:auto;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim2)}
 .row.sheetrow{margin-top:4px}
 .row button:focus-visible,.row a.dl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 

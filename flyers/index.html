@@ -159,13 +159,14 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   background:rgba(255,255,255,.05);color:var(--ink);font-size:15px;line-height:1}
 .sheetx:hover{border-color:var(--accent)}
 .sheethint{margin:0 0 18px;color:var(--dim);font-size:13px;line-height:1.6}
-.sheetfig{margin:0 0 18px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.row.sheetsave{margin-top:0;margin-bottom:16px}
+.sheetfig{margin:0 0 22px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
 .sheetfig img{width:100%;height:auto;display:block;border-radius:10px;
   box-shadow:0 20px 44px -24px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07)}
-a.sheetdl{align-self:flex-start;font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
-  padding:8px 14px;text-decoration:none;background:transparent;color:var(--dim);
-  border:1px solid var(--line2)}
-a.sheetdl:hover{color:var(--ink);border-color:var(--accent)}
+.row.sheetfigrow{margin-top:0;align-items:center}
+a.sheetdl{text-decoration:none}
+.signum{margin-left:auto;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim2)}
 .row.sheetrow{margin-top:4px}
 .row button:focus-visible,.row a.dl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
@@ -4985,21 +4986,60 @@ function swapToImage(cv, url, alt) {
   im.src = url;
 }
 
-/* ── the save sheet ───────────────────────────────────────────────────────
-   This page is usually read inside a frame, and a frame can be told it may
-   not download anything at all. When it is, there is no clever version of a
-   download button that works — the browser refuses the whole category, link
-   or button, gesture or not. Three rounds of making the download more
-   correct did not change that, because correctness was never the problem.
+/* ── getting a file out ───────────────────────────────────────────────────
+   Downloading is a permission, and the frame this page is read in does not
+   grant it. Nothing about the download can be written better — the browser
+   refuses the category.
 
-   So the button stops asking permission. It opens the images, full size, in
-   the page you are already looking at. Press and hold one on a phone and it
-   goes to your camera roll; right-click it on a computer and Save Image is
-   right there. That path is not a permission, it is what an image is.
+   But downloading is not the only way a file leaves a page. Two others need
+   no permission at all, and between them they cover every device:
 
-   The real download links are in here too, so if the frame does allow them
-   they still do the quick thing. But nothing depends on that any more.
+     · the share sheet — navigator.share with a File opens the operating
+       system's own sheet, which on a phone has Save Image on it. This is
+       the one that matters, because a phone is where these get posted.
+
+     · the clipboard — an image written to the clipboard can be pasted into
+       anything. This is the one that matters on a computer.
+
+   And underneath both, the image itself: press and hold it, or right-click
+   it. That has always worked and always will, because it is not a feature.
+
+   The download link stays for the browsers that do allow it. It is now the
+   third option rather than the only one.
    ─────────────────────────────────────────────────────────────────────── */
+
+/* the PNG bytes back out of the data: URL, without a network request —
+   fetch() would be simpler and is exactly what a strict policy blocks */
+function dataToBlob(url) {
+  const bin = atob(url.slice(url.indexOf(',') + 1));
+  const a = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return new Blob([a], { type: 'image/png' });
+}
+function shotFile(s) {
+  return new File([dataToBlob(s.url)], s.name, { type: 'image/png' });
+}
+/* synchronous, so it can be asked inside a click without spending it */
+function canShareFiles(files) {
+  try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files })); }
+  catch (e) { return false; }
+}
+function shareShots(shots, btn, title) {
+  const files = shots.map(shotFile);
+  if (!canShareFiles(files)) return false;
+  navigator.share({ files, title: title || '' })
+    .then(() => flash(btn, 'Shared ✓'))
+    .catch(() => { });
+  return true;
+}
+function copyImage(s, btn) {
+  try {
+    navigator.clipboard.write([new ClipboardItem({ 'image/png': dataToBlob(s.url) })])
+      .then(() => flash(btn, 'Copied ✓'))
+      .catch(() => flash(btn, 'Hold the image'));
+  } catch (e) { flash(btn, 'Hold the image'); }
+}
+
 function openSheet(shots, title, cap, tags) {
   const ov = document.createElement('div');
   ov.className = 'sheet';
@@ -5018,11 +5058,31 @@ function openSheet(shots, title, cap, tags) {
   head.append(h, x);
   box.appendChild(head);
 
+  /* whether the phone route exists is decided once, here, and the wording
+     underneath follows it — no instructions for a button that is not there */
+  const sharing = canShareFiles(shots.map(shotFile));
+
+  if (sharing) {
+    const r0 = document.createElement('div');
+    r0.className = 'row sheetsave';
+    const all = document.createElement('button');
+    all.className = 'primary wide';
+    all.textContent = shots.length > 1
+      ? '⇪ Save all ' + shots.length + ' to Photos'
+      : '⇪ Save to Photos';
+    all.onclick = () => shareShots(shots, all, title);
+    r0.appendChild(all);
+    box.appendChild(r0);
+  }
+
   const hint = document.createElement('p');
   hint.className = 'sheethint';
-  hint.textContent = 'Press and hold an image to save it to your camera roll. On a computer, ' +
-    'right-click it and choose Save Image As. The link under each one downloads it directly ' +
-    'where the browser allows that.';
+  hint.textContent = sharing
+    ? 'Save to Photos opens your phone’s own share sheet — choose Save Image. ' +
+      'You can also press and hold any image below.'
+    : 'Press and hold an image to save it, or right-click it and choose Save Image As. ' +
+      'Copy image puts it on the clipboard to paste straight into a post. Download works ' +
+      'where the browser allows it.';
   box.appendChild(hint);
 
   shots.forEach((s, k) => {
@@ -5030,10 +5090,31 @@ function openSheet(shots, title, cap, tags) {
     fig.className = 'sheetfig';
     const im = new Image();
     im.src = s.url; im.alt = title + (shots.length > 1 ? ' — slide ' + (k + 1) : '');
+    const row = document.createElement('div');
+    row.className = 'row sheetfigrow';
+
+    if (sharing) {
+      const sh = document.createElement('button');
+      sh.className = 'copy'; sh.textContent = '⇪ Save';
+      sh.onclick = () => shareShots([s], sh, s.name);
+      row.appendChild(sh);
+    }
+    const ci = document.createElement('button');
+    ci.className = 'copy'; ci.textContent = '⧉ Copy image';
+    ci.onclick = () => copyImage(s, ci);
+    row.appendChild(ci);
+
     const a = document.createElement('a');
-    a.className = 'copy sheetdl'; a.href = s.url; a.download = s.name;
-    a.textContent = '↓ ' + (shots.length > 1 ? 'Slide ' + (k + 1) : 'Save') + ' · PNG';
-    fig.append(im, a);
+    a.className = 'copy dl sheetdl'; a.href = s.url; a.download = s.name;
+    a.textContent = '↓ Download';
+    row.appendChild(a);
+
+    if (shots.length > 1) {
+      const n = document.createElement('span');
+      n.className = 'signum'; n.textContent = 'Slide ' + (k + 1);
+      row.appendChild(n);
+    }
+    fig.append(im, row);
     box.appendChild(fig);
   });
 
