@@ -323,6 +323,40 @@ async function saveOne(s) {
     await pause(700 + tries * 500);
   }
 }
+
+/* ── a whole post, in one file ────────────────────────────────────────────
+   Every save is confirmed one file at a time, so three slides means three
+   confirmations. One file means one. A .pptx carries the three images as
+   three full-bleed pages and is on the list of extensions the host accepts,
+   which a zip and a PDF are not.
+
+   If this view will not take a .pptx it says so by its error code, and the
+   slides go one at a time instead — same files, more clicks.
+   ─────────────────────────────────────────────────────────────────────── */
+async function saveDeck(shots, btn, base) {
+  if (shots.length < 2) return saveShots(shots, btn);
+  const old = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Packing ' + shots.length + ' slides…';
+  let deck = null;
+  try { deck = await pptxBlob(shots); } catch (e) { deck = null; }
+  btn.disabled = false;
+  btn.textContent = old;
+
+  if (deck && hostSave()) {
+    const one = { name: base + '.pptx', blob: deck };
+    const r = await saveOne(one);
+    if (r === 'saved') { flash(btn, 'All ' + shots.length + ' saved ✓'); return; }
+    if (r === 'declined') { flash(btn, 'Cancelled'); return; }
+    /* the extension is not allowed in this view — fall through to the slides */
+  } else if (deck) {
+    /* no host at all: an ordinary link, still inside the click */
+    await saveOne({ name: base + '.pptx', url: URL.createObjectURL(deck), blob: deck });
+    flash(btn, 'All ' + shots.length + ' saved ✓');
+    return;
+  }
+  await saveShots(shots, btn);
+}
 /* every slide, one after another. Only a decline stops it early. */
 async function saveShots(shots, btn) {
   const old = btn.textContent, many = shots.length > 1;
@@ -581,9 +615,10 @@ function postCard(i, P, slidesFn, eyebrow) {
   dlBtn.textContent = nSlides > 1
     ? '↓ Download all ' + nSlides + ' slides'
     : (P.story ? '↓ Download story' : '↓ Download post');
+  if (nSlides > 1) dlBtn.title = 'One file — ' + nSlides + ' pages, one per slide';
   dlBtn.onclick = () => {
     if (!shots) { flash(dlBtn, 'Preparing…'); return; }
-    saveShots(shots, dlBtn);
+    saveDeck(shots, dlBtn, base);
   };
 
   const slideBtns = nSlides > 1

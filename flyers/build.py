@@ -43,7 +43,7 @@ FONT_FACES = [
 
 # concatenated in this order; the numeric prefixes are the dependency order
 SCRIPTS = ["10-lib.js", "15-graphics.js", "20-brand.js", "30-slides.js", "40-listings.js", "45-poster.js",
-           "50-content.js", "60-app.js"]
+           "55-pptx.js", "50-content.js", "60-app.js"]
 
 
 def data_uri(path: pathlib.Path) -> str:
