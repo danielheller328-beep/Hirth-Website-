@@ -4926,24 +4926,30 @@ const esc = s => String(s == null ? '' : s).replace(/&(?![a-z]+;)/g, '&amp;').re
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 46);
 
 /* ── downloading ──────────────────────────────────────────────────────────
-   Downloads are real links, not buttons that go and make a file.
+   Every file here is a data: URL, not a blob: URL, and that is the whole
+   fix.
 
-   That distinction is the whole thing. A button that waits on canvas.toBlob
-   and then synthesises a click has spent its user gesture by the time the
-   click happens — the browser sees a script starting a download on its own
-   several ticks after anybody touched anything, and blocks it. Safari and
-   iOS block it outright, and a sandboxed frame blocks it everywhere.
+   This page is normally read inside a frame with a strict content policy on
+   it. Such a policy lists the URL schemes the page may load things from, and
+   `data:` is on that list — it has to be, because the fonts and the logo in
+   this very page are data: URLs and they arrive fine. `blob:` is a different
+   scheme and is routinely not on the list. When it is missing, a blob image
+   never loads and a blob download never starts, and neither failure says
+   anything: no error, no console, nothing. Which is exactly what a download
+   button that does nothing looks like.
 
-   So the file is built when the card paints, and the anchor is armed with a
-   blob URL and a download attribute before the user gets there. Clicking it
-   is then an ordinary click on an ordinary link, which nothing blocks.
-
-   One link, one file, and the file is a PNG. Nothing is zipped — a zip lands
-   in Files rather than Photos and you cannot post from it, which on a phone
-   is the same as the download not working.
+   canvas.toDataURL hands back the PNG as a data: URL directly. It is bigger
+   on the wire than a blob and it is synchronous, but it loads under the
+   policy, it saves under the policy, and it needs no object URL to be
+   created, held or revoked. Being synchronous is a second benefit: the
+   anchor is armed in the same tick it is painted, so there is never a moment
+   where the file exists but the link does not.
    ─────────────────────────────────────────────────────────────────────── */
-function canvasBlob(cv) {
-  return new Promise(res => cv.toBlob(res, 'image/png'));
+function canvasURL(cv) {
+  return cv.toDataURL('image/png');
+}
+function textURL(t) {
+  return 'data:text/plain;charset=utf-8,' + encodeURIComponent(t);
 }
 
 /* ── links ────────────────────────────────────────────────────────────────
@@ -4951,7 +4957,6 @@ function canvasBlob(cv) {
    is nothing to point at yet. arm() gives it its file. Until then it is
    visibly not ready rather than quietly broken.
    ─────────────────────────────────────────────────────────────────────── */
-const _urls = [];
 function dlLink(label, cls) {
   const a = document.createElement('a');
   a.className = cls + ' dl wait';
@@ -4960,33 +4965,25 @@ function dlLink(label, cls) {
   a.title = 'Preparing…';
   return a;
 }
-function arm(a, blob, filename) {
+function arm(a, url, filename) {
   if (!a) return;
-  const u = URL.createObjectURL(blob);
-  _urls.push(u);
-  a.href = u; a.download = filename;
+  a.href = url; a.download = filename;
   a.title = filename;
   a.classList.remove('wait');
 }
 function armText(a, text, filename) {
-  arm(a, new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
+  arm(a, textURL(text), filename);
 }
 /* the painted canvas, handed over as an image the browser will let you save */
-function swapToImage(cv, blob, alt) {
+function swapToImage(cv, url, alt) {
   if (!cv.parentNode) return;
   const im = new Image();
   im.className = 'cv';
   im.alt = alt || '';
   im.decoding = 'async';
   im.onload = () => { if (cv.parentNode) cv.parentNode.replaceChild(im, cv); };
-  im.src = objURL(blob);
+  im.src = url;
 }
-function objURL(blob) {
-  const u = URL.createObjectURL(blob);
-  _urls.push(u);
-  return u;
-}
-addEventListener('pagehide', () => _urls.forEach(u => URL.revokeObjectURL(u)));
 
 /* ── the save sheet ───────────────────────────────────────────────────────
    This page is usually read inside a frame, and a frame can be told it may
@@ -5193,17 +5190,20 @@ function postCard(i, P, slidesFn, eyebrow) {
     ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
     : [];
 
+  /* encoding a 1080-square PNG is not free, so the loop yields between
+     slides and the card stays scrollable while it works */
   async function armAll(cvs) {
     const out = [];
     for (let k = 0; k < cvs.length; k++) {
-      const name = slideName(base, cvs, k), blob = await canvasBlob(cvs[k]);
-      arm(slideLinks[k], blob, name);
-      out.push({ name, url: objURL(blob) });
+      if (k) await new Promise(r => setTimeout(r, 0));
+      const name = slideName(base, cvs, k), url = canvasURL(cvs[k]);
+      arm(slideLinks[k], url, name);
+      out.push({ name, url });
       /* and the slide itself becomes a real image rather than a canvas. A
          canvas cannot be saved by right-clicking it and cannot be saved at
          all by long-pressing it on a phone. An <img> can, on every platform,
          with nothing needing to be permitted. */
-      swapToImage(cvs[k], blob, title + ' — ' + (k + 1));
+      swapToImage(cvs[k], url, title + ' — ' + (k + 1));
     }
     shots = out;
     openBtn.classList.add('ready');
