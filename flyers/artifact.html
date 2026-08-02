@@ -5288,18 +5288,51 @@ async function saveOne(s) {
   }
 }
 
-/* ── a whole post, in one file ────────────────────────────────────────────
-   Every save is confirmed one file at a time, so three slides means three
-   confirmations. One file means one. A .pptx carries the three images as
-   three full-bleed pages and is on the list of extensions the host accepts,
-   which a zip and a PDF are not.
+/* ── a whole post, in one go ──────────────────────────────────────────────
+   Every save the host confirms is one file, so three slides is three
+   confirmations. There is no arguing with that — the only way to make one
+   action produce every slide is to stop using that route when a better one
+   exists. Three do, and they are tried hardest-first:
 
-   If this view will not take a .pptx it says so by its error code, and the
-   slides go one at a time instead — same files, more clicks.
+     1 · the share sheet. navigator.share takes every file in one call and
+         needs no permission at all. On a phone that is one tap and then
+         Save 3 Images — all of them, at once, into the camera roll. This is
+         the one that matters, because a phone is where these get posted.
+
+     2 · one file. A .pptx carries the slides as full-bleed pages, and a
+         .pptx is on the list of extensions the host accepts, which a zip
+         and a PDF are not. One file is one confirmation.
+
+     3 · ordinary links, when there is no host at all — on the website the
+         browser asks once for the set and then all of them land.
+
+   Only if none of those is available does it fall back to one at a time,
+   and then it says so rather than pretending that was the plan.
    ─────────────────────────────────────────────────────────────────────── */
 async function saveDeck(shots, btn, base) {
   if (shots.length < 2) return saveShots(shots, btn);
+
+  /* 1 · every file, one share sheet, no permission — synchronous up to the
+     call, so the tap is still the user's */
+  if (shareShots(shots, btn, base)) return;
+
   const old = btn.textContent;
+  const host = hostSave();
+
+  /* 3 · no host: ordinary links, one browser prompt for the set */
+  if (!host) {
+    btn.disabled = true;
+    for (let i = 0; i < shots.length; i++) {
+      const a = document.createElement('a');
+      a.href = shots[i].url; a.download = shots[i].name; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    btn.disabled = false;
+    flash(btn, 'All ' + shots.length + ' saved ✓');
+    return;
+  }
+
+  /* 2 · one file, one confirmation */
   btn.disabled = true;
   btn.textContent = 'Packing ' + shots.length + ' slides…';
   let deck = null;
@@ -5307,17 +5340,11 @@ async function saveDeck(shots, btn, base) {
   btn.disabled = false;
   btn.textContent = old;
 
-  if (deck && hostSave()) {
-    const one = { name: base + '.pptx', blob: deck };
-    const r = await saveOne(one);
+  if (deck) {
+    const r = await saveOne({ name: base + '.pptx', blob: deck });
     if (r === 'saved') { flash(btn, 'All ' + shots.length + ' saved ✓'); return; }
     if (r === 'declined') { flash(btn, 'Cancelled'); return; }
-    /* the extension is not allowed in this view — fall through to the slides */
-  } else if (deck) {
-    /* no host at all: an ordinary link, still inside the click */
-    await saveOne({ name: base + '.pptx', url: URL.createObjectURL(deck), blob: deck });
-    flash(btn, 'All ' + shots.length + ' saved ✓');
-    return;
+    /* the extension is off in this view — nothing left but one at a time */
   }
   await saveShots(shots, btn);
 }
