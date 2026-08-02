@@ -368,20 +368,33 @@ async function saveDeck(shots, btn, base) {
     return;
   }
 
-  /* 2 · one file, one confirmation */
-  btn.disabled = true;
-  btn.textContent = 'Packing ' + shots.length + ' slides…';
-  let deck = null;
-  try { deck = await pptxBlob(shots); } catch (e) { deck = null; }
-  btn.disabled = false;
-  btn.textContent = old;
+  /* 2 · one file, one confirmation. Whether a view takes a .pptx and whether
+     it takes a .docx are separate answers, so it asks for both before it
+     gives up on the idea of one download. */
+  for (let f = 0; f < DECK_FORMATS.length; f++) {
+    btn.disabled = true;
+    btn.textContent = 'Packing ' + shots.length + ' slides…';
+    let deck = null;
+    try { deck = await DECK_FORMATS[f].make(shots); } catch (e) { deck = null; }
+    btn.disabled = false;
+    btn.textContent = old;
+    if (!deck) continue;
 
-  if (deck) {
-    const r = await saveOne({ name: base + '.pptx', blob: deck });
+    const r = await saveOne({ name: base + '.' + DECK_FORMATS[f].ext, blob: deck });
     if (r === 'saved') { flash(btn, 'All ' + shots.length + ' saved ✓'); return; }
     if (r === 'declined') { flash(btn, 'Cancelled'); return; }
-    /* the extension is off in this view — nothing left but one at a time */
+    /* refused — try the next container */
   }
+
+  /* nothing here will carry more than one file at a time. Say so, once,
+     rather than letting three prompts look like a bug. */
+  const note = document.createElement('p');
+  note.className = 'sheethint onefile';
+  note.textContent = 'This browser only lets one file through at a time, so the '
+    + shots.length + ' slides come one after another. On a phone, or on '
+    + HOUSE.site + '/flyers, they all come at once.';
+  if (btn.parentNode && !btn.parentNode.parentNode.querySelector('.onefile'))
+    btn.parentNode.parentNode.insertBefore(note, btn.parentNode);
   await saveShots(shots, btn);
 }
 /* every slide, one after another. Only a decline stops it early. */
