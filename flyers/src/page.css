@@ -70,7 +70,7 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
 .media{position:relative;padding:18px 18px 40px}
 /* the story keeps its own aspect, and the card grows to hold it */
 .card.story .car{aspect-ratio:9/16}
-.car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;
+.car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;cursor:zoom-in;
   background:rgba(0,0,0,.28);
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
 .track{display:flex;height:100%;transition:transform .42s cubic-bezier(.22,.61,.36,1)}
@@ -128,6 +128,32 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
 .row .done{background:#243642;color:var(--gold)}
 .row [disabled],.row a.dl.wait{opacity:.45;cursor:default;pointer-events:none}
 .row a.dl:visited{color:inherit}
+.row .primary.wide:not(.ready){opacity:.55}
+
+/* the save sheet — the images, full size, where holding one down saves it */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(4,8,12,.88);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  overflow:auto;padding:26px 16px 60px;display:flex;justify-content:center;
+  animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheetbox{width:min(560px,100%);height:max-content}
+.sheethead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  position:sticky;top:0;z-index:2;padding:8px 0 12px;background:linear-gradient(180deg,
+  rgba(4,8,12,.96) 62%,transparent)}
+.sheethead strong{font-family:Fraunces,serif;font-weight:600;font-size:17px;color:var(--ink)}
+.sheetx{width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);cursor:pointer;
+  background:rgba(255,255,255,.05);color:var(--ink);font-size:15px;line-height:1}
+.sheetx:hover{border-color:var(--accent)}
+.sheethint{margin:0 0 18px;color:var(--dim);font-size:13px;line-height:1.6}
+.sheetfig{margin:0 0 18px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.sheetfig img{width:100%;height:auto;display:block;border-radius:10px;
+  box-shadow:0 20px 44px -24px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07)}
+a.sheetdl{align-self:flex-start;font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
+  padding:8px 14px;text-decoration:none;background:transparent;color:var(--dim);
+  border:1px solid var(--line2)}
+a.sheetdl:hover{color:var(--ink);border-color:var(--accent)}
+.row.sheetrow{margin-top:4px}
 .row button:focus-visible,.row a.dl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
@@ -141,7 +167,7 @@ footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.0
   .body{padding:4px 18px 20px}
 }
 @media print{
-  .switch,.nav,.dots,.row{display:none!important}
+  .switch,.nav,.dots,.row,.sheet{display:none!important}
   .view[hidden]{display:block!important}
   body{background:#fff!important;opacity:1!important}
   main.posts{display:block}

@@ -247,16 +247,102 @@ function armText(a, text, filename) {
 /* the painted canvas, handed over as an image the browser will let you save */
 function swapToImage(cv, blob, alt) {
   if (!cv.parentNode) return;
-  const u = URL.createObjectURL(blob);
-  _urls.push(u);
   const im = new Image();
   im.className = 'cv';
   im.alt = alt || '';
   im.decoding = 'async';
   im.onload = () => { if (cv.parentNode) cv.parentNode.replaceChild(im, cv); };
-  im.src = u;
+  im.src = objURL(blob);
+}
+function objURL(blob) {
+  const u = URL.createObjectURL(blob);
+  _urls.push(u);
+  return u;
 }
 addEventListener('pagehide', () => _urls.forEach(u => URL.revokeObjectURL(u)));
+
+/* ── the save sheet ───────────────────────────────────────────────────────
+   This page is usually read inside a frame, and a frame can be told it may
+   not download anything at all. When it is, there is no clever version of a
+   download button that works — the browser refuses the whole category, link
+   or button, gesture or not. Three rounds of making the download more
+   correct did not change that, because correctness was never the problem.
+
+   So the button stops asking permission. It opens the images, full size, in
+   the page you are already looking at. Press and hold one on a phone and it
+   goes to your camera roll; right-click it on a computer and Save Image is
+   right there. That path is not a permission, it is what an image is.
+
+   The real download links are in here too, so if the frame does allow them
+   they still do the quick thing. But nothing depends on that any more.
+   ─────────────────────────────────────────────────────────────────────── */
+function openSheet(shots, title, cap, tags) {
+  const ov = document.createElement('div');
+  ov.className = 'sheet';
+  const box = document.createElement('div');
+  box.className = 'sheetbox';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Save ' + title);
+
+  const head = document.createElement('div');
+  head.className = 'sheethead';
+  const h = document.createElement('strong');
+  h.textContent = shots.length > 1 ? shots.length + ' slides' : 'Save this';
+  const x = document.createElement('button');
+  x.className = 'sheetx'; x.textContent = '✕'; x.setAttribute('aria-label', 'Close');
+  head.append(h, x);
+  box.appendChild(head);
+
+  const hint = document.createElement('p');
+  hint.className = 'sheethint';
+  hint.textContent = 'Press and hold an image to save it to your camera roll. On a computer, ' +
+    'right-click it and choose Save Image As. The link under each one downloads it directly ' +
+    'where the browser allows that.';
+  box.appendChild(hint);
+
+  shots.forEach((s, k) => {
+    const fig = document.createElement('figure');
+    fig.className = 'sheetfig';
+    const im = new Image();
+    im.src = s.url; im.alt = title + (shots.length > 1 ? ' — slide ' + (k + 1) : '');
+    const a = document.createElement('a');
+    a.className = 'copy sheetdl'; a.href = s.url; a.download = s.name;
+    a.textContent = '↓ ' + (shots.length > 1 ? 'Slide ' + (k + 1) : 'Save') + ' · PNG';
+    fig.append(im, a);
+    box.appendChild(fig);
+  });
+
+  if (cap) {
+    const r = document.createElement('div');
+    r.className = 'row sheetrow';
+    const cb = document.createElement('button');
+    cb.className = 'copy'; cb.textContent = 'Copy caption';
+    cb.onclick = e => copy(cap, e.target);
+    r.appendChild(cb);
+    if (tags) {
+      const tb = document.createElement('button');
+      tb.className = 'copy'; tb.textContent = 'Copy tags';
+      tb.onclick = e => copy(tags, e.target);
+      r.appendChild(tb);
+    }
+    box.appendChild(r);
+  }
+
+  ov.appendChild(box);
+  const close = () => {
+    ov.remove();
+    document.body.style.overflow = '';
+    removeEventListener('keydown', esckey);
+  };
+  const esckey = e => { if (e.key === 'Escape') close(); };
+  x.onclick = close;
+  ov.onclick = e => { if (e.target === ov) close(); };
+  addEventListener('keydown', esckey);
+  document.body.style.overflow = 'hidden';
+  document.body.appendChild(ov);
+  x.focus();
+}
 function flash(btn, label) {
   const old = btn.textContent;
   btn.textContent = label; btn.classList.add('done');
@@ -356,49 +442,55 @@ function postCard(i, P, slidesFn, eyebrow) {
   media.innerHTML = '<div class="car placeholder"><span class="spin"></span></div>';
   a.appendChild(media);
 
-  /* Every link is one PNG. Nothing is zipped: a zip is the wrong thing to
+  /* Every file is one PNG. Nothing is zipped: a zip is the wrong thing to
      hand a phone — it lands in Files, not Photos, and you cannot post from
-     it. One image per link is what you actually put on Instagram.
-
-     They are armed the moment the card paints, so clicking one is an
-     ordinary click on an ordinary link and nothing has to be permitted. */
+     it. One image is what you actually put on Instagram. */
   const nSlides = P.slideCount || 1;
-  const slideLinks = Array.from({ length: nSlides }, (_, k) =>
-    dlLink(nSlides === 1
-      ? (P.story ? '↓ Download story' : '↓ Download post')
-      : 'Slide ' + (k + 1) + ' ↓',
-      nSlides === 1 ? 'primary' : 'copy slim'));
+  const title = stripRich(P.title);
+  let shots = null;                          /* [{ name, url }] once painted */
 
-  /* "all of them" clicks the links that are already sitting there, inside
-     the gesture, with nothing awaited in between — the browser sees three
-     link clicks, not a script deciding to send you three files */
-  const allLink = nSlides > 1 ? document.createElement('button') : null;
-  if (allLink) {
-    allLink.className = 'primary wide';
-    allLink.textContent = '↓ Download all ' + nSlides + ' slides';
-    allLink.disabled = true;
-    allLink.onclick = () => {
-      slideLinks.forEach(l => { if (l.href) l.click(); });
-      flash(allLink, 'Saved ✓');
-    };
-  }
+  /* the main control never depends on a permission. It opens the images,
+     full size, in the page — where holding one down saves it. */
+  const openBtn = document.createElement('button');
+  openBtn.className = 'primary wide';
+  openBtn.textContent = nSlides > 1
+    ? '↓ Save all ' + nSlides + ' slides'
+    : (P.story ? '↓ Save story' : '↓ Save post');
+  openBtn.onclick = () => {
+    if (!shots) { flash(openBtn, 'Preparing…'); return; }
+    openSheet(shots, title, P.cap, P.tags);
+  };
+
+  /* and the direct links stay, for the browsers that allow them */
+  const slideLinks = nSlides > 1
+    ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
+    : [];
 
   async function armAll(cvs) {
+    const out = [];
     for (let k = 0; k < cvs.length; k++) {
       const name = slideName(base, cvs, k), blob = await canvasBlob(cvs[k]);
       arm(slideLinks[k], blob, name);
+      out.push({ name, url: objURL(blob) });
       /* and the slide itself becomes a real image rather than a canvas. A
          canvas cannot be saved by right-clicking it and cannot be saved at
          all by long-pressing it on a phone. An <img> can, on every platform,
          with nothing needing to be permitted. */
-      swapToImage(cvs[k], blob, stripRich(P.title) + ' — ' + (k + 1));
+      swapToImage(cvs[k], blob, title + ' — ' + (k + 1));
     }
-    if (allLink) allLink.disabled = false;
+    shots = out;
+    openBtn.classList.add('ready');
   }
 
   whenVisible(a, () => {
     const cvs = slidesFn();
-    a.replaceChild(carousel(cvs, stripRich(P.title)), media);
+    const car = carousel(cvs, title);
+    /* tapping the slide itself opens the same sheet */
+    car.querySelector('.car').addEventListener('click', e => {
+      if (e.target.closest('.nav') || e.target.closest('.dot')) return;
+      if (shots) openSheet(shots, title, P.cap, P.tags);
+    });
+    a.replaceChild(car, media);
     armAll(cvs);
   });
 
@@ -432,7 +524,7 @@ function postCard(i, P, slidesFn, eyebrow) {
   /* row one — the file, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
-  row.appendChild(allLink || slideLinks[0]);
+  row.appendChild(openBtn);
   if (P.cap) {
     const cb = document.createElement('button');
     cb.className = 'copy'; cb.textContent = 'Copy caption';
@@ -448,7 +540,7 @@ function postCard(i, P, slidesFn, eyebrow) {
   b.appendChild(row);
 
   /* row two — the slides one at a time, for when you only want frame two */
-  if (allLink) {
+  if (slideLinks.length) {
     const r2 = document.createElement('div');
     r2.className = 'row slides';
     slideLinks.forEach(l => r2.appendChild(l));
