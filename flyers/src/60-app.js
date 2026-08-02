@@ -199,11 +199,22 @@ const esc = s => String(s == null ? '' : s).replace(/&(?![a-z]+;)/g, '&amp;').re
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 46);
 
 /* ── downloading ──────────────────────────────────────────────────────────
-   One button, one file. Firing three saves in a row is what browsers treat
-   as a site trying to drop files on you: Chrome raises a "download multiple
-   files?" prompt, Safari takes the first and drops the rest, and on a phone
-   nothing lands at all. So a post that is three slides plus a caption comes
-   down as one zip, and a single slide comes down as itself.
+   Downloads are real links, not buttons that go and make a file.
+
+   That distinction is the whole thing. A button that waits on canvas.toBlob
+   and then synthesises a click has spent its user gesture by the time the
+   click happens — the browser sees a script starting a download on its own
+   several ticks after anybody touched anything, and blocks it. Safari and
+   iOS block it outright, and a sandboxed frame blocks it everywhere.
+
+   So the file is built when the card paints, and the anchor is armed with a
+   blob URL and a download attribute before the user gets there. Clicking it
+   is then an ordinary click on an ordinary link, which nothing blocks.
+
+   One link, one file: a post is a zip of its slides plus the caption, and a
+   single slide is the PNG itself. Firing three saves in a row is the other
+   thing browsers stop — Chrome prompts, Safari keeps the first, phones land
+   nothing.
 
    The zip is written here rather than pulled from a library — stored, not
    deflated, because a PNG is already compressed and deflating it again buys
@@ -249,28 +260,55 @@ function zipBlob(files) {                 /* [{ name, bytes }] */
   return new Blob(parts.concat(dir, [new Uint8Array(eo.buffer)]), { type: 'application/zip' });
 }
 
-function saveBlob(blob, name) {
-  const u = URL.createObjectURL(blob), a = document.createElement('a');
-  a.href = u; a.download = name; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(u), 20000);
-}
 function canvasBlob(cv) {
   return new Promise(res => cv.toBlob(res, 'image/png'));
 }
-function saveCanvas(cv, name) {
-  return canvasBlob(cv).then(b => saveBlob(b, name));
-}
-function saveText(t, name) {
-  saveBlob(new Blob([t], { type: 'text/plain;charset=utf-8' }), name);
-}
 /* one file if there is one, a zip if there is more than one */
-async function saveBundle(items, zipName) {   /* [{ name, blob }] */
-  if (items.length === 1) { saveBlob(items[0].blob, items[0].name); return; }
+async function bundle(items, zipName) {       /* [{ name, blob }] -> { blob, name } */
+  if (items.length === 1) return items[0];
   const files = [];
   for (const it of items) files.push({ name: it.name, bytes: new Uint8Array(await it.blob.arrayBuffer()) });
-  saveBlob(zipBlob(files), zipName);
+  return { blob: zipBlob(files), name: zipName };
 }
+
+/* ── links ────────────────────────────────────────────────────────────────
+   A download link starts life unarmed — the card has not painted, so there
+   is nothing to point at yet. arm() gives it its file. Until then it is
+   visibly not ready rather than quietly broken.
+   ─────────────────────────────────────────────────────────────────────── */
+const _urls = [];
+function dlLink(label, cls) {
+  const a = document.createElement('a');
+  a.className = cls + ' dl wait';
+  a.textContent = label;
+  a.setAttribute('role', 'button');
+  a.title = 'Preparing…';
+  return a;
+}
+function arm(a, blob, filename) {
+  if (!a) return;
+  const u = URL.createObjectURL(blob);
+  _urls.push(u);
+  a.href = u; a.download = filename;
+  a.title = filename;
+  a.classList.remove('wait');
+}
+function armText(a, text, filename) {
+  arm(a, new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
+}
+/* the painted canvas, handed over as an image the browser will let you save */
+function swapToImage(cv, blob, alt) {
+  if (!cv.parentNode) return;
+  const u = URL.createObjectURL(blob);
+  _urls.push(u);
+  const im = new Image();
+  im.className = 'cv';
+  im.alt = alt || '';
+  im.decoding = 'async';
+  im.onload = () => { if (cv.parentNode) cv.parentNode.replaceChild(im, cv); };
+  im.src = u;
+}
+addEventListener('pagehide', () => _urls.forEach(u => URL.revokeObjectURL(u)));
 function flash(btn, label) {
   const old = btn.textContent;
   btn.textContent = label; btn.classList.add('done');
@@ -370,11 +408,45 @@ function postCard(i, P, slidesFn, eyebrow) {
   media.innerHTML = '<div class="car placeholder"><span class="spin"></span></div>';
   a.appendChild(media);
 
-  let cvs = null;
-  const slides = () => (cvs || (cvs = slidesFn()));
+  /* the links are created now and given their files the moment the card
+     paints, so by the time anyone clicks one it is an ordinary link */
+  const mainLink = dlLink(P.story ? '↓ Download story' : '↓ Download post', 'primary');
+  const nSlides = P.slideCount || 1;
+  const allLink = nSlides > 1 ? dlLink('↓ Download all ' + nSlides + ' slides', 'copy wide') : null;
+  const slideLinks = nSlides > 1
+    ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
+    : [];
+
+  async function armAll(cvs) {
+    const shots = [];
+    for (let k = 0; k < cvs.length; k++) {
+      const name = slideName(base, cvs, k), blob = await canvasBlob(cvs[k]);
+      shots.push({ name, blob });
+      arm(slideLinks[k], blob, name);
+      /* and the slide itself becomes a real image rather than a canvas. A
+         canvas cannot be saved by right-clicking it and cannot be saved at
+         all by long-pressing it on a phone. An <img> can, on every platform,
+         with nothing needing to be permitted. */
+      swapToImage(cvs[k], blob, stripRich(P.title) + ' — ' + (k + 1));
+    }
+    if (allLink) {
+      const it = await bundle(shots, base + '-slides.zip');
+      arm(allLink, it.blob, it.name);
+    }
+    const whole = P.cap
+      ? shots.concat([{
+        name: base + '-caption.txt',
+        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
+      }])
+      : shots;
+    const it = await bundle(whole, base + '.zip');
+    arm(mainLink, it.blob, it.name);
+  }
+
   whenVisible(a, () => {
-    const real = carousel(slides(), stripRich(P.title));
-    a.replaceChild(real, media);
+    const cvs = slidesFn();
+    a.replaceChild(carousel(cvs, stripRich(P.title)), media);
+    armAll(cvs);
   });
 
   const b = document.createElement('div');
@@ -414,29 +486,7 @@ function postCard(i, P, slidesFn, eyebrow) {
   /* row one — the post as a package, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
-  const dlBtn = document.createElement('button');
-  dlBtn.className = 'primary';
-  dlBtn.textContent = P.story ? '↓ Download story' : '↓ Download post';
-  dlBtn.onclick = async () => {
-    const cv = slides();
-    dlBtn.disabled = true;
-    const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
-    try {
-      const items = [];
-      for (let k = 0; k < cv.length; k++)
-        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
-      if (P.cap) items.push({
-        name: base + '-caption.txt',
-        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
-      });
-      await saveBundle(items, base + '.zip');
-      dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
-    } catch (err) {
-      dlBtn.textContent = 'Save failed';
-    }
-    setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
-  };
-  row.appendChild(dlBtn);
+  row.appendChild(mainLink);
   if (P.cap) {
     const cb = document.createElement('button');
     cb.className = 'copy'; cb.textContent = 'Copy caption';
@@ -451,38 +501,12 @@ function postCard(i, P, slidesFn, eyebrow) {
   }
   b.appendChild(row);
 
-  /* row two — the slides on their own. Painted lazily, so this row is built
-     from the slide count the card was told to expect, not from the canvases. */
-  const n = P.slideCount || 1;
-  if (n > 1) {
+  /* row two — the slides on their own, for when you only want frame two */
+  if (allLink) {
     const r2 = document.createElement('div');
     r2.className = 'row slides';
-    const all = document.createElement('button');
-    all.className = 'copy wide';
-    all.textContent = '↓ Download all ' + n + ' slides';
-    all.onclick = async e => {
-      const btn = e.target, cv = slides();
-      btn.disabled = true;
-      const items = [];
-      for (let k = 0; k < cv.length; k++)
-        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
-      await saveBundle(items, base + '-slides.zip');
-      btn.disabled = false; flash(btn, 'Saved ✓');
-    };
-    r2.appendChild(all);
-    for (let k = 0; k < n; k++) {
-      const one = document.createElement('button');
-      one.className = 'copy slim';
-      one.textContent = 'Slide ' + (k + 1) + ' ↓';
-      one.onclick = async e => {
-        const cv = slides();
-        if (!cv[k]) return;
-        e.target.disabled = true;
-        await saveCanvas(cv[k], slideName(base, cv, k));
-        e.target.disabled = false; flash(e.target, '✓');
-      };
-      r2.appendChild(one);
-    }
+    r2.appendChild(allLink);
+    slideLinks.forEach(l => r2.appendChild(l));
     b.appendChild(r2);
   }
 
@@ -524,13 +548,9 @@ function liCard(i, P) {
 
   const row = document.createElement('div');
   row.className = 'row';
-  const dl = document.createElement('button');
-  dl.className = 'primary';
-  dl.textContent = '↓ Download post';
-  dl.onclick = e => {
-    saveText(full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
-    flash(e.target, 'Saved ✓');
-  };
+  /* nothing to render, so this one is armed the moment it is built */
+  const dl = dlLink('↓ Download post', 'primary');
+  armText(dl, full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
   const cb = document.createElement('button');
   cb.className = 'copy'; cb.textContent = 'Copy caption';
   cb.onclick = e => copy(full, e.target);

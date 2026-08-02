@@ -75,7 +75,8 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
 .track{display:flex;height:100%;transition:transform .42s cubic-bezier(.22,.61,.36,1)}
 .slide{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+/* canvas while it paints, then an <img> of the same pixels — same box */
+.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;
   border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   color:#F1E7D3;border:1px solid rgba(255,255,255,.18);background:rgba(9,16,26,.55);
@@ -122,17 +123,23 @@ canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .row.slides{margin-top:9px;padding-top:12px;border-top:1px solid var(--line)}
 .row:last-child{margin-bottom:0}
 .body>.row:first-of-type{margin-top:auto;padding-top:16px}
-button.primary,button.copy{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
-  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap}
-button.primary{background:var(--accent);color:#08121B;border:none}
-button.copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
-button.copy.wide{flex:1 1 100%;text-align:center}
-button.copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
-button.copy:hover{color:var(--ink);border-color:var(--accent)}
-button.primary:hover{filter:brightness(1.07)}
-button.primary:active,button.copy:active{transform:scale(.97)}
-button.done{background:#243642;color:var(--gold)}
-button[disabled]{opacity:.6;cursor:default}
+/* buttons and download links are the same object to look at — the difference
+   is that a download is an <a> with a file already on it, so the click is an
+   ordinary click on an ordinary link and nothing has to be allowed */
+.row button,.row a.dl{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
+  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap;
+  display:inline-block;text-decoration:none;line-height:1.35;border:none;text-align:center}
+.row .primary{background:var(--accent);color:#08121B}
+.row .copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+.row .copy.wide{flex:1 1 100%}
+.row .copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
+.row .copy:hover{color:var(--ink);border-color:var(--accent)}
+.row .primary:hover{filter:brightness(1.07)}
+.row .primary:active,.row .copy:active{transform:scale(.97)}
+.row .done{background:#243642;color:var(--gold)}
+.row [disabled],.row a.dl.wait{opacity:.45;cursor:default;pointer-events:none}
+.row a.dl:visited{color:inherit}
+.row button:focus-visible,.row a.dl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
   text-align:center;color:var(--dim);font-size:13px}

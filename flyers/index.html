@@ -88,7 +88,8 @@ main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
 .track{display:flex;height:100%;transition:transform .42s cubic-bezier(.22,.61,.36,1)}
 .slide{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+/* canvas while it paints, then an <img> of the same pixels — same box */
+.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;
   border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
   color:#F1E7D3;border:1px solid rgba(255,255,255,.18);background:rgba(9,16,26,.55);
@@ -135,17 +136,23 @@ canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
 .row.slides{margin-top:9px;padding-top:12px;border-top:1px solid var(--line)}
 .row:last-child{margin-bottom:0}
 .body>.row:first-of-type{margin-top:auto;padding-top:16px}
-button.primary,button.copy{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
-  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap}
-button.primary{background:var(--accent);color:#08121B;border:none}
-button.copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
-button.copy.wide{flex:1 1 100%;text-align:center}
-button.copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
-button.copy:hover{color:var(--ink);border-color:var(--accent)}
-button.primary:hover{filter:brightness(1.07)}
-button.primary:active,button.copy:active{transform:scale(.97)}
-button.done{background:#243642;color:var(--gold)}
-button[disabled]{opacity:.6;cursor:default}
+/* buttons and download links are the same object to look at — the difference
+   is that a download is an <a> with a file already on it, so the click is an
+   ordinary click on an ordinary link and nothing has to be allowed */
+.row button,.row a.dl{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
+  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap;
+  display:inline-block;text-decoration:none;line-height:1.35;border:none;text-align:center}
+.row .primary{background:var(--accent);color:#08121B}
+.row .copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+.row .copy.wide{flex:1 1 100%}
+.row .copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
+.row .copy:hover{color:var(--ink);border-color:var(--accent)}
+.row .primary:hover{filter:brightness(1.07)}
+.row .primary:active,.row .copy:active{transform:scale(.97)}
+.row .done{background:#243642;color:var(--gold)}
+.row [disabled],.row a.dl.wait{opacity:.45;cursor:default;pointer-events:none}
+.row a.dl:visited{color:inherit}
+.row button:focus-visible,.row a.dl:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
   text-align:center;color:var(--dim);font-size:13px}
@@ -4904,11 +4911,22 @@ const esc = s => String(s == null ? '' : s).replace(/&(?![a-z]+;)/g, '&amp;').re
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 46);
 
 /* ── downloading ──────────────────────────────────────────────────────────
-   One button, one file. Firing three saves in a row is what browsers treat
-   as a site trying to drop files on you: Chrome raises a "download multiple
-   files?" prompt, Safari takes the first and drops the rest, and on a phone
-   nothing lands at all. So a post that is three slides plus a caption comes
-   down as one zip, and a single slide comes down as itself.
+   Downloads are real links, not buttons that go and make a file.
+
+   That distinction is the whole thing. A button that waits on canvas.toBlob
+   and then synthesises a click has spent its user gesture by the time the
+   click happens — the browser sees a script starting a download on its own
+   several ticks after anybody touched anything, and blocks it. Safari and
+   iOS block it outright, and a sandboxed frame blocks it everywhere.
+
+   So the file is built when the card paints, and the anchor is armed with a
+   blob URL and a download attribute before the user gets there. Clicking it
+   is then an ordinary click on an ordinary link, which nothing blocks.
+
+   One link, one file: a post is a zip of its slides plus the caption, and a
+   single slide is the PNG itself. Firing three saves in a row is the other
+   thing browsers stop — Chrome prompts, Safari keeps the first, phones land
+   nothing.
 
    The zip is written here rather than pulled from a library — stored, not
    deflated, because a PNG is already compressed and deflating it again buys
@@ -4954,28 +4972,55 @@ function zipBlob(files) {                 /* [{ name, bytes }] */
   return new Blob(parts.concat(dir, [new Uint8Array(eo.buffer)]), { type: 'application/zip' });
 }
 
-function saveBlob(blob, name) {
-  const u = URL.createObjectURL(blob), a = document.createElement('a');
-  a.href = u; a.download = name; a.rel = 'noopener';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(u), 20000);
-}
 function canvasBlob(cv) {
   return new Promise(res => cv.toBlob(res, 'image/png'));
 }
-function saveCanvas(cv, name) {
-  return canvasBlob(cv).then(b => saveBlob(b, name));
-}
-function saveText(t, name) {
-  saveBlob(new Blob([t], { type: 'text/plain;charset=utf-8' }), name);
-}
 /* one file if there is one, a zip if there is more than one */
-async function saveBundle(items, zipName) {   /* [{ name, blob }] */
-  if (items.length === 1) { saveBlob(items[0].blob, items[0].name); return; }
+async function bundle(items, zipName) {       /* [{ name, blob }] -> { blob, name } */
+  if (items.length === 1) return items[0];
   const files = [];
   for (const it of items) files.push({ name: it.name, bytes: new Uint8Array(await it.blob.arrayBuffer()) });
-  saveBlob(zipBlob(files), zipName);
+  return { blob: zipBlob(files), name: zipName };
 }
+
+/* ── links ────────────────────────────────────────────────────────────────
+   A download link starts life unarmed — the card has not painted, so there
+   is nothing to point at yet. arm() gives it its file. Until then it is
+   visibly not ready rather than quietly broken.
+   ─────────────────────────────────────────────────────────────────────── */
+const _urls = [];
+function dlLink(label, cls) {
+  const a = document.createElement('a');
+  a.className = cls + ' dl wait';
+  a.textContent = label;
+  a.setAttribute('role', 'button');
+  a.title = 'Preparing…';
+  return a;
+}
+function arm(a, blob, filename) {
+  if (!a) return;
+  const u = URL.createObjectURL(blob);
+  _urls.push(u);
+  a.href = u; a.download = filename;
+  a.title = filename;
+  a.classList.remove('wait');
+}
+function armText(a, text, filename) {
+  arm(a, new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
+}
+/* the painted canvas, handed over as an image the browser will let you save */
+function swapToImage(cv, blob, alt) {
+  if (!cv.parentNode) return;
+  const u = URL.createObjectURL(blob);
+  _urls.push(u);
+  const im = new Image();
+  im.className = 'cv';
+  im.alt = alt || '';
+  im.decoding = 'async';
+  im.onload = () => { if (cv.parentNode) cv.parentNode.replaceChild(im, cv); };
+  im.src = u;
+}
+addEventListener('pagehide', () => _urls.forEach(u => URL.revokeObjectURL(u)));
 function flash(btn, label) {
   const old = btn.textContent;
   btn.textContent = label; btn.classList.add('done');
@@ -5075,11 +5120,45 @@ function postCard(i, P, slidesFn, eyebrow) {
   media.innerHTML = '<div class="car placeholder"><span class="spin"></span></div>';
   a.appendChild(media);
 
-  let cvs = null;
-  const slides = () => (cvs || (cvs = slidesFn()));
+  /* the links are created now and given their files the moment the card
+     paints, so by the time anyone clicks one it is an ordinary link */
+  const mainLink = dlLink(P.story ? '↓ Download story' : '↓ Download post', 'primary');
+  const nSlides = P.slideCount || 1;
+  const allLink = nSlides > 1 ? dlLink('↓ Download all ' + nSlides + ' slides', 'copy wide') : null;
+  const slideLinks = nSlides > 1
+    ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
+    : [];
+
+  async function armAll(cvs) {
+    const shots = [];
+    for (let k = 0; k < cvs.length; k++) {
+      const name = slideName(base, cvs, k), blob = await canvasBlob(cvs[k]);
+      shots.push({ name, blob });
+      arm(slideLinks[k], blob, name);
+      /* and the slide itself becomes a real image rather than a canvas. A
+         canvas cannot be saved by right-clicking it and cannot be saved at
+         all by long-pressing it on a phone. An <img> can, on every platform,
+         with nothing needing to be permitted. */
+      swapToImage(cvs[k], blob, stripRich(P.title) + ' — ' + (k + 1));
+    }
+    if (allLink) {
+      const it = await bundle(shots, base + '-slides.zip');
+      arm(allLink, it.blob, it.name);
+    }
+    const whole = P.cap
+      ? shots.concat([{
+        name: base + '-caption.txt',
+        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
+      }])
+      : shots;
+    const it = await bundle(whole, base + '.zip');
+    arm(mainLink, it.blob, it.name);
+  }
+
   whenVisible(a, () => {
-    const real = carousel(slides(), stripRich(P.title));
-    a.replaceChild(real, media);
+    const cvs = slidesFn();
+    a.replaceChild(carousel(cvs, stripRich(P.title)), media);
+    armAll(cvs);
   });
 
   const b = document.createElement('div');
@@ -5119,29 +5198,7 @@ function postCard(i, P, slidesFn, eyebrow) {
   /* row one — the post as a package, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
-  const dlBtn = document.createElement('button');
-  dlBtn.className = 'primary';
-  dlBtn.textContent = P.story ? '↓ Download story' : '↓ Download post';
-  dlBtn.onclick = async () => {
-    const cv = slides();
-    dlBtn.disabled = true;
-    const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
-    try {
-      const items = [];
-      for (let k = 0; k < cv.length; k++)
-        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
-      if (P.cap) items.push({
-        name: base + '-caption.txt',
-        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
-      });
-      await saveBundle(items, base + '.zip');
-      dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
-    } catch (err) {
-      dlBtn.textContent = 'Save failed';
-    }
-    setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
-  };
-  row.appendChild(dlBtn);
+  row.appendChild(mainLink);
   if (P.cap) {
     const cb = document.createElement('button');
     cb.className = 'copy'; cb.textContent = 'Copy caption';
@@ -5156,38 +5213,12 @@ function postCard(i, P, slidesFn, eyebrow) {
   }
   b.appendChild(row);
 
-  /* row two — the slides on their own. Painted lazily, so this row is built
-     from the slide count the card was told to expect, not from the canvases. */
-  const n = P.slideCount || 1;
-  if (n > 1) {
+  /* row two — the slides on their own, for when you only want frame two */
+  if (allLink) {
     const r2 = document.createElement('div');
     r2.className = 'row slides';
-    const all = document.createElement('button');
-    all.className = 'copy wide';
-    all.textContent = '↓ Download all ' + n + ' slides';
-    all.onclick = async e => {
-      const btn = e.target, cv = slides();
-      btn.disabled = true;
-      const items = [];
-      for (let k = 0; k < cv.length; k++)
-        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
-      await saveBundle(items, base + '-slides.zip');
-      btn.disabled = false; flash(btn, 'Saved ✓');
-    };
-    r2.appendChild(all);
-    for (let k = 0; k < n; k++) {
-      const one = document.createElement('button');
-      one.className = 'copy slim';
-      one.textContent = 'Slide ' + (k + 1) + ' ↓';
-      one.onclick = async e => {
-        const cv = slides();
-        if (!cv[k]) return;
-        e.target.disabled = true;
-        await saveCanvas(cv[k], slideName(base, cv, k));
-        e.target.disabled = false; flash(e.target, '✓');
-      };
-      r2.appendChild(one);
-    }
+    r2.appendChild(allLink);
+    slideLinks.forEach(l => r2.appendChild(l));
     b.appendChild(r2);
   }
 
@@ -5229,13 +5260,9 @@ function liCard(i, P) {
 
   const row = document.createElement('div');
   row.className = 'row';
-  const dl = document.createElement('button');
-  dl.className = 'primary';
-  dl.textContent = '↓ Download post';
-  dl.onclick = e => {
-    saveText(full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
-    flash(e.target, 'Saved ✓');
-  };
+  /* nothing to render, so this one is armed the moment it is built */
+  const dl = dlLink('↓ Download post', 'primary');
+  armText(dl, full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
   const cb = document.createElement('button');
   cb.className = 'copy'; cb.textContent = 'Copy caption';
   cb.onclick = e => copy(full, e.target);
