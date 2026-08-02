@@ -44,8 +44,19 @@ header.mast .logo{width:min(300px,64vw);height:auto;display:block;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--line2)}}
 
-.sechead{display:flex;align-items:baseline;gap:18px;margin:44px 0 2px;flex-wrap:wrap}
-.sechead:first-of-type{margin-top:34px}
+/* the two places */
+.switch{display:flex;gap:10px;justify-content:center;margin:38px 0 0;flex-wrap:wrap;
+  scroll-margin-top:18px}
+.switch button{font:600 14px "Space Grotesk",sans-serif;background:var(--bg2);color:var(--dim);
+  border:1px solid var(--line2);padding:11px 26px;border-radius:999px;cursor:pointer;transition:.16s}
+.switch button[aria-selected="true"]{background:var(--accent);color:#08121B;border-color:transparent;
+  box-shadow:0 10px 26px -12px rgba(111,182,232,.7)}
+.switch button:hover{color:var(--ink);border-color:var(--accent)}
+.switch button[aria-selected="true"]:hover{color:#08121B}
+.switch .ct{margin-left:10px;font-size:12px;opacity:.72;font-weight:500}
+.view[hidden]{display:none}
+
+.sechead{display:flex;align-items:baseline;gap:18px;margin:34px 0 2px;flex-wrap:wrap}
 .sechead h2{font-family:Fraunces,serif;font-weight:500;font-size:22px;margin:0;white-space:nowrap;color:var(--ink)}
 .sechead .ln{flex:1;min-width:40px;height:1px;background:linear-gradient(90deg,var(--line2),transparent);
   transform:translateY(-6px)}
@@ -138,7 +149,8 @@ footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.0
   .body{padding:4px 18px 20px}
 }
 @media print{
-  .nav,.dots,.row{display:none!important}
+  .switch,.nav,.dots,.row{display:none!important}
+  .view[hidden]{display:block!important}
   body{background:#fff!important;opacity:1!important}
   main.posts{display:block}
   .card{break-inside:avoid;border-color:#ddd;margin-bottom:20px}
@@ -159,17 +171,23 @@ footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.0
     <div class="rulemark"><i></i></div>
   </header>
 
-  <div class="sechead">
-    <h2 id="sectionHead">The week</h2><div class="ln"></div>
-    <span class="secnote" id="weekRange">—</span>
-  </div>
-  <main class="posts" id="posts"></main>
+  <div class="switch" id="switch" role="tablist" aria-label="Sections"></div>
 
-  <div class="sechead">
-    <h2>LinkedIn</h2><div class="ln"></div>
-    <span class="secnote" id="liNote">—</span>
-  </div>
-  <main class="posts" id="liposts"></main>
+  <section class="view" id="view-week" role="tabpanel" aria-labelledby="tab-week">
+    <div class="sechead">
+      <h2 id="sectionHead">The week</h2><div class="ln"></div>
+      <span class="secnote" id="weekRange">—</span>
+    </div>
+    <main class="posts" id="posts"></main>
+  </section>
+
+  <section class="view" id="view-li" role="tabpanel" aria-labelledby="tab-li" hidden>
+    <div class="sechead">
+      <h2>LinkedIn — the written week</h2><div class="ln"></div>
+      <span class="secnote" id="liNote">—</span>
+    </div>
+    <main class="posts" id="liposts"></main>
+  </section>
 
   <footer class="ft">
     <strong>The Hirth Group</strong><br>
@@ -252,6 +270,23 @@ function measure(c, text, f, track) {
   const w = c.measureText(String(text)).width - (track || 0);
   c.restore();
   return w;
+}
+
+/* the box the glyphs actually fill, not the em box they are nominally set in.
+   A 230px numeral inks about 165px tall and sits nowhere near the middle of
+   its own line, so anything placed underneath by a fraction of the nominal
+   size lands inside the figure. Measure it instead of guessing at it. */
+function inkBox(c, str, f, track) {
+  c.save(); c.font = f; setTrack(c, track || 0);
+  const m = c.measureText(String(str));
+  c.restore();
+  const px = /(\d+(?:\.\d+)?)px/.exec(f);
+  const size = px ? parseFloat(px[1]) : 16;
+  return {
+    ascent: m.actualBoundingBoxAscent != null ? m.actualBoundingBoxAscent : size * .72,
+    descent: m.actualBoundingBoxDescent != null ? m.actualBoundingBoxDescent : size * .06,
+    width: m.width - (track || 0)
+  };
 }
 function metrics(c, text, f, track) {
   c.save(); c.font = f; setTrack(c, track || 0);
@@ -2143,10 +2178,12 @@ const L_signal = {
     } else {
       let sz = 230;
       while (measure(c, P.figure, FN(700, sz), -6) > B.w && sz > 80) sz -= 6;
-      text(c, P.figure, B.x, y + sz * .56, { font: FN(700, sz), fill: ad.ink, base: 'middle', track: -6 });
-      y += sz * .56 + 44;
+      /* the label goes under the ink, not under a fraction of the point size */
+      const ink = inkBox(c, P.figure, FN(700, sz), -6);
+      text(c, P.figure, B.x, y + ink.ascent, { font: FN(700, sz), fill: ad.ink, track: -6 });
+      y += ink.ascent + ink.descent + 40;
       caps(c, P.figureSub, B.x, y, { size: 16, fill: ad.accent, track: 3.4 });
-      y += 46;
+      y += 44;
     }
     rule(c, B.x, y, B.w, ad.ink, 3); y += 40;
     if (P.bars) {
@@ -4060,8 +4097,235 @@ The part of this job that does not photograph well is telling a seller the numbe
 197+ transactions. $471M+ in sales volume. Greater Los Angeles.
 
 Thinking about selling? 310.300.2838`,
-  tags: '#ClientReview #Testimonial #CommercialRealEstate #CRE #HirthGroup #CREBroker #LosAngelesRealEstate #SoldByHirth #KWCommercial #LARealEstate #SellCommercial #InvestmentProperty #RealEstateInvesting #BrokerOpinionOfValue #ThinkingOfSelling' }
+  tags: '#ClientReview #Testimonial #CommercialRealEstate #CRE #HirthGroup #CREBroker #LosAngelesRealEstate #SoldByHirth #KWCommercial #LARealEstate #SellCommercial #InvestmentProperty #RealEstateInvesting #BrokerOpinionOfValue #ThinkingOfSelling' },
 
+{ id: 'cpark', topic: 'Parking', kicker: 'The Brief',
+  title: 'Parking is not an amenity. *It is the use.*',
+  sub: 'The stall count decides what a tenant is allowed to be. Everything else is decoration.',
+  pointsTitle: 'What the stall count decides',
+  points: [
+    ['Restaurants need parking', 'at a ratio most older retail cannot reach.'],
+    ['Medical needs more than office,', 'which is why the conversion pencils and then does not.'],
+    ['Non-conforming counts', 'are grandfathered until the day you change the use.'],
+    ['Shared and reciprocal easements', 'are a document, not an assumption. Read it.'],
+    ['Tandem and stacked stalls', 'often do not count toward the requirement at all.'],
+    ['Stripe the lot yourself', 'before you believe the number on the flyer.']
+  ],
+  figurePair: ['1:250', '1:100'], figurePairLabels: ['typical office', 'typical restaurant'],
+  figureLabel: 'The Ratio', figureKicker: 'Stalls per thousand square feet',
+  pull: 'A building does not lose a tenant because the rent was wrong. It loses the tenant because the use it could support was smaller than the sign out front suggested.',
+  ctaKicker: 'Underwriting a conversion?', cta: 'Count the stalls *before* you count the rent.',
+  stats: [['1:250', 'Office Ratio'], ['1:100', 'Restaurant'], ['0', 'Assumptions']],
+  cap: `Parking is not an amenity. It is the use.
+
+The stall count decides what a tenant is legally allowed to be in that building. Restaurants need a ratio most older retail cannot reach. Medical needs more than office, which is exactly why a conversion pencils on a spreadsheet and then dies at the counter.
+
+Non-conforming counts are grandfathered — until the day you change the use. Then the whole requirement comes back at current code. Shared lots are governed by a reciprocal easement, which is a document you read, not a thing you assume.
+
+Go stripe the lot yourself before you believe the number on the flyer.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Parking #CommercialRealEstate #CRE #Zoning #DueDiligence #RetailRealEstate #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ValueAdd #CommercialProperty #RealEstateTips' },
+
+{ id: 'czone', topic: 'Entitlements', kicker: 'The Brief',
+  title: 'Zoned for it is not *approved for it.*',
+  sub: 'The code tells you what is permitted. The counter tells you what is possible. They are not the same building.',
+  pointsTitle: 'Between the code and the keys',
+  points: [
+    ['By-right means no hearing,', 'not no plan check and not no timeline.'],
+    ['A conditional use permit', 'is a discretionary decision. Discretion can say no.'],
+    ['Specific plans and overlays', 'sit on top of the base zone and quietly govern it.'],
+    ['Neighbourhood councils', 'do not vote, but they are heard, and they remember.'],
+    ['Every month of process', 'is a month of carry you are financing.'],
+    ['Price the entitlement risk', 'into the land, or the seller keeps it.']
+  ],
+  figurePair: ['12–24', '0'], figurePairLabels: ['months to entitle', 'guarantees'],
+  figureLabel: 'The Process', figureKicker: 'Greater Los Angeles, typical',
+  pull: 'Land is worth what you can build on it, on a date certain. Take away the date and you are buying an opinion.',
+  ctaKicker: 'Buying land or a conversion?', cta: 'Price the entitlement *before* you price the dirt.',
+  stats: [['12–24', 'Months'], ['CUP', 'Discretionary'], ['0', 'Guarantees']],
+  cap: `Zoned for it is not approved for it.
+
+The code tells you what is permitted. The planning counter tells you what is possible. Those are frequently not the same building.
+
+By-right means no public hearing — it does not mean no plan check, and it certainly does not mean no timeline. A conditional use permit is a discretionary decision, and discretion is allowed to say no. Specific plans and overlay districts sit on top of the base zone and quietly rewrite it.
+
+Every month of process is a month of carry somebody is paying for. Price the entitlement risk into the land, or the seller keeps it and you inherit it.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#Entitlements #Zoning #CommercialRealEstate #CRE #LandDevelopment #DueDiligence #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateStrategy #CommercialProperty #ValueAdd' },
+
+{ id: 'ccarryback', topic: 'Seller Financing', kicker: 'The Brief',
+  title: 'A seller carry is a price. *Not a favour.*',
+  sub: 'If you are financing the buyer, you are being paid twice — and you should be pricing both.',
+  pointsTitle: 'What the carry is actually worth',
+  points: [
+    ['A note at under market', 'is a discount you gave without saying so.'],
+    ['You keep the risk', 'that the bank was going to take off your hands.'],
+    ['A larger down payment', 'is the only real protection in the document.'],
+    ['Personal guarantees', 'are worth exactly what the guarantor is worth.'],
+    ['Gains spread over years', 'is the reason to do it, so do that math first.'],
+    ['Price the note and the price', 'as two numbers, then agree on both.']
+  ],
+  figurePair: ['2', '1'], figurePairLabels: ['numbers being agreed', 'number being discussed'],
+  figureLabel: 'The Trade', figureKicker: 'Price and paper are separate',
+  pull: 'Every carry-back deal that went wrong went wrong the same way: the parties agreed on a price and treated the paper as a detail.',
+  ctaKicker: 'Considering carrying paper?', cta: 'We price the note *and* the building.',
+  stats: [['2', 'Numbers'], ['1', 'Document'], ['0', 'Handshakes']],
+  cap: `A seller carry is a price, not a favour.
+
+If you are financing your own buyer you are being paid twice — once for the building and once for the money — and you should be pricing both.
+
+A note written under market is a discount you handed over without ever saying the word. You are also keeping the risk a bank was going to take off your hands, so the down payment is the only real protection in the document. A personal guarantee is worth exactly what the guarantor is worth, which is a question, not an answer.
+
+Spreading the gain over several years is a genuinely good reason to do it. Do that math first, then price the note and the building as two separate numbers.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#SellerFinancing #CommercialRealEstate #CRE #DealStructure #InvestmentProperty #CapitalGains #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateInvesting #CommercialProperty #DealFlow #TaxDeferred' },
+
+{ id: 'cinsure', topic: 'Insurance', kicker: 'The Brief',
+  title: 'Insurance stopped being a line you *copy forward.*',
+  sub: 'The number in the seller’s operating statement is the number the seller has. It is not the number you will have.',
+  pointsTitle: 'Why the premium moved',
+  points: [
+    ['Carriers repriced California,', 'and some of them left the state entirely.'],
+    ['Replacement cost, not value,', 'is what the premium is actually built on.'],
+    ['Roof age and electrical', 'decide whether you are quoted at all.'],
+    ['A bound quote in diligence', 'beats a broker’s estimate every time.'],
+    ['NNN passes it through,', 'until the tenant renews and prices it in.'],
+    ['Underwrite the new premium,', 'not the one on the statement.']
+  ],
+  figure: 'Year 1', figureSub: 'when the real premium lands', figureLabel: 'The Reset',
+  figureKicker: 'Not year five',
+  pull: 'The seller’s premium is a fact about the seller. Your premium is a fact about your building, your carrier and this year.',
+  ctaKicker: 'Underwriting an acquisition?', cta: 'Get it *bound* before you remove contingencies.',
+  stats: [['Yr 1', 'When It Lands'], ['1', 'Bound Quote'], ['0', 'Estimates']],
+  cap: `Insurance stopped being a line you copy forward.
+
+The number in the seller's operating statement is the number the seller has. It is not the number you will have, and in California that gap has stopped being small.
+
+Carriers repriced the state and several of them left it. The premium is built on replacement cost, not on what you are paying for the building. Roof age and electrical decide whether you get quoted at all, not just what you get quoted.
+
+Get a bound quote during diligence, not a broker's estimate. On a NNN deal it passes through to the tenant — right up until that tenant renews and prices it in.
+
+Underwrite the premium you are going to pay.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Insurance #CommercialRealEstate #CRE #Underwriting #DueDiligence #NOI #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #PropertyManagement #CommercialProperty #RealEstateInvesting' },
+
+{ id: 'cvacant', topic: 'Vacancy', kicker: 'The Brief',
+  title: 'A vacant building is not a discount. *It is a question.*',
+  sub: 'Empty is either the reason to buy it or the reason nobody has. Those look identical from the street.',
+  pointsTitle: 'What to establish first',
+  points: [
+    ['How long it has been empty,', 'and what the last three tenants paid.'],
+    ['Why the last one left.', 'The answer is rarely the one you are given.'],
+    ['What the space needs', 'to be leasable, in dollars, from a contractor.'],
+    ['What comparable space', 'is actually leasing at right now, signed.'],
+    ['How long the lease-up takes,', 'and who carries it while it does.'],
+    ['Whether an owner-user', 'is the real buyer, because often they are.']
+  ],
+  figurePair: ['6–12', '0'], figurePairLabels: ['months to lease up', 'income meanwhile'],
+  figureLabel: 'The Gap', figureKicker: 'Somebody funds it',
+  pull: 'Vacancy is not a discount you are given. It is a job you are taking on, and the discount should be the price of doing it.',
+  ctaKicker: 'Looking at an empty building?', cta: 'Price the lease-up, *then* price the building.',
+  stats: [['6–12', 'Months'], ['$0', 'Income'], ['1', 'Question']],
+  cap: `A vacant building is not a discount. It is a question.
+
+Empty is either the reason to buy it or the reason nobody has, and from the street those two look exactly the same.
+
+So establish the facts first. How long it has been empty. What the last three tenants paid. Why the last one actually left — the answer is rarely the one in the marketing. What the space needs to be leasable, in dollars, from a contractor rather than an estimate. What comparable space is signing at right now.
+
+Then the part everyone skips: how long lease-up takes, and who is carrying it while it happens. That is the number the discount has to cover.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#Vacancy #CommercialRealEstate #CRE #ValueAdd #InvestmentProperty #LeaseUp #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #OwnerUser #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cland', topic: 'Land Value', kicker: 'The Brief',
+  title: 'Sometimes you are not buying a building. *You are buying the dirt.*',
+  sub: 'When the improvement is worth less than the land under it, the rent roll is a distraction.',
+  pointsTitle: 'When land is the deal',
+  points: [
+    ['Land per square foot', 'is a comp set of its own. Pull it separately.'],
+    ['An old improvement', 'can be a demolition cost, not an asset.'],
+    ['Density and height', 'decide what the dirt is worth, not what stands on it.'],
+    ['A short-term tenant', 'is income while you entitle. A long one is a problem.'],
+    ['Corner, frontage, access', 'move land value more than square footage does.'],
+    ['Underwrite both ways', 'and let the higher number tell you what it is.']
+  ],
+  figurePair: ['2', '1'], figurePairLabels: ['ways to value it', 'that is correct'],
+  figureLabel: 'Two Models', figureKicker: 'Income and land',
+  pull: 'Half the buildings that trade at a bad cap rate were never income deals. The buyer was pricing the parcel and the seller was pricing the rent roll.',
+  ctaKicker: 'Not sure which one you own?', cta: 'We run it *both* ways before we price it.',
+  stats: [['2', 'Models'], ['1', 'Parcel'], ['LA', 'Market']],
+  cap: `Sometimes you are not buying a building. You are buying the dirt.
+
+When the improvement is worth less than the land under it, the rent roll is a distraction — and a surprising number of deals are in exactly that position without anyone saying so out loud.
+
+Land per square foot is its own comp set, so pull it separately. An old improvement can be a demolition cost rather than an asset. Density and height decide what the parcel is worth, not what happens to be standing on it. A short-term tenant is income while you entitle; a long one is an obstacle you paid for.
+
+Underwrite it as income and as land, then let the higher number tell you what you actually own.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#LandValue #CommercialRealEstate #CRE #LandDevelopment #Entitlements #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ValueAdd #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cassume', topic: 'Assumption', kicker: 'The Brief',
+  title: 'The loan is part of the asset now. *Price it that way.*',
+  sub: 'A below-market note with years left on it is worth real money to the right buyer. It is worth nothing if nobody markets it.',
+  pointsTitle: 'What makes a loan assumable',
+  points: [
+    ['Read the note first.', 'Assumable and transferable are different words.'],
+    ['Lender approval', 'is a process with a fee and a timeline.'],
+    ['The remaining term', 'is what the buyer is really buying.'],
+    ['A rate gap of two points', 'is worth more than most price concessions.'],
+    ['The gap between price and loan', 'has to be funded by somebody.'],
+    ['Market the debt', 'in the offering, not in the third phone call.']
+  ],
+  figure: '2 pts', figureSub: 'below today, on real money', figureLabel: 'The Spread',
+  figureKicker: 'What it is worth',
+  pull: 'Assumable debt is the only part of a deal that got more valuable while everything else got harder, and it is still buried on page nine.',
+  ctaKicker: 'Have debt worth assuming?', cta: 'It belongs on page one, *not* page nine.',
+  stats: [['2 pts', 'Rate Gap'], ['1', 'Note'], ['0', 'Buried']],
+  cap: `The loan is part of the asset now. Price it that way.
+
+A below-market note with years left on it is worth real money to the right buyer — and worth nothing at all if nobody markets it.
+
+Start by reading the note, because assumable and transferable are not the same word. Lender approval is a process with a fee and a timeline attached. The remaining term is what the buyer is genuinely buying, and a two-point gap to today's rate is worth more than most price concessions anyone is arguing about.
+
+The gap between the price and the loan balance has to be funded by somebody, so establish that early.
+
+Then put the debt on page one of the offering instead of page nine.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#AssumableDebt #CommercialRealEstate #CRE #DealStructure #Financing #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CapRate #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cphase1', topic: 'Environmental', kicker: 'The Brief',
+  title: 'The Phase I is not a formality. *It is a decision.*',
+  sub: 'Nobody reads it until the lender does, and by then it is a reason to reprice rather than a reason to plan.',
+  pointsTitle: 'What it is actually for',
+  points: [
+    ['A recognised condition', 'is a finding, not an accusation. Read what it says.'],
+    ['Dry cleaners and auto uses', 'are the two histories that change deals.'],
+    ['Order it early,', 'because a Phase II adds weeks you do not have.'],
+    ['The lender will require it', 'regardless of what you decide about it.'],
+    ['Innocent landowner defence', 'is the reason the report exists at all.'],
+    ['A clean report is leverage', 'when you are the one selling.']
+  ],
+  figurePair: ['2–3', '4–8'], figurePairLabels: ['weeks, Phase I', 'weeks, Phase II'],
+  figureLabel: 'The Clock', figureKicker: 'If it escalates',
+  pull: 'Environmental almost never kills a deal. It kills timelines, and a dead timeline kills the deal.',
+  ctaKicker: 'Opening escrow soon?', cta: 'Order it in week one, *not* week five.',
+  stats: [['2–3', 'Weeks, Ph. I'], ['4–8', 'Weeks, Ph. II'], ['1', 'Report']],
+  cap: `The Phase I is not a formality. It is a decision.
+
+Nobody reads it until the lender does, and by then it has become a reason to reprice rather than a reason to plan.
+
+A recognised environmental condition is a finding, not an accusation — read what it actually says. Dry cleaners and automotive uses are the two site histories that genuinely change deals. Order the report in week one, because if it escalates to a Phase II you are adding weeks you did not budget.
+
+The lender will require it either way. And if you are the seller, a clean report is leverage, not paperwork.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Environmental #PhaseI #CommercialRealEstate #CRE #DueDiligence #Escrow #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CommercialProperty #RealEstateTips #DealFlow' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -4470,29 +4734,46 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 /* ── rotation ─────────────────────────────────────────────────────────────
    Seven pieces a week, and seven is the whole week: three posts and four
-   stories. Three topics carry it — two of them run as carousels and all
-   three run as stories, which is the split he actually publishes.
+   stories. Six topics carry it — two run as carousels, four run as stories,
+   and no topic ever runs as both in the same week. Publishing the same
+   argument twice in one week, once square and once tall, was the thing that
+   made the set look padded.
 
-   The step is coprime with the bank size, so the bank is exhausted before
-   anything repeats. The art direction is assigned from the week number plus
-   the slot, so a topic that does come round again comes round in a different
-   world.
+   How far the window walks each week matters more than it looks. Step seven
+   posts into a bank of twenty-one and the same seven travel together forever,
+   because seven divides twenty-one — three distinct weeks, then a loop. The
+   step has to share no factor with the bank, so stepFor() walks up from the
+   number wanted until it finds one that does not, and the whole bank is
+   turned over before any grouping comes back.
+
+   The art direction is assigned from the week number plus the slot, so a
+   topic that does come round again comes round in a different world.
    ─────────────────────────────────────────────────────────────────────── */
-const WEEK_CONTENT_N = 3;
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function stepFor(len, want) {
+  let s = Math.max(1, want % len || len);
+  for (let i = 0; i < len; i++, s = s % len + 1) if (gcd(s, len) === 1) return s;
+  return 1;
+}
+
+const WEEK_CONTENT_N = 6;               /* 2 carousels + 4 stories */
+const WEEK_LI_N = 7;                    /* one a day */
+
 function pickContent() {
+  const step = stepFor(CONTENT.length, WEEK_CONTENT_N);
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
-    const p = CONTENT[(WEEK_N * WEEK_CONTENT_N + i) % CONTENT.length];
+    const p = CONTENT[(WEEK_N * step + i) % CONTENT.length];
     out.push(Object.assign({}, p, { ad: AD[AD_ORDER[(WEEK_N * 7 + i) % AD_ORDER.length]] }));
   }
   return out;
 }
-/* Listings are kept in the bank but are not surfaced as their own section.
-   To bring them back, add a `listings` entry to TABS below. */
+/* Listings are kept in the bank but are not surfaced. */
 function pickLinkedIn() {
+  const step = stepFor(LINKEDIN.length, WEEK_LI_N);
   const out = [];
-  for (let i = 0; i < 7; i++) {
-    const p = LINKEDIN[(WEEK_N * 7 + i) % LINKEDIN.length];
+  for (let i = 0; i < WEEK_LI_N; i++) {
+    const p = LINKEDIN[(WEEK_N * step + i) % LINKEDIN.length];
     out.push(Object.assign({}, p, { day: DAYS[i] }));
   }
   return out;
@@ -4577,11 +4858,12 @@ WEEK.poster = (function () {
   });
 })();
 
-/* the stories — four of them: one for each of the week's three topics, and a
-   house piece that alternates between the poster and the team, so the fourth
-   slot is never the same thing two weeks running */
+/* the carousels take the first two topics, the stories take the other four —
+   so the week is seven pieces about seven different things */
+WEEK.carousels = WEEK.content.slice(0, 2);
+
 WEEK.stories = (function () {
-  const out = WEEK.content.map((P, i) => ({
+  const out = WEEK.content.slice(2).map((P, i) => ({
     id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
     kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
     draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
@@ -4589,16 +4871,11 @@ WEEK.stories = (function () {
         : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
   }));
 
-  const pp = WEEK.poster;
-  if (WEEK_N % 2 === 0) {
-    out.push({
-      id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
-      adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
-      draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
-    });
-  } else {
+  /* every third week the last story is the house instead of a topic — the
+     poster is never repeated here, it is already the week's first post */
+  if (WEEK_N % 3 === 0 && out.length) {
     const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-    out.push({
+    out[out.length - 1] = {
       id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
       stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
       draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
@@ -4608,7 +4885,7 @@ We are not the loudest team in the room. We are the one that finds the deal ever
 
 310.300.2838 · HirthGroup.com`,
       tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-    });
+    };
   }
   return out;
 })();
@@ -4617,18 +4894,78 @@ We are not the loudest team in the room. We are the one that finds the deal ever
 const esc = s => String(s == null ? '' : s).replace(/&(?![a-z]+;)/g, '&amp;').replace(/</g, '&lt;');
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 46);
 
+/* ── downloading ──────────────────────────────────────────────────────────
+   One button, one file. Firing three saves in a row is what browsers treat
+   as a site trying to drop files on you: Chrome raises a "download multiple
+   files?" prompt, Safari takes the first and drops the rest, and on a phone
+   nothing lands at all. So a post that is three slides plus a caption comes
+   down as one zip, and a single slide comes down as itself.
+
+   The zip is written here rather than pulled from a library — stored, not
+   deflated, because a PNG is already compressed and deflating it again buys
+   nothing but a dependency. Sixty lines and the page stays self-contained.
+   ─────────────────────────────────────────────────────────────────────── */
+const _crc = (function () {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(b) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = _crc[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipBlob(files) {                 /* [{ name, bytes }] */
+  const enc = new TextEncoder(), parts = [], dir = [];
+  let at = 0;
+  files.forEach(f => {
+    const nm = enc.encode(f.name), crc = crc32(f.bytes), n = f.bytes.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, n, true); lh.setUint32(22, n, true);
+    lh.setUint16(26, nm.length, true);
+    parts.push(new Uint8Array(lh.buffer), nm, f.bytes);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+    cd.setUint32(16, crc, true); cd.setUint32(20, n, true); cd.setUint32(24, n, true);
+    cd.setUint16(28, nm.length, true); cd.setUint32(42, at, true);
+    dir.push(new Uint8Array(cd.buffer), nm);
+    at += 30 + nm.length + n;
+  });
+  const dirSize = dir.reduce((a, b) => a + b.length, 0);
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true);
+  eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true);
+  eo.setUint32(12, dirSize, true); eo.setUint32(16, at, true);
+  return new Blob(parts.concat(dir, [new Uint8Array(eo.buffer)]), { type: 'application/zip' });
+}
+
+function saveBlob(blob, name) {
+  const u = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = u; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 20000);
+}
+function canvasBlob(cv) {
+  return new Promise(res => cv.toBlob(res, 'image/png'));
+}
 function saveCanvas(cv, name) {
-  return new Promise(res => cv.toBlob(b => {
-    const u = URL.createObjectURL(b), a = document.createElement('a');
-    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => { URL.revokeObjectURL(u); res(); }, 420);
-  }, 'image/png'));
+  return canvasBlob(cv).then(b => saveBlob(b, name));
 }
 function saveText(t, name) {
-  const b = new Blob([t], { type: 'text/plain' }), u = URL.createObjectURL(b);
-  const a = document.createElement('a');
-  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(u), 420);
+  saveBlob(new Blob([t], { type: 'text/plain;charset=utf-8' }), name);
+}
+/* one file if there is one, a zip if there is more than one */
+async function saveBundle(items, zipName) {   /* [{ name, blob }] */
+  if (items.length === 1) { saveBlob(items[0].blob, items[0].name); return; }
+  const files = [];
+  for (const it of items) files.push({ name: it.name, bytes: new Uint8Array(await it.blob.arrayBuffer()) });
+  saveBlob(zipBlob(files), zipName);
 }
 function flash(btn, label) {
   const old = btn.textContent;
@@ -4780,9 +5117,19 @@ function postCard(i, P, slidesFn, eyebrow) {
     const cv = slides();
     dlBtn.disabled = true;
     const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
-    for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
-    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), base + '-caption.txt');
-    dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
+    try {
+      const items = [];
+      for (let k = 0; k < cv.length; k++)
+        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
+      if (P.cap) items.push({
+        name: base + '-caption.txt',
+        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
+      });
+      await saveBundle(items, base + '.zip');
+      dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
+    } catch (err) {
+      dlBtn.textContent = 'Save failed';
+    }
     setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
   };
   row.appendChild(dlBtn);
@@ -4810,10 +5157,13 @@ function postCard(i, P, slidesFn, eyebrow) {
     all.className = 'copy wide';
     all.textContent = '↓ Download all ' + n + ' slides';
     all.onclick = async e => {
-      const cv = slides();
-      e.target.disabled = true;
-      for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
-      e.target.disabled = false; flash(e.target, 'Saved ✓');
+      const btn = e.target, cv = slides();
+      btn.disabled = true;
+      const items = [];
+      for (let k = 0; k < cv.length; k++)
+        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
+      await saveBundle(items, base + '-slides.zip');
+      btn.disabled = false; flash(btn, 'Saved ✓');
     };
     r2.appendChild(all);
     for (let k = 0; k < n; k++) {
@@ -4889,11 +5239,45 @@ function liCard(i, P) {
   return a;
 }
 
+/* ── the two places ───────────────────────────────────────────────────────
+   The designed week and the written week are different jobs on different
+   days, so they are not one long scroll with a heading in the middle —
+   they are two views, and only one is on screen at a time.
+   ─────────────────────────────────────────────────────────────────────── */
+const VIEWS = [
+  { id: 'week', tab: 'The week', panel: 'view-week' },
+  { id: 'li', tab: 'LinkedIn', panel: 'view-li' }
+];
+function buildSwitch() {
+  const host = document.getElementById('switch');
+  host.innerHTML = '';
+  const counts = { week: 7, li: WEEK.linkedin.length };
+  const btns = VIEWS.map(v => {
+    const b = document.createElement('button');
+    b.id = 'tab-' + v.id;
+    b.setAttribute('role', 'tab');
+    b.innerHTML = esc(v.tab) + '<span class="ct">' + counts[v.id] + '</span>';
+    host.appendChild(b);
+    return b;
+  });
+  const show = i => {
+    VIEWS.forEach((v, j) => {
+      document.getElementById(v.panel).hidden = j !== i;
+      btns[j].setAttribute('aria-selected', j === i ? 'true' : 'false');
+    });
+    if (location.hash.slice(1) !== VIEWS[i].id) history.replaceState(null, '', '#' + VIEWS[i].id);
+  };
+  btns.forEach((b, i) => b.onclick = () => {
+    show(i);
+    document.getElementById('switch').scrollIntoView({ block: 'start' });
+  });
+  const want = VIEWS.findIndex(v => v.id === location.hash.slice(1));
+  show(want < 0 ? 0 : want);
+}
+
 /* ── the page ─────────────────────────────────────────────────────────────
-   Two sections. The week is seven pieces — three posts and four stories, in
-   one run, because a story is not a different kind of work from a post and
-   should not sit behind a tab. LinkedIn is its own section underneath: it is
-   written, not designed, and it is published somewhere else.
+   The week is seven pieces — three posts and four stories, in one run,
+   because a story is not a different kind of work from a post.
    ─────────────────────────────────────────────────────────────────────── */
 function buildFeed() {
   const host = document.getElementById('posts');
@@ -4907,7 +5291,7 @@ function buildFeed() {
     () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
     'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
 
-  const carousels = WEEK.content.slice(0, Math.min(2, MAXPOSTS));
+  const carousels = WEEK.carousels.slice(0, Math.min(2, MAXPOSTS));
   carousels.forEach(P => {
     P.slideCount = SLIDES_PER_POST;
     host.appendChild(postCard(n++, P, () => contentSlides(P),
@@ -4962,6 +5346,7 @@ function loadImages() {
   } catch (e) { }
   try { await loadImages(); } catch (e) { }
   buildFeed();
+  buildSwitch();
   document.body.classList.add('ready');
 })();
 </script>

@@ -5,18 +5,18 @@
   "recorded": "2026-08-02",
   "carousels": [
     {
-      "id": "cwait",
-      "topic": "Pricing",
+      "id": "ccarryback",
+      "topic": "Seller Financing",
       "art_direction": "Blueprint"
     },
     {
-      "id": "crent",
-      "topic": "Due Diligence",
+      "id": "cinsure",
+      "topic": "Insurance",
       "art_direction": "Signal"
     },
     {
-      "id": "coffmkt",
-      "topic": "Deal Flow",
+      "id": "cvacant",
+      "topic": "Vacancy",
       "art_direction": "Dossier"
     }
   ],
@@ -68,7 +68,7 @@
     }
   ],
   "bank": {
-    "content": 16,
+    "content": 24,
     "linkedin": 21,
     "listings": 2
   }

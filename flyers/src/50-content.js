@@ -449,8 +449,235 @@ The part of this job that does not photograph well is telling a seller the numbe
 197+ transactions. $471M+ in sales volume. Greater Los Angeles.
 
 Thinking about selling? 310.300.2838`,
-  tags: '#ClientReview #Testimonial #CommercialRealEstate #CRE #HirthGroup #CREBroker #LosAngelesRealEstate #SoldByHirth #KWCommercial #LARealEstate #SellCommercial #InvestmentProperty #RealEstateInvesting #BrokerOpinionOfValue #ThinkingOfSelling' }
+  tags: '#ClientReview #Testimonial #CommercialRealEstate #CRE #HirthGroup #CREBroker #LosAngelesRealEstate #SoldByHirth #KWCommercial #LARealEstate #SellCommercial #InvestmentProperty #RealEstateInvesting #BrokerOpinionOfValue #ThinkingOfSelling' },
 
+{ id: 'cpark', topic: 'Parking', kicker: 'The Brief',
+  title: 'Parking is not an amenity. *It is the use.*',
+  sub: 'The stall count decides what a tenant is allowed to be. Everything else is decoration.',
+  pointsTitle: 'What the stall count decides',
+  points: [
+    ['Restaurants need parking', 'at a ratio most older retail cannot reach.'],
+    ['Medical needs more than office,', 'which is why the conversion pencils and then does not.'],
+    ['Non-conforming counts', 'are grandfathered until the day you change the use.'],
+    ['Shared and reciprocal easements', 'are a document, not an assumption. Read it.'],
+    ['Tandem and stacked stalls', 'often do not count toward the requirement at all.'],
+    ['Stripe the lot yourself', 'before you believe the number on the flyer.']
+  ],
+  figurePair: ['1:250', '1:100'], figurePairLabels: ['typical office', 'typical restaurant'],
+  figureLabel: 'The Ratio', figureKicker: 'Stalls per thousand square feet',
+  pull: 'A building does not lose a tenant because the rent was wrong. It loses the tenant because the use it could support was smaller than the sign out front suggested.',
+  ctaKicker: 'Underwriting a conversion?', cta: 'Count the stalls *before* you count the rent.',
+  stats: [['1:250', 'Office Ratio'], ['1:100', 'Restaurant'], ['0', 'Assumptions']],
+  cap: `Parking is not an amenity. It is the use.
+
+The stall count decides what a tenant is legally allowed to be in that building. Restaurants need a ratio most older retail cannot reach. Medical needs more than office, which is exactly why a conversion pencils on a spreadsheet and then dies at the counter.
+
+Non-conforming counts are grandfathered — until the day you change the use. Then the whole requirement comes back at current code. Shared lots are governed by a reciprocal easement, which is a document you read, not a thing you assume.
+
+Go stripe the lot yourself before you believe the number on the flyer.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Parking #CommercialRealEstate #CRE #Zoning #DueDiligence #RetailRealEstate #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ValueAdd #CommercialProperty #RealEstateTips' },
+
+{ id: 'czone', topic: 'Entitlements', kicker: 'The Brief',
+  title: 'Zoned for it is not *approved for it.*',
+  sub: 'The code tells you what is permitted. The counter tells you what is possible. They are not the same building.',
+  pointsTitle: 'Between the code and the keys',
+  points: [
+    ['By-right means no hearing,', 'not no plan check and not no timeline.'],
+    ['A conditional use permit', 'is a discretionary decision. Discretion can say no.'],
+    ['Specific plans and overlays', 'sit on top of the base zone and quietly govern it.'],
+    ['Neighbourhood councils', 'do not vote, but they are heard, and they remember.'],
+    ['Every month of process', 'is a month of carry you are financing.'],
+    ['Price the entitlement risk', 'into the land, or the seller keeps it.']
+  ],
+  figurePair: ['12–24', '0'], figurePairLabels: ['months to entitle', 'guarantees'],
+  figureLabel: 'The Process', figureKicker: 'Greater Los Angeles, typical',
+  pull: 'Land is worth what you can build on it, on a date certain. Take away the date and you are buying an opinion.',
+  ctaKicker: 'Buying land or a conversion?', cta: 'Price the entitlement *before* you price the dirt.',
+  stats: [['12–24', 'Months'], ['CUP', 'Discretionary'], ['0', 'Guarantees']],
+  cap: `Zoned for it is not approved for it.
+
+The code tells you what is permitted. The planning counter tells you what is possible. Those are frequently not the same building.
+
+By-right means no public hearing — it does not mean no plan check, and it certainly does not mean no timeline. A conditional use permit is a discretionary decision, and discretion is allowed to say no. Specific plans and overlay districts sit on top of the base zone and quietly rewrite it.
+
+Every month of process is a month of carry somebody is paying for. Price the entitlement risk into the land, or the seller keeps it and you inherit it.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#Entitlements #Zoning #CommercialRealEstate #CRE #LandDevelopment #DueDiligence #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateStrategy #CommercialProperty #ValueAdd' },
+
+{ id: 'ccarryback', topic: 'Seller Financing', kicker: 'The Brief',
+  title: 'A seller carry is a price. *Not a favour.*',
+  sub: 'If you are financing the buyer, you are being paid twice — and you should be pricing both.',
+  pointsTitle: 'What the carry is actually worth',
+  points: [
+    ['A note at under market', 'is a discount you gave without saying so.'],
+    ['You keep the risk', 'that the bank was going to take off your hands.'],
+    ['A larger down payment', 'is the only real protection in the document.'],
+    ['Personal guarantees', 'are worth exactly what the guarantor is worth.'],
+    ['Gains spread over years', 'is the reason to do it, so do that math first.'],
+    ['Price the note and the price', 'as two numbers, then agree on both.']
+  ],
+  figurePair: ['2', '1'], figurePairLabels: ['numbers being agreed', 'number being discussed'],
+  figureLabel: 'The Trade', figureKicker: 'Price and paper are separate',
+  pull: 'Every carry-back deal that went wrong went wrong the same way: the parties agreed on a price and treated the paper as a detail.',
+  ctaKicker: 'Considering carrying paper?', cta: 'We price the note *and* the building.',
+  stats: [['2', 'Numbers'], ['1', 'Document'], ['0', 'Handshakes']],
+  cap: `A seller carry is a price, not a favour.
+
+If you are financing your own buyer you are being paid twice — once for the building and once for the money — and you should be pricing both.
+
+A note written under market is a discount you handed over without ever saying the word. You are also keeping the risk a bank was going to take off your hands, so the down payment is the only real protection in the document. A personal guarantee is worth exactly what the guarantor is worth, which is a question, not an answer.
+
+Spreading the gain over several years is a genuinely good reason to do it. Do that math first, then price the note and the building as two separate numbers.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#SellerFinancing #CommercialRealEstate #CRE #DealStructure #InvestmentProperty #CapitalGains #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #RealEstateInvesting #CommercialProperty #DealFlow #TaxDeferred' },
+
+{ id: 'cinsure', topic: 'Insurance', kicker: 'The Brief',
+  title: 'Insurance stopped being a line you *copy forward.*',
+  sub: 'The number in the seller’s operating statement is the number the seller has. It is not the number you will have.',
+  pointsTitle: 'Why the premium moved',
+  points: [
+    ['Carriers repriced California,', 'and some of them left the state entirely.'],
+    ['Replacement cost, not value,', 'is what the premium is actually built on.'],
+    ['Roof age and electrical', 'decide whether you are quoted at all.'],
+    ['A bound quote in diligence', 'beats a broker’s estimate every time.'],
+    ['NNN passes it through,', 'until the tenant renews and prices it in.'],
+    ['Underwrite the new premium,', 'not the one on the statement.']
+  ],
+  figure: 'Year 1', figureSub: 'when the real premium lands', figureLabel: 'The Reset',
+  figureKicker: 'Not year five',
+  pull: 'The seller’s premium is a fact about the seller. Your premium is a fact about your building, your carrier and this year.',
+  ctaKicker: 'Underwriting an acquisition?', cta: 'Get it *bound* before you remove contingencies.',
+  stats: [['Yr 1', 'When It Lands'], ['1', 'Bound Quote'], ['0', 'Estimates']],
+  cap: `Insurance stopped being a line you copy forward.
+
+The number in the seller's operating statement is the number the seller has. It is not the number you will have, and in California that gap has stopped being small.
+
+Carriers repriced the state and several of them left it. The premium is built on replacement cost, not on what you are paying for the building. Roof age and electrical decide whether you get quoted at all, not just what you get quoted.
+
+Get a bound quote during diligence, not a broker's estimate. On a NNN deal it passes through to the tenant — right up until that tenant renews and prices it in.
+
+Underwrite the premium you are going to pay.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Insurance #CommercialRealEstate #CRE #Underwriting #DueDiligence #NOI #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #PropertyManagement #CommercialProperty #RealEstateInvesting' },
+
+{ id: 'cvacant', topic: 'Vacancy', kicker: 'The Brief',
+  title: 'A vacant building is not a discount. *It is a question.*',
+  sub: 'Empty is either the reason to buy it or the reason nobody has. Those look identical from the street.',
+  pointsTitle: 'What to establish first',
+  points: [
+    ['How long it has been empty,', 'and what the last three tenants paid.'],
+    ['Why the last one left.', 'The answer is rarely the one you are given.'],
+    ['What the space needs', 'to be leasable, in dollars, from a contractor.'],
+    ['What comparable space', 'is actually leasing at right now, signed.'],
+    ['How long the lease-up takes,', 'and who carries it while it does.'],
+    ['Whether an owner-user', 'is the real buyer, because often they are.']
+  ],
+  figurePair: ['6–12', '0'], figurePairLabels: ['months to lease up', 'income meanwhile'],
+  figureLabel: 'The Gap', figureKicker: 'Somebody funds it',
+  pull: 'Vacancy is not a discount you are given. It is a job you are taking on, and the discount should be the price of doing it.',
+  ctaKicker: 'Looking at an empty building?', cta: 'Price the lease-up, *then* price the building.',
+  stats: [['6–12', 'Months'], ['$0', 'Income'], ['1', 'Question']],
+  cap: `A vacant building is not a discount. It is a question.
+
+Empty is either the reason to buy it or the reason nobody has, and from the street those two look exactly the same.
+
+So establish the facts first. How long it has been empty. What the last three tenants paid. Why the last one actually left — the answer is rarely the one in the marketing. What the space needs to be leasable, in dollars, from a contractor rather than an estimate. What comparable space is signing at right now.
+
+Then the part everyone skips: how long lease-up takes, and who is carrying it while it happens. That is the number the discount has to cover.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#Vacancy #CommercialRealEstate #CRE #ValueAdd #InvestmentProperty #LeaseUp #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #OwnerUser #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cland', topic: 'Land Value', kicker: 'The Brief',
+  title: 'Sometimes you are not buying a building. *You are buying the dirt.*',
+  sub: 'When the improvement is worth less than the land under it, the rent roll is a distraction.',
+  pointsTitle: 'When land is the deal',
+  points: [
+    ['Land per square foot', 'is a comp set of its own. Pull it separately.'],
+    ['An old improvement', 'can be a demolition cost, not an asset.'],
+    ['Density and height', 'decide what the dirt is worth, not what stands on it.'],
+    ['A short-term tenant', 'is income while you entitle. A long one is a problem.'],
+    ['Corner, frontage, access', 'move land value more than square footage does.'],
+    ['Underwrite both ways', 'and let the higher number tell you what it is.']
+  ],
+  figurePair: ['2', '1'], figurePairLabels: ['ways to value it', 'that is correct'],
+  figureLabel: 'Two Models', figureKicker: 'Income and land',
+  pull: 'Half the buildings that trade at a bad cap rate were never income deals. The buyer was pricing the parcel and the seller was pricing the rent roll.',
+  ctaKicker: 'Not sure which one you own?', cta: 'We run it *both* ways before we price it.',
+  stats: [['2', 'Models'], ['1', 'Parcel'], ['LA', 'Market']],
+  cap: `Sometimes you are not buying a building. You are buying the dirt.
+
+When the improvement is worth less than the land under it, the rent roll is a distraction — and a surprising number of deals are in exactly that position without anyone saying so out loud.
+
+Land per square foot is its own comp set, so pull it separately. An old improvement can be a demolition cost rather than an asset. Density and height decide what the parcel is worth, not what happens to be standing on it. A short-term tenant is income while you entitle; a long one is an obstacle you paid for.
+
+Underwrite it as income and as land, then let the higher number tell you what you actually own.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#LandValue #CommercialRealEstate #CRE #LandDevelopment #Entitlements #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #ValueAdd #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cassume', topic: 'Assumption', kicker: 'The Brief',
+  title: 'The loan is part of the asset now. *Price it that way.*',
+  sub: 'A below-market note with years left on it is worth real money to the right buyer. It is worth nothing if nobody markets it.',
+  pointsTitle: 'What makes a loan assumable',
+  points: [
+    ['Read the note first.', 'Assumable and transferable are different words.'],
+    ['Lender approval', 'is a process with a fee and a timeline.'],
+    ['The remaining term', 'is what the buyer is really buying.'],
+    ['A rate gap of two points', 'is worth more than most price concessions.'],
+    ['The gap between price and loan', 'has to be funded by somebody.'],
+    ['Market the debt', 'in the offering, not in the third phone call.']
+  ],
+  figure: '2 pts', figureSub: 'below today, on real money', figureLabel: 'The Spread',
+  figureKicker: 'What it is worth',
+  pull: 'Assumable debt is the only part of a deal that got more valuable while everything else got harder, and it is still buried on page nine.',
+  ctaKicker: 'Have debt worth assuming?', cta: 'It belongs on page one, *not* page nine.',
+  stats: [['2 pts', 'Rate Gap'], ['1', 'Note'], ['0', 'Buried']],
+  cap: `The loan is part of the asset now. Price it that way.
+
+A below-market note with years left on it is worth real money to the right buyer — and worth nothing at all if nobody markets it.
+
+Start by reading the note, because assumable and transferable are not the same word. Lender approval is a process with a fee and a timeline attached. The remaining term is what the buyer is genuinely buying, and a two-point gap to today's rate is worth more than most price concessions anyone is arguing about.
+
+The gap between the price and the loan balance has to be funded by somebody, so establish that early.
+
+Then put the debt on page one of the offering instead of page nine.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+  tags: '#AssumableDebt #CommercialRealEstate #CRE #DealStructure #Financing #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CapRate #CommercialProperty #RealEstateInvesting #DealFlow' },
+
+{ id: 'cphase1', topic: 'Environmental', kicker: 'The Brief',
+  title: 'The Phase I is not a formality. *It is a decision.*',
+  sub: 'Nobody reads it until the lender does, and by then it is a reason to reprice rather than a reason to plan.',
+  pointsTitle: 'What it is actually for',
+  points: [
+    ['A recognised condition', 'is a finding, not an accusation. Read what it says.'],
+    ['Dry cleaners and auto uses', 'are the two histories that change deals.'],
+    ['Order it early,', 'because a Phase II adds weeks you do not have.'],
+    ['The lender will require it', 'regardless of what you decide about it.'],
+    ['Innocent landowner defence', 'is the reason the report exists at all.'],
+    ['A clean report is leverage', 'when you are the one selling.']
+  ],
+  figurePair: ['2–3', '4–8'], figurePairLabels: ['weeks, Phase I', 'weeks, Phase II'],
+  figureLabel: 'The Clock', figureKicker: 'If it escalates',
+  pull: 'Environmental almost never kills a deal. It kills timelines, and a dead timeline kills the deal.',
+  ctaKicker: 'Opening escrow soon?', cta: 'Order it in week one, *not* week five.',
+  stats: [['2–3', 'Weeks, Ph. I'], ['4–8', 'Weeks, Ph. II'], ['1', 'Report']],
+  cap: `The Phase I is not a formality. It is a decision.
+
+Nobody reads it until the lender does, and by then it has become a reason to reprice rather than a reason to plan.
+
+A recognised environmental condition is a finding, not an accusation — read what it actually says. Dry cleaners and automotive uses are the two site histories that genuinely change deals. Order the report in week one, because if it escalates to a Phase II you are adding weeks you did not budget.
+
+The lender will require it either way. And if you are the seller, a clean report is leverage, not paperwork.
+
+Daniel Hirth · 310.300.2838`,
+  tags: '#Environmental #PhaseI #CommercialRealEstate #CRE #DueDiligence #Escrow #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CommercialProperty #RealEstateTips #DealFlow' },
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════

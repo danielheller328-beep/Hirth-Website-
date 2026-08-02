@@ -658,10 +658,12 @@ const L_signal = {
     } else {
       let sz = 230;
       while (measure(c, P.figure, FN(700, sz), -6) > B.w && sz > 80) sz -= 6;
-      text(c, P.figure, B.x, y + sz * .56, { font: FN(700, sz), fill: ad.ink, base: 'middle', track: -6 });
-      y += sz * .56 + 44;
+      /* the label goes under the ink, not under a fraction of the point size */
+      const ink = inkBox(c, P.figure, FN(700, sz), -6);
+      text(c, P.figure, B.x, y + ink.ascent, { font: FN(700, sz), fill: ad.ink, track: -6 });
+      y += ink.ascent + ink.descent + 40;
       caps(c, P.figureSub, B.x, y, { size: 16, fill: ad.accent, track: 3.4 });
-      y += 46;
+      y += 44;
     }
     rule(c, B.x, y, B.w, ad.ink, 3); y += 40;
     if (P.bars) {

@@ -71,6 +71,23 @@ function measure(c, text, f, track) {
   c.restore();
   return w;
 }
+
+/* the box the glyphs actually fill, not the em box they are nominally set in.
+   A 230px numeral inks about 165px tall and sits nowhere near the middle of
+   its own line, so anything placed underneath by a fraction of the nominal
+   size lands inside the figure. Measure it instead of guessing at it. */
+function inkBox(c, str, f, track) {
+  c.save(); c.font = f; setTrack(c, track || 0);
+  const m = c.measureText(String(str));
+  c.restore();
+  const px = /(\d+(?:\.\d+)?)px/.exec(f);
+  const size = px ? parseFloat(px[1]) : 16;
+  return {
+    ascent: m.actualBoundingBoxAscent != null ? m.actualBoundingBoxAscent : size * .72,
+    descent: m.actualBoundingBoxDescent != null ? m.actualBoundingBoxDescent : size * .06,
+    width: m.width - (track || 0)
+  };
+}
 function metrics(c, text, f, track) {
   c.save(); c.font = f; setTrack(c, track || 0);
   const m = c.measureText(String(text));

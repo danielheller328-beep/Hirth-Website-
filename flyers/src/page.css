@@ -40,8 +40,19 @@ header.mast .logo{width:min(300px,64vw);height:auto;display:block;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--line2)}}
 
-.sechead{display:flex;align-items:baseline;gap:18px;margin:44px 0 2px;flex-wrap:wrap}
-.sechead:first-of-type{margin-top:34px}
+/* the two places */
+.switch{display:flex;gap:10px;justify-content:center;margin:38px 0 0;flex-wrap:wrap;
+  scroll-margin-top:18px}
+.switch button{font:600 14px "Space Grotesk",sans-serif;background:var(--bg2);color:var(--dim);
+  border:1px solid var(--line2);padding:11px 26px;border-radius:999px;cursor:pointer;transition:.16s}
+.switch button[aria-selected="true"]{background:var(--accent);color:#08121B;border-color:transparent;
+  box-shadow:0 10px 26px -12px rgba(111,182,232,.7)}
+.switch button:hover{color:var(--ink);border-color:var(--accent)}
+.switch button[aria-selected="true"]:hover{color:#08121B}
+.switch .ct{margin-left:10px;font-size:12px;opacity:.72;font-weight:500}
+.view[hidden]{display:none}
+
+.sechead{display:flex;align-items:baseline;gap:18px;margin:34px 0 2px;flex-wrap:wrap}
 .sechead h2{font-family:Fraunces,serif;font-weight:500;font-size:22px;margin:0;white-space:nowrap;color:var(--ink)}
 .sechead .ln{flex:1;min-width:40px;height:1px;background:linear-gradient(90deg,var(--line2),transparent);
   transform:translateY(-6px)}
@@ -134,7 +145,8 @@ footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.0
   .body{padding:4px 18px 20px}
 }
 @media print{
-  .nav,.dots,.row{display:none!important}
+  .switch,.nav,.dots,.row{display:none!important}
+  .view[hidden]{display:block!important}
   body{background:#fff!important;opacity:1!important}
   main.posts{display:block}
   .card{break-inside:avoid;border-color:#ddd;margin-bottom:20px}

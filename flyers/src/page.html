@@ -15,17 +15,23 @@
     <div class="rulemark"><i></i></div>
   </header>
 
-  <div class="sechead">
-    <h2 id="sectionHead">The week</h2><div class="ln"></div>
-    <span class="secnote" id="weekRange">—</span>
-  </div>
-  <main class="posts" id="posts"></main>
+  <div class="switch" id="switch" role="tablist" aria-label="Sections"></div>
 
-  <div class="sechead">
-    <h2>LinkedIn</h2><div class="ln"></div>
-    <span class="secnote" id="liNote">—</span>
-  </div>
-  <main class="posts" id="liposts"></main>
+  <section class="view" id="view-week" role="tabpanel" aria-labelledby="tab-week">
+    <div class="sechead">
+      <h2 id="sectionHead">The week</h2><div class="ln"></div>
+      <span class="secnote" id="weekRange">—</span>
+    </div>
+    <main class="posts" id="posts"></main>
+  </section>
+
+  <section class="view" id="view-li" role="tabpanel" aria-labelledby="tab-li" hidden>
+    <div class="sechead">
+      <h2>LinkedIn — the written week</h2><div class="ln"></div>
+      <span class="secnote" id="liNote">—</span>
+    </div>
+    <main class="posts" id="liposts"></main>
+  </section>
 
   <footer class="ft">
     <strong>The Hirth Group</strong><br>

@@ -38,29 +38,46 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 /* ── rotation ─────────────────────────────────────────────────────────────
    Seven pieces a week, and seven is the whole week: three posts and four
-   stories. Three topics carry it — two of them run as carousels and all
-   three run as stories, which is the split he actually publishes.
+   stories. Six topics carry it — two run as carousels, four run as stories,
+   and no topic ever runs as both in the same week. Publishing the same
+   argument twice in one week, once square and once tall, was the thing that
+   made the set look padded.
 
-   The step is coprime with the bank size, so the bank is exhausted before
-   anything repeats. The art direction is assigned from the week number plus
-   the slot, so a topic that does come round again comes round in a different
-   world.
+   How far the window walks each week matters more than it looks. Step seven
+   posts into a bank of twenty-one and the same seven travel together forever,
+   because seven divides twenty-one — three distinct weeks, then a loop. The
+   step has to share no factor with the bank, so stepFor() walks up from the
+   number wanted until it finds one that does not, and the whole bank is
+   turned over before any grouping comes back.
+
+   The art direction is assigned from the week number plus the slot, so a
+   topic that does come round again comes round in a different world.
    ─────────────────────────────────────────────────────────────────────── */
-const WEEK_CONTENT_N = 3;
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+function stepFor(len, want) {
+  let s = Math.max(1, want % len || len);
+  for (let i = 0; i < len; i++, s = s % len + 1) if (gcd(s, len) === 1) return s;
+  return 1;
+}
+
+const WEEK_CONTENT_N = 6;               /* 2 carousels + 4 stories */
+const WEEK_LI_N = 7;                    /* one a day */
+
 function pickContent() {
+  const step = stepFor(CONTENT.length, WEEK_CONTENT_N);
   const out = [];
   for (let i = 0; i < WEEK_CONTENT_N; i++) {
-    const p = CONTENT[(WEEK_N * WEEK_CONTENT_N + i) % CONTENT.length];
+    const p = CONTENT[(WEEK_N * step + i) % CONTENT.length];
     out.push(Object.assign({}, p, { ad: AD[AD_ORDER[(WEEK_N * 7 + i) % AD_ORDER.length]] }));
   }
   return out;
 }
-/* Listings are kept in the bank but are not surfaced as their own section.
-   To bring them back, add a `listings` entry to TABS below. */
+/* Listings are kept in the bank but are not surfaced. */
 function pickLinkedIn() {
+  const step = stepFor(LINKEDIN.length, WEEK_LI_N);
   const out = [];
-  for (let i = 0; i < 7; i++) {
-    const p = LINKEDIN[(WEEK_N * 7 + i) % LINKEDIN.length];
+  for (let i = 0; i < WEEK_LI_N; i++) {
+    const p = LINKEDIN[(WEEK_N * step + i) % LINKEDIN.length];
     out.push(Object.assign({}, p, { day: DAYS[i] }));
   }
   return out;
@@ -145,11 +162,12 @@ WEEK.poster = (function () {
   });
 })();
 
-/* the stories — four of them: one for each of the week's three topics, and a
-   house piece that alternates between the poster and the team, so the fourth
-   slot is never the same thing two weeks running */
+/* the carousels take the first two topics, the stories take the other four —
+   so the week is seven pieces about seven different things */
+WEEK.carousels = WEEK.content.slice(0, 2);
+
 WEEK.stories = (function () {
-  const out = WEEK.content.map((P, i) => ({
+  const out = WEEK.content.slice(2).map((P, i) => ({
     id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
     kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
     draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
@@ -157,16 +175,11 @@ WEEK.stories = (function () {
         : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
   }));
 
-  const pp = WEEK.poster;
-  if (WEEK_N % 2 === 0) {
-    out.push({
-      id: 'st-poster', title: pp.title, story: true, kind: 'Poster',
-      adName: 'Press · ' + pp.cutName, cap: pp.cap, tags: pp.tags, stats: pp.stats,
-      draw: c => posterStory(c, pp, frameMeta({ id: pp.id }, 1, 1, SW, SH))
-    });
-  } else {
+  /* every third week the last story is the house instead of a topic — the
+     poster is never repeated here, it is already the week's first post */
+  if (WEEK_N % 3 === 0 && out.length) {
     const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
-    out.push({
+    out[out.length - 1] = {
       id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
       stats: [[HOUSE.volume, 'Sales Volume'], [HOUSE.deals, 'Transactions'], ['LA', 'Market']],
       draw: c => storyTeam(c, teamAd, frameMeta({ id: 'team' }, 0, 1, SW, SH)),
@@ -176,7 +189,7 @@ We are not the loudest team in the room. We are the one that finds the deal ever
 
 310.300.2838 · HirthGroup.com`,
       tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #MultiTenant #HirthGroup #KWCommercial #NNN #CREDeals'
-    });
+    };
   }
   return out;
 })();
@@ -185,18 +198,78 @@ We are not the loudest team in the room. We are the one that finds the deal ever
 const esc = s => String(s == null ? '' : s).replace(/&(?![a-z]+;)/g, '&amp;').replace(/</g, '&lt;');
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 46);
 
+/* ── downloading ──────────────────────────────────────────────────────────
+   One button, one file. Firing three saves in a row is what browsers treat
+   as a site trying to drop files on you: Chrome raises a "download multiple
+   files?" prompt, Safari takes the first and drops the rest, and on a phone
+   nothing lands at all. So a post that is three slides plus a caption comes
+   down as one zip, and a single slide comes down as itself.
+
+   The zip is written here rather than pulled from a library — stored, not
+   deflated, because a PNG is already compressed and deflating it again buys
+   nothing but a dependency. Sixty lines and the page stays self-contained.
+   ─────────────────────────────────────────────────────────────────────── */
+const _crc = (function () {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(b) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < b.length; i++) c = _crc[(c ^ b[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function zipBlob(files) {                 /* [{ name, bytes }] */
+  const enc = new TextEncoder(), parts = [], dir = [];
+  let at = 0;
+  files.forEach(f => {
+    const nm = enc.encode(f.name), crc = crc32(f.bytes), n = f.bytes.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, n, true); lh.setUint32(22, n, true);
+    lh.setUint16(26, nm.length, true);
+    parts.push(new Uint8Array(lh.buffer), nm, f.bytes);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true); cd.setUint16(4, 20, true); cd.setUint16(6, 20, true);
+    cd.setUint32(16, crc, true); cd.setUint32(20, n, true); cd.setUint32(24, n, true);
+    cd.setUint16(28, nm.length, true); cd.setUint32(42, at, true);
+    dir.push(new Uint8Array(cd.buffer), nm);
+    at += 30 + nm.length + n;
+  });
+  const dirSize = dir.reduce((a, b) => a + b.length, 0);
+  const eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true);
+  eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true);
+  eo.setUint32(12, dirSize, true); eo.setUint32(16, at, true);
+  return new Blob(parts.concat(dir, [new Uint8Array(eo.buffer)]), { type: 'application/zip' });
+}
+
+function saveBlob(blob, name) {
+  const u = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = u; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(u), 20000);
+}
+function canvasBlob(cv) {
+  return new Promise(res => cv.toBlob(res, 'image/png'));
+}
 function saveCanvas(cv, name) {
-  return new Promise(res => cv.toBlob(b => {
-    const u = URL.createObjectURL(b), a = document.createElement('a');
-    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => { URL.revokeObjectURL(u); res(); }, 420);
-  }, 'image/png'));
+  return canvasBlob(cv).then(b => saveBlob(b, name));
 }
 function saveText(t, name) {
-  const b = new Blob([t], { type: 'text/plain' }), u = URL.createObjectURL(b);
-  const a = document.createElement('a');
-  a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(u), 420);
+  saveBlob(new Blob([t], { type: 'text/plain;charset=utf-8' }), name);
+}
+/* one file if there is one, a zip if there is more than one */
+async function saveBundle(items, zipName) {   /* [{ name, blob }] */
+  if (items.length === 1) { saveBlob(items[0].blob, items[0].name); return; }
+  const files = [];
+  for (const it of items) files.push({ name: it.name, bytes: new Uint8Array(await it.blob.arrayBuffer()) });
+  saveBlob(zipBlob(files), zipName);
 }
 function flash(btn, label) {
   const old = btn.textContent;
@@ -348,9 +421,19 @@ function postCard(i, P, slidesFn, eyebrow) {
     const cv = slides();
     dlBtn.disabled = true;
     const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
-    for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
-    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), base + '-caption.txt');
-    dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
+    try {
+      const items = [];
+      for (let k = 0; k < cv.length; k++)
+        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
+      if (P.cap) items.push({
+        name: base + '-caption.txt',
+        blob: new Blob([P.cap + '\n\n' + (P.tags || '')], { type: 'text/plain;charset=utf-8' })
+      });
+      await saveBundle(items, base + '.zip');
+      dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
+    } catch (err) {
+      dlBtn.textContent = 'Save failed';
+    }
     setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
   };
   row.appendChild(dlBtn);
@@ -378,10 +461,13 @@ function postCard(i, P, slidesFn, eyebrow) {
     all.className = 'copy wide';
     all.textContent = '↓ Download all ' + n + ' slides';
     all.onclick = async e => {
-      const cv = slides();
-      e.target.disabled = true;
-      for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
-      e.target.disabled = false; flash(e.target, 'Saved ✓');
+      const btn = e.target, cv = slides();
+      btn.disabled = true;
+      const items = [];
+      for (let k = 0; k < cv.length; k++)
+        items.push({ name: slideName(base, cv, k), blob: await canvasBlob(cv[k]) });
+      await saveBundle(items, base + '-slides.zip');
+      btn.disabled = false; flash(btn, 'Saved ✓');
     };
     r2.appendChild(all);
     for (let k = 0; k < n; k++) {
@@ -457,11 +543,45 @@ function liCard(i, P) {
   return a;
 }
 
+/* ── the two places ───────────────────────────────────────────────────────
+   The designed week and the written week are different jobs on different
+   days, so they are not one long scroll with a heading in the middle —
+   they are two views, and only one is on screen at a time.
+   ─────────────────────────────────────────────────────────────────────── */
+const VIEWS = [
+  { id: 'week', tab: 'The week', panel: 'view-week' },
+  { id: 'li', tab: 'LinkedIn', panel: 'view-li' }
+];
+function buildSwitch() {
+  const host = document.getElementById('switch');
+  host.innerHTML = '';
+  const counts = { week: 7, li: WEEK.linkedin.length };
+  const btns = VIEWS.map(v => {
+    const b = document.createElement('button');
+    b.id = 'tab-' + v.id;
+    b.setAttribute('role', 'tab');
+    b.innerHTML = esc(v.tab) + '<span class="ct">' + counts[v.id] + '</span>';
+    host.appendChild(b);
+    return b;
+  });
+  const show = i => {
+    VIEWS.forEach((v, j) => {
+      document.getElementById(v.panel).hidden = j !== i;
+      btns[j].setAttribute('aria-selected', j === i ? 'true' : 'false');
+    });
+    if (location.hash.slice(1) !== VIEWS[i].id) history.replaceState(null, '', '#' + VIEWS[i].id);
+  };
+  btns.forEach((b, i) => b.onclick = () => {
+    show(i);
+    document.getElementById('switch').scrollIntoView({ block: 'start' });
+  });
+  const want = VIEWS.findIndex(v => v.id === location.hash.slice(1));
+  show(want < 0 ? 0 : want);
+}
+
 /* ── the page ─────────────────────────────────────────────────────────────
-   Two sections. The week is seven pieces — three posts and four stories, in
-   one run, because a story is not a different kind of work from a post and
-   should not sit behind a tab. LinkedIn is its own section underneath: it is
-   written, not designed, and it is published somewhere else.
+   The week is seven pieces — three posts and four stories, in one run,
+   because a story is not a different kind of work from a post.
    ─────────────────────────────────────────────────────────────────────── */
 function buildFeed() {
   const host = document.getElementById('posts');
@@ -475,7 +595,7 @@ function buildFeed() {
     () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
     'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
 
-  const carousels = WEEK.content.slice(0, Math.min(2, MAXPOSTS));
+  const carousels = WEEK.carousels.slice(0, Math.min(2, MAXPOSTS));
   carousels.forEach(P => {
     P.slideCount = SLIDES_PER_POST;
     host.appendChild(postCard(n++, P, () => contentSlides(P),
@@ -530,5 +650,6 @@ function loadImages() {
   } catch (e) { }
   try { await loadImages(); } catch (e) { }
   buildFeed();
+  buildSwitch();
   document.body.classList.add('ready');
 })();
