@@ -225,28 +225,6 @@ function textURL(t) {
   return 'data:text/plain;charset=utf-8,' + encodeURIComponent(t);
 }
 
-/* ── links ────────────────────────────────────────────────────────────────
-   A download link starts life unarmed — the card has not painted, so there
-   is nothing to point at yet. arm() gives it its file. Until then it is
-   visibly not ready rather than quietly broken.
-   ─────────────────────────────────────────────────────────────────────── */
-function dlLink(label, cls) {
-  const a = document.createElement('a');
-  a.className = cls + ' dl wait';
-  a.textContent = label;
-  a.setAttribute('role', 'button');
-  a.title = 'Preparing…';
-  return a;
-}
-function arm(a, url, filename) {
-  if (!a) return;
-  a.href = url; a.download = filename;
-  a.title = filename;
-  a.classList.remove('wait');
-}
-function armText(a, text, filename) {
-  arm(a, textURL(text), filename);
-}
 /* the painted canvas, handed over as an image the browser will let you save */
 function swapToImage(cv, url, alt) {
   if (!cv.parentNode) return;
@@ -288,8 +266,66 @@ function dataToBlob(url) {
   for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
   return new Blob([a], { type: 'image/png' });
 }
-function shotFile(s) {
-  return new File([dataToBlob(s.url)], s.name, { type: 'image/png' });
+function shotBlob(s) { return s.blob || (s.blob = dataToBlob(s.url)); }
+function shotFile(s) { return new File([shotBlob(s)], s.name, { type: 'image/png' }); }
+
+/* ── saving ───────────────────────────────────────────────────────────────
+   The page is read inside a frame, and frame code is not allowed to start a
+   download itself — which is why every version of a download button failed
+   silently. The host provides the way through: window.claude.downloads.save
+   hands the file to the viewer, who is shown the name and size and accepts
+   or declines. That is the sanctioned route, and it is the one that works.
+
+   Read this page on the website instead of in the frame and there is no
+   host to ask, so it falls back to an ordinary link, which is allowed there.
+   One function, both places.
+
+   The host allows one prompt at a time, so a three-slide post is saved one
+   file after another rather than all at once, and a decline stops the run
+   instead of asking twice more.
+   ─────────────────────────────────────────────────────────────────────── */
+function hostSave() {
+  return window.claude && window.claude.downloads && window.claude.downloads.save
+    ? window.claude.downloads : null;
+}
+/* → 'saved' | 'declined' | 'busy' | 'failed' */
+async function saveShot(s) {
+  const host = hostSave();
+  if (host) {
+    try {
+      await host.save({ filename: s.name, data: shotBlob(s) });
+      return 'saved';
+    } catch (e) {
+      const c = (e && e.code) || 'unavailable';
+      if (c === 'declined') return 'declined';
+      if (c === 'rate_limited') return 'busy';
+      if (c === 'bad_request' || c === 'too_large' || c === 'rejected_extension'
+        || c === 'extension_not_enabled' || c === 'transform_error') return 'failed';
+      /* unavailable / lifecycle — try the link instead */
+    }
+  }
+  /* no host: nothing has been awaited yet on this path, so the click is
+     still the user's and an ordinary link is allowed */
+  const a = document.createElement('a');
+  a.href = s.url; a.download = s.name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  return 'saved';
+}
+async function saveShots(shots, btn) {
+  const old = btn.textContent;
+  btn.disabled = true;
+  let done = 0, verdict = 'saved';
+  for (let i = 0; i < shots.length; i++) {
+    if (shots.length > 1) btn.textContent = 'Saving ' + (i + 1) + ' of ' + shots.length + '…';
+    verdict = await saveShot(shots[i]);
+    if (verdict !== 'saved') break;
+    done++;
+  }
+  btn.disabled = false;
+  btn.textContent = old;
+  flash(btn, verdict === 'saved' ? 'Saved ✓'
+    : verdict === 'declined' ? (done ? done + ' saved' : 'Cancelled')
+      : verdict === 'busy' ? 'One at a time' : 'Could not save');
 }
 /* synchronous, so it can be asked inside a click without spending it */
 function canShareFiles(files) {
@@ -376,10 +412,10 @@ function openSheet(shots, title, cap, tags) {
     ci.onclick = () => copyImage(s, ci);
     row.appendChild(ci);
 
-    const a = document.createElement('a');
-    a.className = 'copy dl sheetdl'; a.href = s.url; a.download = s.name;
-    a.textContent = '↓ Download';
-    row.appendChild(a);
+    const dl = document.createElement('button');
+    dl.className = 'copy'; dl.textContent = '↓ Download';
+    dl.onclick = () => saveShots([s], dl);
+    row.appendChild(dl);
 
     if (shots.length > 1) {
       const n = document.createElement('span');
@@ -526,22 +562,31 @@ function postCard(i, P, slidesFn, eyebrow) {
   const title = stripRich(P.title);
   let shots = null;                          /* [{ name, url }] once painted */
 
-  /* the main control never depends on a permission. It opens the images,
-     full size, in the page — where holding one down saves it. */
-  const openBtn = document.createElement('button');
-  openBtn.className = 'primary wide';
-  openBtn.textContent = nSlides > 1
-    ? '↓ Save all ' + nSlides + ' slides'
-    : (P.story ? '↓ Save story' : '↓ Save post');
-  openBtn.onclick = () => {
-    if (!shots) { flash(openBtn, 'Preparing…'); return; }
-    openSheet(shots, title, P.cap, P.tags);
+  const dlBtn = document.createElement('button');
+  dlBtn.className = 'primary wide';
+  dlBtn.textContent = nSlides > 1
+    ? '↓ Download all ' + nSlides + ' slides'
+    : (P.story ? '↓ Download story' : '↓ Download post');
+  dlBtn.onclick = () => {
+    if (!shots) { flash(dlBtn, 'Preparing…'); return; }
+    saveShots(shots, dlBtn);
   };
 
-  /* and the direct links stay, for the browsers that allow them */
-  const slideLinks = nSlides > 1
-    ? Array.from({ length: nSlides }, (_, k) => dlLink('Slide ' + (k + 1) + ' ↓', 'copy slim'))
+  const slideBtns = nSlides > 1
+    ? Array.from({ length: nSlides }, (_, k) => {
+      const b = document.createElement('button');
+      b.className = 'copy slim';
+      b.textContent = 'Slide ' + (k + 1) + ' ↓';
+      b.onclick = () => { if (shots && shots[k]) saveShots([shots[k]], b); };
+      return b;
+    })
     : [];
+
+  /* and the other ways out, a tap away: bigger, shareable, holdable */
+  const moreBtn = document.createElement('button');
+  moreBtn.className = 'copy';
+  moreBtn.textContent = '⤢ Other ways';
+  moreBtn.onclick = () => { if (shots) openSheet(shots, title, P.cap, P.tags); };
 
   /* encoding a 1080-square PNG is not free, so the loop yields between
      slides and the card stays scrollable while it works */
@@ -550,7 +595,6 @@ function postCard(i, P, slidesFn, eyebrow) {
     for (let k = 0; k < cvs.length; k++) {
       if (k) await new Promise(r => setTimeout(r, 0));
       const name = slideName(base, cvs, k), url = canvasURL(cvs[k]);
-      arm(slideLinks[k], url, name);
       out.push({ name, url });
       /* and the slide itself becomes a real image rather than a canvas. A
          canvas cannot be saved by right-clicking it and cannot be saved at
@@ -559,7 +603,7 @@ function postCard(i, P, slidesFn, eyebrow) {
       swapToImage(cvs[k], url, title + ' — ' + (k + 1));
     }
     shots = out;
-    openBtn.classList.add('ready');
+    dlBtn.classList.add('ready');
   }
 
   whenVisible(a, () => {
@@ -604,7 +648,7 @@ function postCard(i, P, slidesFn, eyebrow) {
   /* row one — the file, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
-  row.appendChild(openBtn);
+  row.appendChild(dlBtn);
   if (P.cap) {
     const cb = document.createElement('button');
     cb.className = 'copy'; cb.textContent = 'Copy caption';
@@ -617,13 +661,14 @@ function postCard(i, P, slidesFn, eyebrow) {
     tb.onclick = e => copy(P.tags, e.target);
     row.appendChild(tb);
   }
+  row.appendChild(moreBtn);
   b.appendChild(row);
 
   /* row two — the slides one at a time, for when you only want frame two */
-  if (slideLinks.length) {
+  if (slideBtns.length) {
     const r2 = document.createElement('div');
     r2.className = 'row slides';
-    slideLinks.forEach(l => r2.appendChild(l));
+    slideBtns.forEach(l => r2.appendChild(l));
     b.appendChild(r2);
   }
 
@@ -663,9 +708,15 @@ function liCard(i, P) {
 
   const row = document.createElement('div');
   row.className = 'row';
-  /* nothing to render, so this one is armed the moment it is built */
-  const dl = dlLink('↓ Download post', 'primary');
-  armText(dl, full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
+  /* text, so it is ready the moment it is built — same save route */
+  const dl = document.createElement('button');
+  dl.className = 'primary';
+  dl.textContent = '↓ Download post';
+  dl.onclick = () => saveShots([{
+    name: 'hirth-linkedin-' + P.day.toLowerCase() + '.txt',
+    url: textURL(full + '\n\n' + tags),
+    blob: new Blob([full + '\n\n' + tags], { type: 'text/plain;charset=utf-8' })
+  }], dl);
   const cb = document.createElement('button');
   cb.className = 'copy'; cb.textContent = 'Copy caption';
   cb.onclick = e => copy(full, e.target);
