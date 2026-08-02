@@ -98,15 +98,25 @@ function frameMeta(P, i, total, w, h) {
     sheetNo: String(i + 1).padStart(2, '0')
   };
 }
+/* ── a post is three frames ───────────────────────────────────────────────
+   The cover states it, the middle argues it, the last one asks for the call.
+   Three is what a reader will actually swipe through, and it forces the
+   middle frame to be the best of the three rather than the second of two.
+
+   Which middle frame it gets is decided by the post itself, not the slot: a
+   review runs the quote, and everything else runs points or the figure
+   depending on its own id. So two posts side by side in the same week are
+   built differently, not just coloured differently.
+   ─────────────────────────────────────────────────────────────────────── */
+const SLIDES_PER_POST = 3;
 function contentSlides(P) {
-  const ad = P.ad, L = LAYOUT[ad.id], total = 4;
+  const ad = P.ad, L = LAYOUT[ad.id], total = SLIDES_PER_POST;
+  const mid = P.review ? quoteSlide
+    : (hashStr(P.id + ':mid') % 2 ? L.figure : L.points);
   return [
     paint(c => L.cover(c, ad, P, frameMeta(P, 0, total, FW, FH)), FW, FH),
-    paint(c => (P.review ? quoteSlide(c, ad, P, frameMeta(P, 1, total, FW, FH))
-      : L.points(c, ad, P, frameMeta(P, 1, total, FW, FH))), FW, FH),
-    paint(c => (P.review ? L.points(c, ad, P, frameMeta(P, 2, total, FW, FH))
-      : L.figure(c, ad, P, frameMeta(P, 2, total, FW, FH))), FW, FH),
-    paint(c => L.ask(c, ad, P, frameMeta(P, 3, total, FW, FH)), FW, FH)
+    paint(c => mid(c, ad, P, frameMeta(P, 1, total, FW, FH)), FW, FH),
+    paint(c => L.ask(c, ad, P, frameMeta(P, 2, total, FW, FH)), FW, FH)
   ];
 }
 
@@ -120,8 +130,9 @@ WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
     poster: true, who: 'dh',
-    /* the cut turns independently of the statement — twelve weeks before a
-       statement meets the same portrait treatment twice */
+    /* the cut turns independently of the statement, and seven cuts against six
+       statements share no factor — forty-two weeks before a statement meets
+       the same portrait treatment twice */
     cutIndex: WEEK_N,
     cutName: posterCut(WEEK_N).name,
     title: stripRich(P.line),
@@ -239,16 +250,6 @@ function carousel(cvs, label) {
   return w;
 }
 
-function panel(label, body, btnLabel, isTags) {
-  const p = document.createElement('div');
-  p.className = 'panel';
-  p.innerHTML = '<div class="phead"><span class="plabel">' + esc(label) + '</span>' +
-    '<button class="copy">' + esc(btnLabel || 'Copy') + '</button></div>' +
-    '<div class="ptext' + (isTags ? ' tags' : '') + '"></div>';
-  p.querySelector('.ptext').textContent = body;
-  p.querySelector('.copy').onclick = e => copy(body, e.target);
-  return p;
-}
 
 /* Everything lives on one page now, which means twenty-eight canvases would
    otherwise be painted before the first one is on screen. Each card paints
@@ -272,10 +273,17 @@ function whenVisible(el, fn) {
   _observer.observe(el);
 }
 
+/* ── a card ───────────────────────────────────────────────────────────────
+   One tile: the slides on top, then everything you need to publish them —
+   the caption, the link, the hashtags, and the buttons underneath. The whole
+   post is downloadable as a set, and every slide is downloadable on its own,
+   because sometimes you only want to re-post frame two.
+   ─────────────────────────────────────────────────────────────────────── */
 function postCard(i, P, slidesFn, eyebrow) {
   const a = document.createElement('article');
   a.className = 'card' + (P.story ? ' story' : '');
   a.id = 'post-' + (P.id || i);
+  const base = 'hirth-' + slug(stripRich(P.title));
 
   const media = document.createElement('div');
   media.className = 'media';
@@ -283,19 +291,20 @@ function postCard(i, P, slidesFn, eyebrow) {
   a.appendChild(media);
 
   let cvs = null;
+  const slides = () => (cvs || (cvs = slidesFn()));
   whenVisible(a, () => {
-    cvs = slidesFn();
-    const real = carousel(cvs, stripRich(P.title));
+    const real = carousel(slides(), stripRich(P.title));
     a.replaceChild(real, media);
   });
+
   const b = document.createElement('div');
   b.className = 'body';
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">' + esc(eyebrow) + '</span>' +
-    (P.ad || P.adName ? '<span class="adtag" title="Art direction">' +
-      esc(P.ad ? P.ad.name : P.adName) + '</span>' : '') + '</div>' +
-    '<h2>' + esc(stripRich(P.title)) + '</h2>';
+    '<span class="eyebrow">' + esc(eyebrow) + '</span></div>' +
+    '<h2>' + esc(stripRich(P.title)) + '</h2>' +
+    (P.ad || P.adName ? '<div class="adtag" title="Art direction">' +
+      esc(P.ad ? P.ad.name : P.adName) + '</div>' : '');
   if (P.stats) {
     const s = document.createElement('div');
     s.className = 'strip';
@@ -303,28 +312,93 @@ function postCard(i, P, slidesFn, eyebrow) {
       '<div><span class="v">' + esc(x[0]) + '</span><span class="l">' + esc(x[1]) + '</span></div>').join('');
     b.appendChild(s);
   }
-  if (P.cap) b.appendChild(panel('Caption', P.cap, 'Copy caption'));
-  if (P.tags) b.appendChild(panel('Hashtags · first comment', P.tags, 'Copy', true));
+  if (P.cap) {
+    const cap = document.createElement('div');
+    cap.className = 'cap';
+    cap.textContent = P.cap;
+    b.appendChild(cap);
+  }
+  const link = document.createElement('a');
+  link.className = 'sitelink';
+  link.href = 'https://' + HOUSE.site;
+  link.target = '_blank'; link.rel = 'noopener';
+  link.textContent = HOUSE.site;
+  b.appendChild(link);
+  if (P.tags) {
+    const t = document.createElement('div');
+    t.className = 'tagline2';
+    t.textContent = P.tags;
+    b.appendChild(t);
+  }
+
+  /* row one — the post as a package, and the two things you paste */
   const row = document.createElement('div');
   row.className = 'row';
   const dlBtn = document.createElement('button');
   dlBtn.className = 'primary';
-  dlBtn.textContent = P.story ? '↓ Save story' : '↓ Save post';
+  dlBtn.textContent = P.story ? '↓ Download story' : '↓ Download post';
   dlBtn.onclick = async () => {
-    if (!cvs) { cvs = slidesFn(); }
+    const cv = slides();
     dlBtn.disabled = true;
     const old = dlBtn.textContent; dlBtn.textContent = 'Saving…';
-    for (let k = 0; k < cvs.length; k++)
-      await saveCanvas(cvs[k], 'hirth-' + slug(stripRich(P.title)) +
-        (k === cvs.length - 1 && cvs[k].height > cvs[k].width ? '-story' : '-' + (k + 1)) + '.png');
-    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), 'hirth-' + slug(stripRich(P.title)) + '-caption.txt');
+    for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
+    if (P.cap) saveText(P.cap + '\n\n' + (P.tags || ''), base + '-caption.txt');
     dlBtn.textContent = 'Saved ✓'; dlBtn.classList.add('done');
     setTimeout(() => { dlBtn.textContent = old; dlBtn.disabled = false; dlBtn.classList.remove('done'); }, 1700);
   };
   row.appendChild(dlBtn);
+  if (P.cap) {
+    const cb = document.createElement('button');
+    cb.className = 'copy'; cb.textContent = 'Copy caption';
+    cb.onclick = e => copy(P.cap, e.target);
+    row.appendChild(cb);
+  }
+  if (P.tags) {
+    const tb = document.createElement('button');
+    tb.className = 'copy'; tb.textContent = 'Copy tags';
+    tb.onclick = e => copy(P.tags, e.target);
+    row.appendChild(tb);
+  }
   b.appendChild(row);
+
+  /* row two — the slides on their own. Painted lazily, so this row is built
+     from the slide count the card was told to expect, not from the canvases. */
+  const n = P.slideCount || 1;
+  if (n > 1) {
+    const r2 = document.createElement('div');
+    r2.className = 'row slides';
+    const all = document.createElement('button');
+    all.className = 'copy wide';
+    all.textContent = '↓ Download all ' + n + ' slides';
+    all.onclick = async e => {
+      const cv = slides();
+      e.target.disabled = true;
+      for (let k = 0; k < cv.length; k++) await saveCanvas(cv[k], slideName(base, cv, k));
+      e.target.disabled = false; flash(e.target, 'Saved ✓');
+    };
+    r2.appendChild(all);
+    for (let k = 0; k < n; k++) {
+      const one = document.createElement('button');
+      one.className = 'copy slim';
+      one.textContent = 'Slide ' + (k + 1) + ' ↓';
+      one.onclick = async e => {
+        const cv = slides();
+        if (!cv[k]) return;
+        e.target.disabled = true;
+        await saveCanvas(cv[k], slideName(base, cv, k));
+        e.target.disabled = false; flash(e.target, '✓');
+      };
+      r2.appendChild(one);
+    }
+    b.appendChild(r2);
+  }
+
   a.appendChild(b);
   return a;
+}
+function slideName(base, cvs, k) {
+  const tall = cvs[k].height > cvs[k].width;
+  return base + (cvs.length === 1 ? (tall ? '-story' : '') : '-' + (k + 1)) + '.png';
 }
 
 function liCard(i, P) {
@@ -335,31 +409,42 @@ function liCard(i, P) {
   b.className = 'body';
   b.innerHTML =
     '<div class="topline"><span class="num">' + String(i + 1).padStart(2, '0') + '</span>' +
-    '<span class="eyebrow">LINKEDIN · ' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span>' +
-    '<span class="adtag">Written</span></div>' +
-    '<h2>' + esc(P.title) + '</h2>';
+    '<span class="eyebrow">LINKEDIN · ' + esc(P.day.toUpperCase()) + ' · ' + esc(P.topic.toUpperCase()) + '</span></div>' +
+    '<h2>' + esc(P.title) + '</h2>' +
+    '<div class="adtag">Written</div>';
 
-  /* the same caption panel every other card carries, so a LinkedIn post is
-     copied the same way a carousel caption is rather than selected by hand */
+  /* a LinkedIn card reads the same as a carousel card — caption, link,
+     hashtags, buttons — so the page has one shape, not two */
   const tags = P.tags || liTags(P.topic);
   const full = P.title + '\n\n' + P.body;
-  b.appendChild(panel('Caption · the post', full, 'Copy caption'));
-  b.appendChild(panel('Hashtags · first comment', tags, 'Copy', true));
+  const cap = document.createElement('div');
+  cap.className = 'cap'; cap.textContent = full;
+  b.appendChild(cap);
+  const link = document.createElement('a');
+  link.className = 'sitelink';
+  link.href = 'https://' + HOUSE.site; link.target = '_blank'; link.rel = 'noopener';
+  link.textContent = HOUSE.site;
+  b.appendChild(link);
+  const t = document.createElement('div');
+  t.className = 'tagline2'; t.textContent = tags;
+  b.appendChild(t);
 
   const row = document.createElement('div');
   row.className = 'row';
   const dl = document.createElement('button');
   dl.className = 'primary';
-  dl.textContent = '↓ Save .txt';
+  dl.textContent = '↓ Download post';
   dl.onclick = e => {
     saveText(full + '\n\n' + tags, 'hirth-linkedin-' + P.day.toLowerCase() + '.txt');
     flash(e.target, 'Saved ✓');
   };
-  const both = document.createElement('button');
-  both.className = 'copy';
-  both.textContent = '⧉ Copy post + hashtags';
-  both.onclick = e => copy(full + '\n\n' + tags, e.target);
-  row.append(dl, both);
+  const cb = document.createElement('button');
+  cb.className = 'copy'; cb.textContent = 'Copy caption';
+  cb.onclick = e => copy(full, e.target);
+  const tb = document.createElement('button');
+  tb.className = 'copy'; tb.textContent = 'Copy tags';
+  tb.onclick = e => copy(tags, e.target);
+  row.append(dl, cb, tb);
   b.appendChild(row);
   a.appendChild(b);
   return a;
@@ -377,16 +462,19 @@ function buildFeed() {
   let n = 0;
 
   WEEK.content.slice(0, MAXPOSTS).forEach(P => {
+    P.slideCount = SLIDES_PER_POST;
     host.appendChild(postCard(n++, P, () => contentSlides(P),
-      'CAROUSEL · 4 FRAMES · ' + P.topic.toUpperCase()));
+      'CAROUSEL · ' + SLIDES_PER_POST + ' SLIDES · ' + P.topic.toUpperCase()));
   });
 
   const pp = WEEK.poster;
+  pp.slideCount = 1;
   host.appendChild(postCard(n++, pp,
     () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
     'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
 
   WEEK.stories.slice(0, MAXPOSTS * 2).forEach(P => {
+    P.slideCount = 1;
     host.appendChild(postCard(n++, P, () => [paint(P.draw, SW, SH)],
       'STORY · 9:16 · ' + String(P.kind).toUpperCase()));
   });

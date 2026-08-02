@@ -7,9 +7,11 @@
    The photograph runs as shot — no screen, no duotone, no filter. The frame
    masks it to a shape and crops it, and that is the whole treatment.
 
-   The one constraint is resolution: the headshot on file is 240 x 240, so the
-   plates are capped at roughly 2x that. Drop a larger headshot into
-   assets/dh.png and every plate in every cut grows on its own.
+   Two files, one shoot. `dh` is the head-and-shoulders crop, for anything
+   circular. `dhero` is the full frame — head to hip, on the open floor — and
+   it is what makes the tall plates possible: a column, an arch, a full bleed
+   down one side of the sheet. Both are large enough now that nothing is
+   enlarged past its own pixels.
    ══════════════════════════════════════════════════════════════════════════ */
 
 const PRESS = {
@@ -23,40 +25,44 @@ const PRESS = {
    The photograph, as shot. No screen, no duotone, no filter — the frame just
    masks it to a shape and crops it.
 
-   The only processing is a size cap. The headshot on file is 240 x 240, and
-   an unedited photograph blown up past roughly 2x starts to look soft, so
-   plateSize() refuses to draw one larger than that. It reads the cap off the
-   file itself: drop a 1500px headshot into assets/dh.png and every plate in
-   every cut gets correspondingly bigger on its own, with no other change.
+   The only processing is a size cap. An unedited photograph blown up much
+   past its own resolution goes soft, so plateSize() reads the cap off the
+   file itself and refuses to draw one bigger than that. Swap in a larger
+   photograph and every plate in every cut grows on its own.
    ─────────────────────────────────────────────────────────────────────── */
-const MAX_UPSCALE = 1.95;
+const MAX_UPSCALE = 1.5;
 
 function plateSize(img, want) {
   if (!img) return want;
   return Math.min(want, img.naturalWidth * MAX_UPSCALE);
 }
-
 function plateShape(c, shape, x, y, w, h) {
   c.beginPath();
   if (shape === 'circle') c.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, 6.284);
   else if (shape === 'arch') {
-    const rr = w / 2;
+    const rr = Math.min(w / 2, h);
     c.moveTo(x, y + h); c.lineTo(x, y + rr);
-    c.arc(x + rr, y + rr, rr, Math.PI, 0);
+    c.arc(x + w / 2, y + rr, rr, Math.PI, 0);
     c.lineTo(x + w, y + h); c.closePath();
+  } else if (shape === 'round') {
+    const r = Math.min(w, h) * .06;
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r);
+    c.closePath();
   } else c.rect(x, y, w, h);
 }
 
 /* ── clarity ──────────────────────────────────────────────────────────────
-   A 240px headshot drawn at 460px is a 1.9x enlargement, and bicubic
-   enlargement is soft by construction — it invents the in-between pixels by
-   averaging, which is exactly what "blurry" means.
+   Bicubic enlargement is soft by construction — it invents the in-between
+   pixels by averaging, which is exactly what "blurry" means. An unsharp mask
+   puts the edge contrast back: blur a copy, subtract it from the original to
+   isolate the edges, then add those edges back at strength.
 
-   An unsharp mask puts the edge contrast back: blur a copy, subtract it from
-   the original to isolate the edges, then add those edges back at strength.
-   It is the last step in every print workflow and the reason a scanned
-   photograph looks sharp on the page. Applied once, cached, so it costs
-   nothing after the first frame.
+   It only runs when the plate is actually bigger than the pixels behind it.
+   A photograph drawn at or below its own resolution needs nothing, and
+   sharpening one that does not need it is how a face starts to look etched.
+   The scale decides, not the caller. Cached either way.
    ─────────────────────────────────────────────────────────────────────── */
 const _faceCache = {};
 function sharpFace(img, key, w, h, zoom, fx, fy) {
@@ -71,11 +77,20 @@ function sharpFace(img, key, w, h, zoom, fx, fy) {
   const iw = img.naturalWidth, ih = img.naturalHeight;
   const scale = Math.max(W / iw, H / ih) * (zoom || 1);
   const dw = iw * scale, dh = ih * scale;
-  c.drawImage(img, W / 2 - dw * fx, H / 2 - dh * fy, dw, dh);
+  /* fx/fy say which point of the photograph to bring to the middle of the
+     plate — but only as far as the photograph can travel and still cover it.
+     Without the clamp a plate the picture exactly fills slides off its own
+     edge and opens a band of whatever is behind. */
+  const ox = clamp(W / 2 - dw * fx, Math.min(0, W - dw), 0);
+  const oy = clamp(H / 2 - dh * fy, Math.min(0, H - dh), 0);
+  c.drawImage(img, ox, oy, dw, dh);
+
+  /* drawn at or under 1:1 — the photograph is already as sharp as it gets */
+  if (scale <= 1.02) { _faceCache[ck] = cv; return cv; }
 
   const im = c.getImageData(0, 0, W, H), d = im.data;
   const src = new Uint8ClampedArray(d);
-  const amount = 0.85, radius = 1;
+  const amount = clamp((scale - 1) * 1.2, 0, .85), radius = 1;
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = (y * W + x) * 4;
@@ -196,10 +211,24 @@ function pressHead(c, P, x, y, boxW, maxSize, o) {
    THE CUTS
 
    The poster comes round every week, so the portrait cannot be the same
-   portrait every week. Four cuts rotate independently of the statement — a
-   different plate shape, a different crop of his face, a different polarity
-   of ink. Twelve weeks before a statement meets the same cut twice.
+   portrait every week. Seven cuts rotate independently of the statement — a
+   different plate shape, a different crop, a different polarity of ink, and
+   in three of them a standing figure rather than a head in a circle. Seven
+   and six share no factor, so it is forty-two weeks before a statement meets
+   the same cut a second time.
    ══════════════════════════════════════════════════════════════════════════ */
+
+/* the feather that lets a bled plate leave the sheet instead of stopping on
+   it — the ground colour pulled back across the plate's inboard edge */
+function plateFeather(c, x, y, w, h, col, side, run) {
+  const r = run || 150;
+  const g = side === 'right'
+    ? c.createLinearGradient(x + w, y, x + w - r, y)
+    : c.createLinearGradient(x, y, x + r, y);
+  g.addColorStop(0, rgba(col, .92)); g.addColorStop(1, rgba(col, 0));
+  c.fillStyle = g; c.fillRect(x, y, w, h);
+}
+
 const POSTER_CUTS = [
 
   /* 1 · RONDEL — the photograph large, bleeding off the bottom-right */
@@ -237,7 +266,40 @@ const POSTER_CUTS = [
       pressSig(c, M, h - 230);
     } },
 
-  /* 2 · CARD — the photograph mounted on a printed card laid on the sheet.
+  /* 2 · COLUMN — the standing figure run full height off the right edge, the
+     photograph feathered into the ground so it leaves the sheet rather than
+     stopping on it. The words hold the whole left column. */
+  { id: 'column', name: 'Column',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGround(c, w, h, S.seed);
+      const pw = 452, px = w - pw;
+      if (face) {
+        portraitPhoto(c, face, px, 0, pw, h, { key: 'hero', shape: 'rect', fx: .52, fy: .40 });
+        plateFeather(c, px, 0, 220, h, '#081824', 'left', 220);
+        line(c, hair(px), 0, hair(px), h, rgba('#C6A461', .40), 1);
+      }
+      logoLockup(c, M, LOGO_Y, 200, 'white');
+      caps(c, P.kicker, M, LOGO_Y + 150, { size: 14, fill: PRESS.accent, track: 4 });
+      pressHead(c, P, M, 300, px - M - 54, 82, { boxH: 430, maxLines: 5 });
+      pressSig(c, M, h - 210, { size: 38 });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGround(c, w, h, S.seed);
+      const pw = 520, px = w - pw, py = 880;
+      if (face) {
+        portraitPhoto(c, face, px, py, pw, h - py, { key: 'hero', shape: 'rect', fx: .52, fy: .34 });
+        plateFeather(c, px, py, 200, h - py, '#081824', 'left', 200);
+        line(c, hair(px), py, hair(px), h, rgba('#C6A461', .40), 1);
+      }
+      logoLockup(c, M, 120, 250, 'white');
+      caps(c, P.kicker, M, 300, { size: 16, fill: PRESS.accent, track: 4.4 });
+      pressHead(c, P, M, 440, w - M * 2, 130, { boxH: 380, maxLines: 3 });
+      pressSig(c, M, h - 300, { size: 38 });
+    } },
+
+  /* 3 · CARD — the photograph mounted on a printed card laid on the sheet.
      The card carries the contact details, so the poster does not repeat them. */
   { id: 'card', name: 'Card',
     feed(c, P, S) {
@@ -303,13 +365,60 @@ const POSTER_CUTS = [
       caps(c, HOUSE.dre + '  ·  ' + HOUSE.firm, M, h - 88, { size: 12, fill: PRESS.muted, track: 2.6 });
     } },
 
-  /* 3 · INVERSE — printed on paper: cream stock, dark type, photograph left */
+  /* 4 · ARCH — the figure standing in a niche, on a ruled floor. The only cut
+     where he is a whole person rather than a head, and the frame says so. */
+  { id: 'arch', name: 'Arch',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGround(c, w, h, S.seed);
+      const aw = 404, ah = 640, ax = w - aw - 92, ay = h - ah - 148;
+      if (face) {
+        c.save();
+        c.strokeStyle = rgba('#C6A461', .28); c.lineWidth = 1;
+        plateShape(c, 'arch', ax - 20, ay - 20, aw + 40, ah + 40); c.stroke();
+        plateShape(c, 'arch', ax - 40, ay - 40, aw + 80, ah + 80); c.stroke();
+        c.restore();
+        portraitPhoto(c, face, ax, ay, aw, ah, {
+          key: 'hero', shape: 'arch', fx: .5, fy: .40,
+          edge: rgba('#C6A461', .8), edgeWidth: 2, shadow: ['rgba(0,0,0,.6)', 44, 14]
+        });
+      }
+      rule(c, ax - 96, ay + ah + 1, aw + 192, rgba('#C6A461', .42), 2);
+      rule(c, ax - 62, ay + ah + 13, aw + 124, rgba('#C6A461', .18), 1);
+      logoLockup(c, M, LOGO_Y, 200, 'white');
+      caps(c, P.kicker, M, LOGO_Y + 150, { size: 14, fill: PRESS.accent, track: 4 });
+      pressHead(c, P, M, 300, ax - M - 78, 78, { boxH: 400, maxLines: 5 });
+      pressSig(c, M, h - 200, { size: 36 });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGround(c, w, h, S.seed);
+      const aw = 600, ah = 850, ax = (w - aw) / 2, ay = 780;
+      if (face) {
+        c.save();
+        c.strokeStyle = rgba('#C6A461', .26); c.lineWidth = 1;
+        plateShape(c, 'arch', ax - 24, ay - 24, aw + 48, ah + 48); c.stroke();
+        plateShape(c, 'arch', ax - 48, ay - 48, aw + 96, ah + 96); c.stroke();
+        c.restore();
+        portraitPhoto(c, face, ax, ay, aw, ah, {
+          key: 'hero', shape: 'arch', fx: .5, fy: .40,
+          edge: rgba('#C6A461', .8), edgeWidth: 2, shadow: ['rgba(0,0,0,.6)', 48, 16]
+        });
+      }
+      rule(c, ax - 110, ay + ah + 1, aw + 220, rgba('#C6A461', .42), 2);
+      logoLockup(c, w / 2, 130, 250, 'white', 'center');
+      caps(c, P.kicker, w / 2, 310, { size: 16, fill: PRESS.accent, align: 'center', track: 4.4 });
+      pressHead(c, P, w / 2, 420, w - M * 2, 108, { boxH: 320, maxLines: 3, align: 'center' });
+      pressSig(c, w / 2, h - 190, { align: 'center', size: 36 });
+    } },
+
+  /* 5 · INVERSE — printed on paper: cream stock, dark type, photograph left */
   { id: 'inverse', name: 'Inverse',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGroundLight(c, w, h, S.seed);
       if (face) {
-        const d = plateSize(face, 528), x = -d * .18, y = h - d * .92;
+        const d = plateSize(face, 528), x = -d * .06, y = h - d * .92;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 18, d / 2 + 52, 3, rgba('#9A7A3E', .28), 1);
         portraitPhoto(c, face, x, y, d, d, {
           key: 'dh', shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
@@ -331,7 +440,7 @@ const POSTER_CUTS = [
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];
       pressGroundLight(c, w, h, S.seed);
       if (face) {
-        const d = plateSize(face, 528), x = -d * .16, y = h - d - 300;
+        const d = plateSize(face, 528), x = -d * .05, y = h - d - 300;
         engravedRings(c, x + d / 2, y + d / 2, d / 2 + 20, d / 2 + 58, 3, rgba('#9A7A3E', .28), 1);
         portraitPhoto(c, face, x, y, d, d, {
           key: 'dh', shape: 'circle', edge: rgba('#9A7A3E', .8), edgeWidth: 3,
@@ -350,7 +459,61 @@ const POSTER_CUTS = [
       });
     } },
 
-  /* 4 · MEDALLION — smaller, centred, ringed; the words take the frame */
+  /* 6 · STANDING — cream stock again, but the whole figure this time, mounted
+     as a print with a hairline border and the words set against it, right. */
+  { id: 'standing', name: 'Standing',
+    feed(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGroundLight(c, w, h, S.seed);
+      const pw = 424, ph = 704, px = M + 10, py = h - ph - 116;
+      if (face) {
+        portraitPhoto(c, face, px, py, pw, ph, {
+          key: 'hero', shape: 'round', fx: .5, fy: .40,
+          edge: rgba('#9A7A3E', .55), edgeWidth: 2, shadow: ['rgba(70,58,38,.30)', 40, 14]
+        });
+        c.save();
+        c.strokeStyle = rgba('#9A7A3E', .35); c.lineWidth = 1;
+        c.strokeRect(hair(px - 14), hair(py - 14), pw + 28, ph + 28);
+        c.restore();
+      }
+      logoLockup(c, w - M, LOGO_Y, 200, 'color', 'right');
+      caps(c, P.kicker, w - M, LOGO_Y + 150, { size: 14, fill: '#9A7A3E', align: 'right', track: 4 });
+      pressHead(c, P, w - M, 300, w - (px + pw) - 54 - M, 74, {
+        boxH: 430, maxLines: 6, align: 'right', ink: '#14222B', em: '#1C5C86',
+        foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
+      });
+      pressSig(c, w - M, h - 212, {
+        align: 'right', size: 36, ink: '#14222B', body: '#4A5560', muted: '#8A9299',
+        accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
+      });
+    },
+    story(c, P, S) {
+      const w = S.w, h = S.h, M = S.M, face = IMG.dhero || IMG.dh;
+      pressGroundLight(c, w, h, S.seed);
+      const pw = 520, ph = 880, px = M, py = 860;
+      if (face) {
+        portraitPhoto(c, face, px, py, pw, ph, {
+          key: 'hero', shape: 'round', fx: .5, fy: .40,
+          edge: rgba('#9A7A3E', .55), edgeWidth: 2, shadow: ['rgba(70,58,38,.30)', 44, 16]
+        });
+        c.save();
+        c.strokeStyle = rgba('#9A7A3E', .35); c.lineWidth = 1;
+        c.strokeRect(hair(px - 16), hair(py - 16), pw + 32, ph + 32);
+        c.restore();
+      }
+      logoLockup(c, M, 130, 250, 'color');
+      caps(c, P.kicker, M, 306, { size: 16, fill: '#9A7A3E', track: 4.4 });
+      pressHead(c, P, M, 430, w - M * 2, 116, {
+        boxH: 340, maxLines: 3, ink: '#14222B', em: '#1C5C86',
+        foil: '#9A7A3E', foilHi: '#D8BE84', shadow: false
+      });
+      pressSig(c, px + pw + 52, 1280, {
+        size: 34, ink: '#14222B', body: '#4A5560', muted: '#8A9299',
+        accent: '#9A7A3E', accentRule: 'rgba(154,122,62,.6)', shadow: null
+      });
+    } },
+
+  /* 7 · MEDALLION — smaller, centred, ringed; the words take the frame */
   { id: 'medallion', name: 'Medallion',
     feed(c, P, S) {
       const w = S.w, h = S.h, M = S.M, face = IMG[P.who || 'dh'];

@@ -15,7 +15,7 @@ body{
     radial-gradient(700px 400px at 100% 8%, rgba(198,164,97,.05), transparent 65%);
   background-attachment:fixed;
 }
-.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.wrap{max-width:1480px;margin:0 auto;padding:0 24px}
 body{opacity:0;transition:opacity .4s ease}
 body.ready{opacity:1}
 
@@ -67,20 +67,18 @@ header.mast .logo{width:min(300px,64vw);height:auto;display:block;margin:0 auto}
 .sechead h2{font-family:Fraunces,serif;font-weight:500;font-size:21px;margin:0;white-space:nowrap;color:var(--ink)}
 .sechead .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
 
-/* cards */
-main.posts{padding:26px 0 20px;display:flex;flex-direction:column;gap:28px}
-.card{background:var(--bg2);border:1px solid var(--line);border-radius:20px;overflow:hidden;
-  display:grid;grid-template-columns:430px 1fr;align-items:start;
+/* cards — a wall of tiles, each one a finished post: slides on top, then the
+   caption, the link, the hashtags and the buttons that publish it */
+main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  display:flex;flex-direction:column;height:100%;
   transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
 .card:hover{border-color:var(--line2);transform:translateY(-2px);
   box-shadow:0 30px 60px -34px rgba(0,0,0,.85)}
-.card.text{grid-template-columns:1fr}
-.media{position:relative;padding:22px 0 44px 22px}
-.card.story .media{padding-right:22px}
-/* one stage holds both aspect ratios: square frames fill it, the 9:16 story
-   is letterboxed inside it, and the card never jumps height mid-carousel */
+.media{position:relative;padding:18px 18px 40px}
+/* the story keeps its own aspect, and the card grows to hold it */
 .card.story .car{aspect-ratio:9/16}
-.card.story .media{padding-left:64px;padding-right:64px}
 .car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;
   background:rgba(0,0,0,.28);
   box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
@@ -100,35 +98,45 @@ canvas.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
   cursor:pointer;transition:width .2s ease,background .2s ease,border-radius .2s ease}
 .dot.on{background:var(--gold);width:22px;border-radius:4px}
 
-.body{padding:26px 30px 28px;min-width:0}
-.topline{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.num{font-family:Fraunces,serif;font-weight:600;font-size:15px;color:var(--gold);opacity:.85}
-.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--accent);font-weight:600}
-.adtag{margin-left:auto;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--dim2);border:1px solid var(--line2);border-radius:999px;padding:4px 11px}
-.body h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:clamp(23px,2.7vw,30px);
-  color:#F3EEE3;margin:10px 0 16px;line-height:1.1}
-.strip{display:flex;gap:26px;flex-wrap:wrap;padding:14px 0 6px;border-top:1px solid var(--line);
-  border-bottom:1px solid var(--line);margin-bottom:16px}
+.body{padding:4px 20px 22px;min-width:0;display:flex;flex-direction:column;flex:1}
+.card.text .body{padding-top:24px}
+.topline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.num{font-family:Fraunces,serif;font-weight:600;font-size:14px;color:var(--gold);opacity:.85}
+.eyebrow{font-size:10px;letter-spacing:.16em;color:var(--accent);font-weight:600}
+.adtag{align-self:flex-start;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim2);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;margin-bottom:14px}
+.body h2{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:21px;
+  color:#F3EEE3;margin:9px 0 10px;line-height:1.18}
+.strip{display:flex;gap:20px;flex-wrap:wrap;padding:12px 0 4px;border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);margin-bottom:14px}
 .strip div{display:flex;flex-direction:column;gap:2px}
-.strip .v{font-family:Fraunces,serif;font-size:21px;font-weight:600;color:var(--accent)}
-.strip .l{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2)}
+.strip .v{font-family:Fraunces,serif;font-size:18px;font-weight:600;color:var(--accent)}
+.strip .l{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2)}
 
-.panel{background:rgba(255,255,255,.028);border:1px solid var(--line);border-radius:13px;
-  padding:14px 16px;margin-top:12px}
-.phead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-.plabel{font-size:10.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim2);font-weight:600}
-.ptext{color:#D6E0E8;font-size:14px;white-space:pre-wrap}
-.card.text .ptext{font-size:15px;line-height:1.72}
-.ptext.tags{color:#9FB9CC;font-size:13px}
-.lipost{margin-top:18px;font:400 15.5px/1.72 "Space Grotesk",sans-serif;color:#D8E4EC;white-space:pre-wrap}
-.litags{margin-top:18px;font:400 13px/1.6 "Space Grotesk",sans-serif;color:#6EA8D8}
+/* the caption, as it will be pasted — long ones scroll inside the card so a
+   tile never becomes a page of its own */
+.cap{color:#CFDAE3;font-size:13.5px;line-height:1.62;white-space:pre-wrap;
+  max-height:220px;overflow:auto;padding-right:6px;
+  -webkit-mask-image:linear-gradient(180deg,#000 88%,transparent);
+  mask-image:linear-gradient(180deg,#000 88%,transparent)}
+.card.text .cap{max-height:300px;font-size:14px}
+.cap::-webkit-scrollbar{width:5px}
+.cap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.sitelink{display:block;margin-top:12px;color:var(--accent);font-size:13px;
+  text-decoration:none;letter-spacing:.01em}
+.sitelink:hover{text-decoration:underline}
+.tagline2{margin-top:10px;color:#6E92AF;font-size:12px;line-height:1.55;word-break:break-word}
 
-.row{display:flex;gap:9px;flex-wrap:wrap;margin-top:18px}
-button.primary,button.copy{font:600 12.5px "Space Grotesk",sans-serif;border-radius:999px;
-  cursor:pointer;padding:9px 16px;transition:filter .14s ease,transform .14s ease;white-space:nowrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.row.slides{margin-top:9px;padding-top:12px;border-top:1px solid var(--line)}
+.row:last-child{margin-bottom:0}
+.body>.row:first-of-type{margin-top:auto;padding-top:16px}
+button.primary,button.copy{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
+  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap}
 button.primary{background:var(--accent);color:#08121B;border:none}
 button.copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+button.copy.wide{flex:1 1 100%;text-align:center}
+button.copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
 button.copy:hover{color:var(--ink);border-color:var(--accent)}
 button.primary:hover{filter:brightness(1.07)}
 button.primary:active,button.copy:active{transform:scale(.97)}
@@ -140,13 +148,15 @@ footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
 footer.ft strong{color:var(--ink);font-family:Fraunces,serif;font-weight:600;font-size:17px}
 footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.04em}
 
-@media (max-width:900px){
-  .card{grid-template-columns:1fr}
-  .media{padding:20px 20px 44px}
-  .body{padding:6px 22px 24px}
+@media (max-width:760px){
+  main.posts{grid-template-columns:1fr;gap:22px}
+  .media{padding:16px 16px 38px}
+  .body{padding:4px 18px 20px}
 }
 @media print{
   .switch,.nav,.dots,.row,.weekbar,.autonote{display:none!important}
   body{background:#fff!important;opacity:1!important}
-  .card{break-inside:avoid;grid-template-columns:1fr;border-color:#ddd}
+  main.posts{display:block}
+  .card{break-inside:avoid;border-color:#ddd;margin-bottom:20px}
+  .cap{max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none}
 }

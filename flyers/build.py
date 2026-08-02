@@ -28,7 +28,8 @@ ASSETS = ROOT / "assets"
 ASSET_MAP = {
     "logoColor": "color.png",
     "logoWhite": "white.png",
-    "dh": "dh.png",
+    "dh": "dh.jpg",       # head-and-shoulders, for circular plates and rosters
+    "dhero": "dhero.jpg",  # the full portrait, for the poster's tall plates
     "ar": "ar.png",
     "ed": "ed.png",
     # people yes, buildings no
