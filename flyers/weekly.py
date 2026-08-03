@@ -26,8 +26,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 
 EPOCH = dt.date(2024, 1, 1)          # a Monday — same anchor as the page
-WEEK_CONTENT_N = 3     # three topics a week: two carousels, three stories
-AD_ORDER = ["atelier", "midnight", "blueprint", "signal", "dossier", "nocturne"]
+RUN_WEEKS = 2          # a set holds for a fortnight
+WEEK_CONTENT_N = 6     # six topics a run: two carousels, four stories
+AD_ORDER = ["atelier", "midnight", "signal", "nocturne", "dossier", "blueprint"]
 AD_NAMES = {"atelier": "Atelier", "midnight": "Midnight", "blueprint": "Blueprint",
             "signal": "Signal", "dossier": "Dossier", "nocturne": "Nocturne"}
 
@@ -37,7 +38,11 @@ def monday_of(d: dt.date) -> dt.date:
 
 
 def week_index(d: dt.date) -> int:
-    return (monday_of(d) - EPOCH).days // 7
+    return (monday_of(d) - EPOCH).days // (RUN_WEEKS * 7)
+
+
+def run_start(d: dt.date) -> dt.date:
+    return EPOCH + dt.timedelta(days=week_index(d) * RUN_WEEKS * 7)
 
 
 def read_content():
@@ -70,8 +75,8 @@ def main() -> None:
 
     today = dt.date.today()
     wn = args.week if args.week is not None else week_index(today)
-    monday = EPOCH + dt.timedelta(weeks=wn)
-    sunday = monday + dt.timedelta(days=6)
+    monday = EPOCH + dt.timedelta(weeks=wn * RUN_WEEKS)
+    sunday = monday + dt.timedelta(days=RUN_WEEKS * 7 - 1)
 
     content, listings, linkedin = read_content(), read_listings(), read_linkedin()
 

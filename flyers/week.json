@@ -1,13 +1,13 @@
 {
-  "week": 134,
+  "week": 67,
   "starts": "2026-07-27",
-  "ends": "2026-08-02",
-  "recorded": "2026-08-02",
+  "ends": "2026-08-09",
+  "recorded": "2026-08-03",
   "carousels": [
     {
       "id": "ccarryback",
       "topic": "Seller Financing",
-      "art_direction": "Blueprint"
+      "art_direction": "Midnight"
     },
     {
       "id": "cinsure",
@@ -17,7 +17,22 @@
     {
       "id": "cvacant",
       "topic": "Vacancy",
+      "art_direction": "Nocturne"
+    },
+    {
+      "id": "cland",
+      "topic": "Land Value",
       "art_direction": "Dossier"
+    },
+    {
+      "id": "cassume",
+      "topic": "Assumption",
+      "art_direction": "Blueprint"
+    },
+    {
+      "id": "cphase1",
+      "topic": "Environmental",
+      "art_direction": "Atelier"
     }
   ],
   "listings": [
@@ -33,38 +48,38 @@
   "linkedin": [
     {
       "day": "Monday",
-      "topic": "Transfer Tax",
-      "title": "In the City of LA, transfer tax is part of the price"
+      "topic": "Property Tax",
+      "title": "The seller\u2019s tax bill is not your tax bill"
     },
     {
       "day": "Tuesday",
-      "topic": "Due Diligence",
-      "title": "The estoppel is where the story stops matching the file"
+      "topic": "Days on Market",
+      "title": "Nobody buys the third price cut"
     },
     {
       "day": "Wednesday",
-      "topic": "Negotiation",
-      "title": "Price is one term"
+      "topic": "Debt",
+      "title": "The maturity date is the real deadline"
     },
     {
       "day": "Thursday",
-      "topic": "Submarkets",
-      "title": "The submarket is not the city"
+      "topic": "Valuation",
+      "title": "Appraisal vs broker opinion"
     },
     {
       "day": "Friday",
-      "topic": "The Business",
-      "title": "The deal you walk away from"
+      "topic": "Leasing",
+      "title": "Ten years from a weak tenant is not ten years"
     },
     {
       "day": "Saturday",
-      "topic": "Owner-Users",
-      "title": "Owner-users are quietly the strongest buyers right now"
+      "topic": "Structure",
+      "title": "Seller financing is a pricing tool"
     },
     {
       "day": "Sunday",
-      "topic": "Process",
-      "title": "A quiet escrow is a designed escrow"
+      "topic": "Capital",
+      "title": "Deferred maintenance is a price, not a surprise"
     }
   ],
   "bank": {

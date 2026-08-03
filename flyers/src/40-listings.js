@@ -333,10 +333,16 @@ function storyFigure(c, ad, P, S) {
   const B = storyStage(c, ad, S, P.figureLabel || P.topic);
   const cy = B.y + 300;
   if (P.figurePair) {
+    /* the pair is set as large as the narrower of the two columns allows, not
+       at a fixed size — a ratio like 1:250 is four times the width of 45, and
+       at a fixed size the two values ran into each other across the rule */
+    const colW = S.w / 2 - S.M - 26;
+    const cxs = [S.M + colW / 2, S.w - S.M - colW / 2];
+    let sz = 210;
+    while ([0, 1].some(i => measure(c, String(P.figurePair[i]), FS(600, sz), 0) > colW) && sz > 78) sz -= 6;
     [0, 1].forEach(i => {
-      const px = S.w / 2 + (i ? 1 : -1) * S.w * .21;
-      text(c, P.figurePair[i], px, cy, { font: FS(600, 210), fill: ad.ink, align: 'center', base: 'middle' });
-      caps(c, P.figurePairLabels[i], px, cy + 142, { size: 19, fill: ad.accent, align: 'center', track: 3.6 });
+      text(c, P.figurePair[i], cxs[i], cy, { font: FS(600, sz), fill: ad.ink, align: 'center', base: 'middle' });
+      caps(c, P.figurePairLabels[i], cxs[i], cy + 142, { size: 19, fill: ad.accent, align: 'center', track: 3.6 });
     });
     vrule(c, S.w / 2, cy - 100, 200, ad.rule, 1);
   } else {

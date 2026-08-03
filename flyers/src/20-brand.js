@@ -344,7 +344,11 @@ AD.nocturne = {
   }
 };
 
-const AD_ORDER = ['atelier', 'midnight', 'blueprint', 'signal', 'dossier', 'nocturne'];
+/* The order is the rotation, and the rotation hands consecutive slots to
+   consecutive entries — so the list alternates light stock and dark ink.
+   Ordered by family instead, midnight and blueprint sat next to each other
+   and a run came out as two dark blue posts that read as one. */
+const AD_ORDER = ['atelier', 'midnight', 'signal', 'nocturne', 'dossier', 'blueprint'];
 
 /* ── shared furniture, styled by whichever world is active ─────────────── */
 

@@ -649,9 +649,12 @@ const L_signal = {
     caps(c, P.figureKicker || P.topic, B.x, y, { size: 15, fill: ad.accent, track: 3.6 });
     y += 46;
     if (P.figurePair) {
+      /* same guard as the story: sized to the column, not to a constant */
+      let psz = 168;
+      while ([0, 1].some(i => measure(c, String(P.figurePair[i]), FN(700, psz), -5) > B.w / 2 - 24) && psz > 64) psz -= 6;
       [0, 1].forEach(i => {
         const px = B.x + (B.w / 2) * i;
-        text(c, P.figurePair[i], px, y + 130, { font: FN(700, 168), fill: i ? ad.accent : ad.ink, base: 'middle', track: -5 });
+        text(c, P.figurePair[i], px, y + 130, { font: FN(700, psz), fill: i ? ad.accent : ad.ink, base: 'middle', track: -5 });
         caps(c, P.figurePairLabels[i], px, y + 236, { size: 15, fill: ad.body, track: 3 });
       });
       y += 290;
@@ -1066,3 +1069,117 @@ const LAYOUT = {
   atelier: L_atelier, midnight: L_midnight, blueprint: L_blueprint,
   signal: L_signal, dossier: L_dossier, nocturne: L_nocturne
 };
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE MIDDLE FRAME
+
+   The cover states it and the last frame asks for the call. What sits
+   between them was, for every post, the same six ruled rows of bold-lead-in
+   followed by trailing text — and a page of six bolded lead-ins is the exact
+   shape of a thing written by a machine. It does not matter how good the
+   typography is if the argument always arrives in the same container.
+
+   So there are five containers now, and a post is handed one by its own id
+   rather than by its position. These four are composed once and read the art
+   direction for their palette, the way the quote frame already did, so they
+   arrive wearing whichever world the post is in.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 · STATEMENT — no list at all. The one sentence that carries the post,
+   set as large as it will go, centred, on a ruled plate. */
+function statementSlide(c, ad, P, S) {
+  const B = stage(c, ad, S, { label: 'The Point' });
+  const cx = S.w / 2;
+  const pad = 34;
+  c.save();
+  c.strokeStyle = ad.ruleSoft || ad.rule; c.lineWidth = 1;
+  c.strokeRect(hair(B.x + pad), hair(B.y + pad), B.w - pad * 2, B.h - pad * 2);
+  c.restore();
+
+  const blk = fitBlock(c, P.pull, { w: B.w - pad * 2 - 72, h: B.h - pad * 2 - 190 }, {
+    weight: 500, family: SERIF, style: 'italic', max: 62, min: 30, leading: 1.3, maxLines: 8
+  });
+  let y = B.y + pad + Math.max(48, (B.h - pad * 2 - blk.height - 120) / 2);
+  drawBlock(c, blk, cx, y, { fill: ad.ink, align: 'center' });
+  y += blk.height + 46;
+  rule(c, cx - 46, y, 92, ad.accent, 2);
+  caps(c, P.topic, cx, y + 36, { size: 13, fill: ad.muted, align: 'center', track: 3.4 });
+}
+
+/* 2 · SEQUENCE — three of the points, not six, each against a numeral set
+   big enough to be a graphic. Scale contrast instead of density. */
+function sequenceSlide(c, ad, P, S) {
+  const B = stage(c, ad, S, { label: 'In Order' });
+  const rows = P.points.slice(0, 3);
+  const gap = B.h / rows.length;
+  rows.forEach((r, i) => {
+    const y = B.y + gap * i + gap / 2;
+    text(c, String(i + 1).padStart(2, '0'), B.x, y + 10, {
+      font: FS(600, 132), fill: ad.accent, base: 'middle', alpha: .28
+    });
+    const tx = B.x + 214, tw = B.w - 214;
+    const lead = fitBlock(c, r[0], { w: tw, h: gap * .42 }, {
+      weight: 600, family: SERIF, max: 44, min: 26, leading: 1.14, maxLines: 2
+    });
+    drawBlock(c, lead, tx, y - lead.height / 2 - 20, { fill: ad.ink });
+    para(c, r[1], tx, y + lead.height / 2 - 12, tw, {
+      font: FN(400, 24), fill: ad.body, leading: 34, maxLines: 2
+    });
+    if (i < rows.length - 1) rule(c, B.x, B.y + gap * (i + 1), B.w, ad.ruleSoft, 1);
+  });
+}
+
+/* 3 · MARGIN — a column of reading text with the points hung beside it as
+   short notes. The shape of a page from a report, not a slide from a deck. */
+function marginSlide(c, ad, P, S) {
+  const B = stage(c, ad, S, { label: 'The Note' });
+  const colW = Math.round(B.w * .58), noteX = B.x + colW + 46, noteW = B.w - colW - 46;
+  let y = B.y + 8;
+  const head = fitBlock(c, P.pointsTitle || P.sub, { w: colW, h: 150 }, {
+    weight: 600, family: SERIF, max: 46, min: 28, leading: 1.16, maxLines: 3
+  });
+  drawBlock(c, head, B.x, y, { fill: ad.ink });
+  y += head.height + 26;
+  rule(c, B.x, y, colW, ad.rule, 1.5);
+  y += 26;
+  para(c, P.pull, B.x, y, colW, { font: FN(400, 25), fill: ad.body, leading: 38, maxLines: 8 });
+
+  line(c, hair(noteX - 24), B.y, hair(noteX - 24), B.bottom, ad.ruleSoft, 1);
+  let ny = B.y + 8;
+  P.points.slice(0, 4).forEach((r, i) => {
+    caps(c, String(i + 1).padStart(2, '0'), noteX, ny, { size: 11, fill: ad.accent, track: 2.6 });
+    ny += 22;
+    ny = para(c, r[0], noteX, ny, noteW, { font: FN(600, 20), fill: ad.ink, leading: 28, maxLines: 3 });
+    ny = para(c, r[1], noteX, ny + 4, noteW, { font: FN(400, 19), fill: ad.muted, leading: 27, maxLines: 3 });
+    ny += 26;
+  });
+}
+
+/* 4 · WEIGH — two numbers that disagree, one over the other, so the
+   comparison is the composition. Only ever handed to a post that actually
+   has a pair; asked to split a single sentence in half it read as nonsense,
+   which is what it was doing before. */
+function weighSlide(c, ad, P, S) {
+  const B = stage(c, ad, S, { label: 'Against' });
+  const half = (B.h - 30) / 2;
+  [0, 1].forEach(i => {
+    const y = B.y + (half + 30) * i;
+    if (i) rule(c, B.x, y - 15, B.w, ad.rule, 1.5);
+    caps(c, P.figurePairLabels[i], B.x, y + 6, {
+      size: 13, fill: i ? ad.accent : ad.muted, track: 3.4
+    });
+    const val = String(P.figurePair[i]);
+    let sz = 150;
+    while (measure(c, val, FS(600, sz), 0) > B.w * .62 && sz > 60) sz -= 6;
+    const ink = inkBox(c, val, FS(600, sz), 0);
+    text(c, val, B.x, y + 52 + ink.ascent, { font: FS(600, sz), fill: i ? ad.ink : ad.body });
+    const ty = y + 52 + ink.ascent + ink.descent + 26;
+    const note = P.points[i] ? P.points[i][0] + ' ' + P.points[i][1] : P.sub;
+    para(c, note, B.x, ty, B.w * .9, {
+      font: FN(400, 24), fill: ad.body, leading: 35, maxLines: Math.max(1, Math.floor((half - (ty - y)) / 35))
+    });
+  });
+}
+
+/* every shape the middle of a post can take */
+const MID_FRAMES = [statementSlide, sequenceSlide, marginSlide, weighSlide];

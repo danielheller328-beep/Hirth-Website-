@@ -7,8 +7,12 @@ name: Weekly social kit
 
 on:
   schedule:
-    # 13:07 UTC Monday — early Monday morning in Los Angeles, and deliberately
-    # off the hour so it is not queued behind everyone else's :00 job.
+    # 13:07 UTC every Monday — early Monday morning in Los Angeles, and
+    # deliberately off the hour so it is not queued behind everyone else's
+    # :00 job. A set now holds for a fortnight, so half these runs find the
+    # run already archived and do nothing; the script decides, not the cron,
+    # because cron cannot express "every other Monday" without drifting
+    # across year boundaries.
     - cron: '7 13 * * 1'
   push:
     branches: [main]

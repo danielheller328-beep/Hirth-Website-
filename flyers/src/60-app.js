@@ -1,30 +1,41 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   60-app.js — the week, and the page around it
+   60-app.js — the run, and the page around it
 
-   The rotation is computed from the date, not stored. Every Monday the page
-   draws a different set: different posts from the bank, and a different art
-   direction assigned to each one. Nobody has to publish anything for that to
-   happen — open it next week and it has already changed.
+   The rotation is computed from the date, not stored. Every other Monday the
+   page draws a different set: different topics from the bank, and a different
+   art direction assigned to each one. Nobody has to publish anything for that
+   to happen — open it after the changeover and it has already changed.
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* ── the week ─────────────────────────────────────────────────────────── */
+/* ── the run ──────────────────────────────────────────────────────────────
+   A set lasts a fortnight. The index is computed from the date rather than
+   stored, so the change happens on its own: the Monday a run begins, every
+   piece on the page is new, and it then holds for fourteen days — long
+   enough to actually publish seven pieces instead of racing the next batch.
+   ─────────────────────────────────────────────────────────────────────── */
+const RUN_WEEKS = 2;
 const EPOCH = Date.UTC(2024, 0, 1);            /* a Monday */
 function mondayOf(d) {
   const u = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
   const dow = new Date(u).getUTCDay();          /* 0 Sun … 6 Sat */
   return u - ((dow + 6) % 7) * 864e5;
 }
-function weekIndex(d) { return Math.floor((mondayOf(d || new Date()) - EPOCH) / (7 * 864e5)); }
+function weekIndex(d) {
+  return Math.floor((mondayOf(d || new Date()) - EPOCH) / (RUN_WEEKS * 7 * 864e5));
+}
+/* the Monday the run containing this date began */
+function runStart(d) {
+  return EPOCH + weekIndex(d) * RUN_WEEKS * 7 * 864e5;
+}
 function weekLabel(d) {
-  const m = mondayOf(d || new Date());
-  const a = new Date(m), b = new Date(m + 6 * 864e5);
+  const a = new Date(runStart(d)), b = new Date(runStart(d) + (RUN_WEEKS * 7 - 1) * 864e5);
   const f = (x, withYear) => x.toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: withYear ? 'numeric' : undefined, timeZone: 'UTC'
   });
   return f(a) + ' – ' + f(b, true);
 }
 function nextMondayLabel() {
-  const m = mondayOf(new Date()) + 7 * 864e5;
+  const m = runStart(new Date()) + RUN_WEEKS * 7 * 864e5;
   return new Date(m).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
@@ -34,16 +45,24 @@ const QS = new URLSearchParams(location.search);
 const WEEK_N = QS.has('week') && !isNaN(parseInt(QS.get('week'), 10))
   ? parseInt(QS.get('week'), 10) : weekIndex();
 const MAXPOSTS = QS.has('max') ? Math.max(1, parseInt(QS.get('max'), 10) || 1) : Infinity;
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+/* seven written posts across fourteen days — every other day, which is the
+   cadence that actually gets kept, and it names the real date rather than a
+   weekday that no longer says which of the two weeks it means */
+const LI_OFFSETS = [0, 2, 4, 7, 9, 11, 13];
+function liDayLabel(i) {
+  const d = new Date(runStart(new Date()) + LI_OFFSETS[i] * 864e5);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
 
 /* ── rotation ─────────────────────────────────────────────────────────────
-   Seven pieces a week, and seven is the whole week: three posts and four
+   Seven pieces a run, and seven is the whole fortnight: three posts and four
    stories. Six topics carry it — two run as carousels, four run as stories,
-   and no topic ever runs as both in the same week. Publishing the same
-   argument twice in one week, once square and once tall, was the thing that
-   made the set look padded.
+   and no topic ever runs as both in the same set. Publishing the same
+   argument twice, once square and once tall, was the thing that made the set
+   look padded.
 
-   How far the window walks each week matters more than it looks. Step seven
+   How far the window walks each run matters more than it looks. Step seven
    posts into a bank of twenty-one and the same seven travel together forever,
    because seven divides twenty-one — three distinct weeks, then a loop. The
    step has to share no factor with the bank, so stepFor() walks up from the
@@ -61,7 +80,7 @@ function stepFor(len, want) {
 }
 
 const WEEK_CONTENT_N = 6;               /* 2 carousels + 4 stories */
-const WEEK_LI_N = 7;                    /* one a day */
+const WEEK_LI_N = 7;                    /* enough to space across a fortnight */
 
 function pickContent() {
   const step = stepFor(CONTENT.length, WEEK_CONTENT_N);
@@ -78,7 +97,7 @@ function pickLinkedIn() {
   const out = [];
   for (let i = 0; i < WEEK_LI_N; i++) {
     const p = LINKEDIN[(WEEK_N * step + i) % LINKEDIN.length];
-    out.push(Object.assign({}, p, { day: DAYS[i] }));
+    out.push(Object.assign({}, p, { day: liDayLabel(i), slot: i + 1 }));
   }
   return out;
 }
@@ -121,19 +140,27 @@ function frameMeta(P, i, total, w, h) {
 }
 /* ── a post is three frames ───────────────────────────────────────────────
    The cover states it, the middle argues it, the last one asks for the call.
-   Three is what a reader will actually swipe through, and it forces the
-   middle frame to be the best of the three rather than the second of two.
 
-   Which middle frame it gets is decided by the post itself, not the slot: a
-   review runs the quote, and everything else runs points or the figure
-   depending on its own id. So two posts side by side in the same week are
-   built differently, not just coloured differently.
+   The middle is where a set stops looking designed and starts looking
+   generated, because for a long time it was the same six ruled rows of
+   bolded lead-in on every post. Six shapes now carry it — the ruled rows,
+   the figure, a single sentence set huge, three numbered points instead of
+   six, a reading column with margin notes, and the two sides weighed
+   against each other. A post is handed one by its own id, so a topic keeps
+   its shape when it comes round again but its neighbour never shares it.
    ─────────────────────────────────────────────────────────────────────── */
 const SLIDES_PER_POST = 3;
+function midFrame(P, L, bump) {
+  if (P.review) return quoteSlide;
+  /* weigh needs a genuine pair of numbers; it is not offered to a post that
+     has none rather than being made to invent one */
+  const bag = [L.points, L.figure, statementSlide, sequenceSlide, marginSlide];
+  if (P.figurePair && P.figurePair.length === 2) bag.push(weighSlide);
+  return bag[(hashStr(P.id + ':mid') + (bump || 0)) % bag.length];
+}
 function contentSlides(P) {
   const ad = P.ad, L = LAYOUT[ad.id], total = SLIDES_PER_POST;
-  const mid = P.review ? quoteSlide
-    : (hashStr(P.id + ':mid') % 2 ? L.figure : L.points);
+  const mid = P.mid || midFrame(P, L);
   return [
     paint(c => L.cover(c, ad, P, frameMeta(P, 0, total, FW, FH)), FW, FH),
     paint(c => mid(c, ad, P, frameMeta(P, 1, total, FW, FH)), FW, FH),
@@ -146,7 +173,7 @@ const WEEK = {
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-/* the poster — the house piece, one statement a week */
+/* the poster — the house piece, one statement a run */
 WEEK.poster = (function () {
   const P = POSTERS[WEEK_N % POSTERS.length];
   return Object.assign({}, P, {
@@ -164,7 +191,20 @@ WEEK.poster = (function () {
 
 /* the carousels take the first two topics, the stories take the other four —
    so the week is seven pieces about seven different things */
-WEEK.carousels = WEEK.content.slice(0, 2);
+WEEK.carousels = (function () {
+  const out = WEEK.content.slice(0, 2);
+  /* two posts side by side must not arrive in the same container, however the
+     hash falls — the second is walked on until it differs. Compared by name,
+     not by identity: each art direction owns its own points and figure, so
+     two different functions can still be the same shape. */
+  out.forEach((P, i) => {
+    let bump = 0, fn = midFrame(P, LAYOUT[P.ad.id]);
+    while (i && out.slice(0, i).some(q => q.mid.name === fn.name) && bump < 8)
+      fn = midFrame(P, LAYOUT[P.ad.id], ++bump);
+    P.mid = fn;
+  });
+  return out;
+})();
 
 WEEK.stories = (function () {
   const out = WEEK.content.slice(2).map((P, i) => ({
@@ -802,7 +842,7 @@ function liCard(i, P) {
   dl.className = 'primary';
   dl.textContent = '↓ Download post';
   dl.onclick = () => saveShots([{
-    name: 'hirth-linkedin-' + P.day.toLowerCase() + '.txt',
+    name: 'hirth-linkedin-' + String(P.slot).padStart(2, '0') + '.txt',
     url: textURL(full + '\n\n' + tags),
     blob: new Blob([full + '\n\n' + tags], { type: 'text/plain;charset=utf-8' })
   }], dl);
@@ -824,7 +864,7 @@ function liCard(i, P) {
    they are two views, and only one is on screen at a time.
    ─────────────────────────────────────────────────────────────────────── */
 const VIEWS = [
-  { id: 'week', tab: 'The week', panel: 'view-week' },
+  { id: 'week', tab: 'The run', panel: 'view-week' },
   { id: 'li', tab: 'LinkedIn', panel: 'view-li' }
 ];
 function buildSwitch() {
@@ -894,7 +934,7 @@ function buildFeed() {
   document.getElementById('weekRange').textContent =
     weekLabel() + '  ·  next set ' + nextMondayLabel();
   document.getElementById('liNote').textContent =
-    WEEK.linkedin.length + ' written posts — one a day';
+    WEEK.linkedin.length + ' written posts for the fortnight';
 }
 
 /* ── boot ─────────────────────────────────────────────────────────────── */
