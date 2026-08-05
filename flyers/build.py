@@ -114,8 +114,8 @@ def main() -> None:
         "<meta charset=\"utf-8\">\n"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
         "<meta name=\"robots\" content=\"noindex\">\n"
-        "<meta name=\"description\" content=\"The Hirth Group — the week's social posts, "
-        "designed and captioned. Rebuilds itself every Monday.\">\n"
+        "<meta name=\"description\" content=\"The Hirth Group — the fortnight's social posts, "
+        "designed and captioned. Rebuilds itself every other Monday.\">\n"
         + ("<title>%s</title>\n" % title.group(1) if title else "")
         + "</head>\n<body>\n" + body_only + "\n</body>\n</html>\n"
     )
