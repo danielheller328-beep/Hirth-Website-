@@ -493,7 +493,7 @@ function Tag({
     'for-sale': 'For Sale',
     'for-lease': 'For Lease',
     'in-escrow': 'In Escrow',
-    closed: 'Sold',
+    closed: 'Closed',
     leased: 'Leased'
   };
   return /*#__PURE__*/React.createElement("span", {
@@ -576,7 +576,7 @@ function PropertyCard({
       textTransform: 'uppercase',
       color: 'var(--text-inverse-secondary)'
     }
-  }, status === 'closed' ? 'Sold by The Hirth Group' : status === 'leased' ? 'Leased by The Hirth Group' : 'The Hirth Group'));
+  }, status === 'closed' ? 'Closed by The Hirth Group' : status === 'leased' ? 'Leased by The Hirth Group' : 'The Hirth Group'));
   return /*#__PURE__*/React.createElement("a", {
     href: href,
     onClick: e => {
@@ -1855,7 +1855,7 @@ function HomePage({
     stats: [{
       value: '$525,000,000',
       suffix: '+',
-      label: 'Sold',
+      label: 'Closed',
       countUp
     }, {
       value: '200',

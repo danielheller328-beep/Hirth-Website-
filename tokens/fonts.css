@@ -1,0 +1,22 @@
+/* The Hirth Group — webfonts (self-hosted)
+   Display: Marcellus (single weight, 400) — engraved-Roman serif, used for
+   headlines, stat figures, and the wordmark feel.
+   UI/Body: Archivo (variable, 400–700) — sober grotesque for everything else.
+   NOTE: substitutions — the live Wix site uses generic system/Wix fonts; these
+   were chosen to match the engraved serif of the HIRTH wordmark. */
+
+@font-face {
+  font-family: 'Marcellus';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/marcellus-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/archivo-variable.woff2') format('woff2-variations');
+}

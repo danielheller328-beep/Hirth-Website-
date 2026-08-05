@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="900" height="540" role="img">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f8fa"></stop><stop offset="1" stop-color="#e4eef3"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="540" fill="url(#sky)"></rect>
+  <rect x="0" y="0" width="900" height="6" fill="#cda35f"></rect>
+  
+  <g>
+    
+    <g opacity="0.5">
+      <rect x="600" y="300" width="46" height="120" rx="3" fill="#c9dfe9"></rect>
+      <rect x="658" y="262" width="46" height="158" rx="3" fill="#c9dfe9"></rect>
+      <rect x="716" y="214" width="46" height="206" rx="3" fill="#c9dfe9"></rect>
+    </g>
+    <path d="M604 296 L676 250 L742 196" fill="none" stroke="#cda35f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M712 186 L760 180 L754 228 Z" fill="#cda35f"></path>
+
+    
+    <g>
+      <rect x="120" y="180" width="360" height="240" fill="#14242e"></rect>
+      <rect x="104" y="156" width="392" height="32" rx="4" fill="#28414f"></rect>
+      <rect x="104" y="188" width="392" height="10" fill="#cda35f"></rect>
+      <g fill="#7fd7da" opacity="0.85">
+        <rect x="152" y="222" width="70" height="58" rx="2"></rect>
+        <rect x="248" y="222" width="70" height="58" rx="2"></rect>
+        <rect x="344" y="222" width="70" height="58" rx="2"></rect>
+        <rect x="152" y="308" width="70" height="58" rx="2"></rect>
+        <rect x="344" y="308" width="70" height="58" rx="2"></rect>
+      </g>
+      <rect x="248" y="308" width="70" height="112" fill="#e6c992"></rect>
+      <rect x="278" y="308" width="4" height="112" fill="#14242e" opacity="0.35"></rect>
+    </g>
+
+    
+    <g>
+      <rect x="516" y="300" width="8" height="120" fill="#3a5565"></rect>
+      <rect x="466" y="262" width="112" height="62" rx="4" fill="#f4f8fa" stroke="#14242e" stroke-width="4"></rect>
+      <text x="522" y="288" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#14242e">FOR</text>
+      <text x="522" y="311" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#cda35f">SALE</text>
+    </g>
+    <rect x="60" y="420" width="800" height="8" rx="4" fill="#3a5565" opacity="0.35"></rect>
+  </g>
+</svg>

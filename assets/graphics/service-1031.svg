@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" width="900" height="540" role="img">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f8fa"></stop><stop offset="1" stop-color="#e4eef3"></stop>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="540" fill="url(#sky)"></rect>
+  <rect x="0" y="0" width="900" height="6" fill="#2f9d6e"></rect>
+  
+  <g>
+    
+    <g transform="translate(450,254)">
+      <path d="M-176 -34 A176 176 0 0 1 150 -66" fill="none" stroke="#2f9d6e" stroke-width="34" stroke-linecap="butt"></path>
+      <path d="M120 -122 L196 -70 L118 -18 Z" fill="#2f9d6e"></path>
+      <path d="M176 42 A176 176 0 0 1 -150 74" fill="none" stroke="#6fc79e" stroke-width="34" stroke-linecap="butt"></path>
+      <path d="M-120 130 L-196 78 L-118 26 Z" fill="#6fc79e"></path>
+    </g>
+
+    
+    <g>
+      <rect x="104" y="204" width="188" height="216" fill="#14242e"></rect>
+      <rect x="104" y="186" width="188" height="22" fill="#28414f"></rect>
+      <g fill="#7fd7da" opacity="0.85">
+        <rect x="126" y="228" width="42" height="34"></rect><rect x="180" y="228" width="42" height="34"></rect><rect x="234" y="228" width="42" height="34"></rect>
+        <rect x="126" y="282" width="42" height="34"></rect><rect x="180" y="282" width="42" height="34"></rect><rect x="234" y="282" width="42" height="34"></rect>
+        <rect x="126" y="336" width="42" height="34"></rect><rect x="234" y="336" width="42" height="34"></rect>
+      </g>
+      <rect x="180" y="336" width="42" height="84" fill="#e6c992"></rect>
+    </g>
+
+    
+    <g>
+      <path d="M608 224 L706 176 L804 224 L804 420 L608 420 Z" fill="#14242e"></path>
+      <path d="M600 226 L706 174 L812 226 L812 244 L600 244 Z" fill="#28414f"></path>
+      <rect x="648" y="300" width="116" height="120" fill="#28414f"></rect>
+      <g fill="#e6c992" opacity="0.9">
+        <rect x="664" y="336" width="36" height="30"></rect><rect x="712" y="336" width="36" height="30"></rect>
+        <rect x="664" y="378" width="36" height="30"></rect><rect x="712" y="378" width="36" height="30"></rect>
+      </g>
+      <rect x="648" y="292" width="116" height="10" fill="#2f9d6e"></rect>
+    </g>
+
+    
+    <g>
+      <text x="450" y="268" text-anchor="middle" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-size="70" font-weight="bold" fill="#14242e" letter-spacing="1">1031</text>
+      <text x="450" y="300" text-anchor="middle" font-family="Georgia, &#39;Times New Roman&#39;, serif" font-size="22" letter-spacing="6" fill="#28414f">EXCHANGE</text>
+    </g>
+    <rect x="60" y="420" width="800" height="8" rx="4" fill="#3a5565" opacity="0.35"></rect>
+  </g>
+</svg>

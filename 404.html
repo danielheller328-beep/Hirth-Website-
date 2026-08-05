@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Hirth Group</title>
+<meta name="robots" content="noindex">
+<style>
+  html, body { height: 100%; margin: 0; background: #0b141a; color: #e7eef3;
+    font: 400 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { min-height: 100%; display: grid; place-content: center; justify-items: center;
+    gap: 18px; text-align: center; padding: 40px 24px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
+  p { margin: 0; color: rgba(231,238,243,0.62); max-width: 34em; }
+  a { display: inline-block; margin-top: 10px; color: #6fc6ef; text-decoration: none;
+    border: 1px solid rgba(111,198,239,0.45); padding: 11px 24px; border-radius: 2px;
+    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; }
+  a:hover { color: #0b141a; background: #6fc6ef; border-color: #6fc6ef; }
+</style>
+<script>
+// Legacy Wix deep links (e.g. /11300nebraskaave-closed) have no file on this host.
+// Route them to the matching section of the site instead of a 404.
+(function () {
+  var p = (location.pathname + location.search + location.hash).toLowerCase();
+  var go = 'home';
+  if (/closed|sold/.test(p)) go = 'properties-closed';
+  else if (/for-?lease|forlease/.test(p)) go = 'properties-for-lease';
+  else if (/leased/.test(p)) go = 'properties-leased';
+  else if (/for-?sale|forsale|listing|propert/.test(p)) go = 'properties-for-sale';
+  else if (/daniel|hirth-bio|about-daniel/.test(p)) go = 'daniel-hirth';
+  else if (/team|about/.test(p)) go = 'about-team';
+  else if (/service/.test(p)) go = 'about-services';
+  else if (/testimonial|review/.test(p)) go = 'about-testimonials';
+  else if (/contact/.test(p)) go = 'contact';
+  location.replace('/?go=' + go);
+})();
+</script>
+</head>
+<body>
+<main>
+  <h1>Taking you to The Hirth Group</h1>
+  <p>That link came from our previous site. Redirecting you to the current page&hellip;</p>
+  <a href="/">Go to hirthgroup.com</a>
+</main>
+</body>
+</html>
