@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Hirth Group — Operations Suite</title>
+<meta name="description" content="The Hirth Group's tools, in one place.">
+<style>
+/* the launcher borrows the kit's palette and its two faces, loaded from the
+   kit's own asset folder rather than duplicated — same origin, no CDN */
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;
+  src:url(../flyers/assets/fraunces-var.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400 500;font-display:swap;
+  src:url(../flyers/assets/space-grotesk-400.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:600 700;font-display:swap;
+  src:url(../flyers/assets/space-grotesk-600.woff2) format('woff2')}
+
+:root{
+  --bg:#0B0F14; --panel:#111820; --line:#1E2932; --line2:#2A3742;
+  --ink:#ECF1F5; --dim:#8A98A4; --dim2:#5F6C77;
+  --accent:#6FB6E8; --gold:#C6A461; --gold-lt:#E7CE93; --live:#6FCF97;
+  --serif:Fraunces,Georgia,'Times New Roman',serif;
+  --sans:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh; font-family:var(--sans); color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+  background-image:
+    radial-gradient(1100px 620px at 78% -12%, rgba(59,124,178,.20), transparent 62%),
+    radial-gradient(900px 520px at 4% 112%, rgba(198,164,97,.09), transparent 62%);
+  background-attachment:fixed;
+  padding:clamp(28px,6vw,64px) clamp(18px,5vw,40px) 64px;
+}
+.wrap{width:100%;max-width:1000px;margin:0 auto}
+
+.lhead{display:flex;align-items:center;gap:16px;padding-bottom:26px;
+  border-bottom:1px solid var(--line);margin-bottom:clamp(30px,6vw,54px)}
+.lhead .mark{width:118px;height:auto;display:block;flex:none}
+.bt .word{font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--ink)}
+.bt .tag{font-family:var(--serif);font-style:italic;font-weight:500;font-size:15px;
+  color:var(--gold);letter-spacing:.02em;margin-top:1px}
+.statuspill{margin-left:auto;display:inline-flex;align-items:center;gap:8px;padding:7px 15px;
+  border:1px solid rgba(111,207,151,.35);background:rgba(111,207,151,.10);border-radius:999px;
+  color:var(--live);font-weight:600;letter-spacing:.10em;text-transform:uppercase;font-size:10px}
+.statuspill .dot{width:7px;height:7px;border-radius:50%;background:var(--live);
+  box-shadow:0 0 10px 1px rgba(111,207,151,.6)}
+@media(max-width:620px){.statuspill{display:none}}
+
+.hero{margin-bottom:clamp(26px,5vw,44px)}
+.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(38px,7vw,64px);
+  line-height:1.02;letter-spacing:.004em;text-wrap:balance}
+.hero h1 .amp{color:var(--gold)}
+.hero .sub{color:var(--dim);font-size:clamp(14px,2.4vw,16px);margin-top:12px;max-width:54ch}
+
+.apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:clamp(16px,2.4vw,20px)}
+@media(max-width:700px){.apps{grid-template-columns:1fr}}
+
+.app{position:relative;display:flex;flex-direction:column;gap:16px;text-decoration:none;color:inherit;
+  border:1px solid var(--line);border-radius:20px;
+  background:linear-gradient(180deg,rgba(28,52,78,.42),rgba(13,20,28,.6));
+  padding:clamp(22px,3vw,30px);min-height:264px;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.app:hover,.app:focus-visible{transform:translateY(-4px);border-color:var(--line2);
+  box-shadow:0 18px 44px -22px rgba(0,0,0,.8),0 0 0 1px rgba(111,182,232,.12);outline:none}
+.app:focus-visible{border-color:var(--gold)}
+
+.app-ic{width:58px;height:58px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line2);background:rgba(8,16,24,.6);
+  box-shadow:inset 0 0 0 1px rgba(198,164,97,.14)}
+.app-name{font-family:var(--serif);font-weight:600;font-size:clamp(24px,3.4vw,30px);line-height:1.06}
+.app-desc{color:var(--dim);font-size:14px;line-height:1.58;margin-top:8px;max-width:42ch}
+.app-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-size:11px;font-weight:600;letter-spacing:.04em;padding:5px 11px;border-radius:999px;
+  border:1px solid var(--line2);background:rgba(143,176,208,.06);color:var(--dim)}
+.chip.gold{border-color:rgba(198,164,97,.42);background:rgba(198,164,97,.10);color:var(--gold-lt)}
+.chip.blue{border-color:rgba(111,182,232,.35);background:rgba(111,182,232,.10);color:var(--accent)}
+.chip.soon{border-color:rgba(148,168,189,.28);background:rgba(148,168,189,.07);color:var(--dim2)}
+
+.app-open{margin-top:auto;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:13px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.app:hover .app-open,.app:focus-visible .app-open{color:var(--gold-lt)}
+.app-open .ar{font-size:16px;transition:transform .18s ease}
+.app:hover .app-open .ar{transform:translateX(4px)}
+
+/* present but inert — nothing happens on press */
+.app.soon{cursor:default;opacity:.6}
+.app.soon:hover,.app.soon:focus-visible{transform:none;border-color:var(--line);box-shadow:none}
+.app.soon .app-open{color:var(--dim2)}
+
+.lfoot{margin-top:clamp(34px,6vw,52px);color:var(--dim2);font-size:11.5px;letter-spacing:.10em;
+  text-transform:uppercase;text-align:center}
+.lfoot a{color:inherit;text-decoration:none}
+.lfoot a:hover{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="lhead">
+    <img class="mark" src="../assets/logo-hirth-white.png" alt="The Hirth Group">
+    <div class="bt">
+      <div class="word">THE&nbsp;HIRTH&nbsp;GROUP</div>
+      <div class="tag">Operations Suite</div>
+    </div>
+    <div class="statuspill"><span class="dot"></span><span id="pill">Updates itself</span></div>
+  </header>
+
+  <div class="hero">
+    <h1>Hirth <span class="amp">Operations</span> Suite</h1>
+    <p class="sub">Your tools, in one place. Pick one to open it.</p>
+  </div>
+
+  <div class="apps">
+
+    <a class="app" href="../flyers/">
+      <div class="app-ic">
+        <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
+          <rect x="7" y="8" width="19" height="24" rx="2.5" fill="none" stroke="#C6A461" stroke-width="1.6"/>
+          <rect x="13" y="4" width="19" height="24" rx="2.5" fill="none" stroke="#6FB6E8" stroke-width="1.6"/>
+          <line x1="17" y1="12" x2="28" y2="12" stroke="#6FB6E8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="17" y1="17" x2="28" y2="17" stroke="#6FB6E8" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="17" y1="22" x2="23" y2="22" stroke="#6FB6E8" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="app-body">
+        <div class="app-name">Post Maker</div>
+        <div class="app-desc">The fortnight&rsquo;s posts, designed and captioned and ready to publish —
+          three feed posts, four stories and seven LinkedIn pieces. It rebuilds itself; there is
+          nothing to run.</div>
+        <div class="app-meta">
+          <span class="chip gold">7 pieces</span>
+          <span class="chip">3 posts &middot; 4 stories</span>
+          <span class="chip blue">7 LinkedIn</span>
+        </div>
+      </div>
+      <div class="app-open">Open Post Maker <span class="ar">&#8594;</span></div>
+    </a>
+
+    <div class="app soon" role="button" aria-disabled="true" tabindex="-1">
+      <div class="app-ic">
+        <svg width="30" height="26" viewBox="0 0 40 32" aria-hidden="true">
+          <rect x="5" y="5" width="30" height="22" rx="3" fill="none" stroke="#5F6C77" stroke-width="1.7"/>
+          <path d="M6 8 L20 18 L34 8" fill="none" stroke="#5F6C77" stroke-width="1.7"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="app-body">
+        <div class="app-name">Listing Desk</div>
+        <div class="app-desc">Offering memoranda, valuations and the closed-deal record, in the same
+          house style as the posts.</div>
+        <div class="app-meta"><span class="chip">OM maker</span><span class="chip">valuations</span>
+          <span class="chip soon">coming soon</span></div>
+      </div>
+      <div class="app-open">Coming soon</div>
+    </div>
+
+  </div>
+
+  <footer class="lfoot">
+    The Hirth Group &middot; Operations Suite &middot;
+    <a href="tel:3103002838">310.300.2838</a>
+  </footer>
+
+</div>
+
+<script>
+/* the pill states when the next set lands, from the same fortnight clock the
+   kit runs on — anchored to the same Monday so the two never disagree */
+(function () {
+  var RUN_WEEKS = 2, EPOCH = Date.UTC(2024, 0, 1), DAY = 864e5;
+  function mondayOf(d) {
+    var u = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+    return u - ((new Date(u).getUTCDay() + 6) % 7) * DAY;
+  }
+  var run = Math.floor((mondayOf(new Date()) - EPOCH) / (RUN_WEEKS * 7 * DAY));
+  var next = new Date(EPOCH + (run + 1) * RUN_WEEKS * 7 * DAY);
+  var el = document.getElementById('pill');
+  if (el) el.textContent = 'Next set ' + next.toLocaleDateString('en-US',
+    { month: 'short', day: 'numeric', timeZone: 'UTC' });
+})();
+</script>
+</body>
+</html>

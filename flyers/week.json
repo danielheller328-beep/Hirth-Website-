@@ -1,0 +1,90 @@
+{
+  "week": 67,
+  "starts": "2026-07-27",
+  "ends": "2026-08-09",
+  "recorded": "2026-08-03",
+  "carousels": [
+    {
+      "id": "ccarryback",
+      "topic": "Seller Financing",
+      "art_direction": "Midnight"
+    },
+    {
+      "id": "cinsure",
+      "topic": "Insurance",
+      "art_direction": "Signal"
+    },
+    {
+      "id": "cvacant",
+      "topic": "Vacancy",
+      "art_direction": "Nocturne"
+    },
+    {
+      "id": "cland",
+      "topic": "Land Value",
+      "art_direction": "Dossier"
+    },
+    {
+      "id": "cassume",
+      "topic": "Assumption",
+      "art_direction": "Blueprint"
+    },
+    {
+      "id": "cphase1",
+      "topic": "Environmental",
+      "art_direction": "Atelier"
+    }
+  ],
+  "listings": [
+    {
+      "id": "olive",
+      "title": "2221 \u2013 2225 Olive Avenue"
+    },
+    {
+      "id": "saviers",
+      "title": "1177 Saviers Road"
+    }
+  ],
+  "linkedin": [
+    {
+      "day": "Monday",
+      "topic": "Property Tax",
+      "title": "The seller\u2019s tax bill is not your tax bill"
+    },
+    {
+      "day": "Tuesday",
+      "topic": "Days on Market",
+      "title": "Nobody buys the third price cut"
+    },
+    {
+      "day": "Wednesday",
+      "topic": "Debt",
+      "title": "The maturity date is the real deadline"
+    },
+    {
+      "day": "Thursday",
+      "topic": "Valuation",
+      "title": "Appraisal vs broker opinion"
+    },
+    {
+      "day": "Friday",
+      "topic": "Leasing",
+      "title": "Ten years from a weak tenant is not ten years"
+    },
+    {
+      "day": "Saturday",
+      "topic": "Structure",
+      "title": "Seller financing is a pricing tool"
+    },
+    {
+      "day": "Sunday",
+      "topic": "Capital",
+      "title": "Deferred maintenance is a price, not a surprise"
+    }
+  ],
+  "bank": {
+    "content": 24,
+    "linkedin": 21,
+    "listings": 2
+  }
+}

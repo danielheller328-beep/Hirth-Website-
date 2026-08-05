@@ -34,6 +34,14 @@ jobs:
             local lower="${file,,}"
 
             [[ -f "$file" ]] || return 1
+
+            # The suite lives at /suite and the post maker at /flyers. Both are
+            # full HTML documents, so without this guard a push that rebuilds
+            # either would be mistaken for a new website upload and copied over
+            # index.html — replacing the public site with an internal tool.
+            [[ "$file" == flyers/* ]] && return 1
+            [[ "$file" == suite/* ]] && return 1
+
             [[ "$lower" == *.zip ]] && return 0
 
             # A website upload can have any filename. Detect HTML by its content.

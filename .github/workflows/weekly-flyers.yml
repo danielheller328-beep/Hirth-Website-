@@ -1,0 +1,67 @@
+name: Weekly social kit
+
+# The page works its own rotation out from the date in the browser, so a new
+# set appears every Monday whether or not this job runs. What this job does is
+# keep the built pages in step with the source, and leave a written record of
+# what went out — flyers/week.json and flyers/ARCHIVE.md.
+
+on:
+  schedule:
+    # 13:07 UTC every Monday — early Monday morning in Los Angeles, and
+    # deliberately off the hour so it is not queued behind everyone else's
+    # :00 job. A set now holds for a fortnight, so half these runs find the
+    # run already archived and do nothing; the script decides, not the cron,
+    # because cron cannot express "every other Monday" without drifting
+    # across year boundaries.
+    - cron: '7 13 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'flyers/src/**'
+      - 'flyers/assets/**'
+      - 'flyers/build.py'
+      - 'flyers/weekly.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-flyers
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Rebuild the kit
+        run: python3 flyers/build.py
+
+      - name: Record the week
+        run: python3 flyers/weekly.py
+
+      - name: Commit if anything moved
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add flyers
+          if git diff --cached --quiet; then
+            echo "Nothing changed this run."
+            exit 0
+          fi
+          git commit -m "Weekly social kit: rebuild and record the rotation"
+          for delay in 2 4 8 16; do
+            git push && exit 0
+            echo "push failed, retrying in ${delay}s"
+            sleep "$delay"
+          done
+          git push

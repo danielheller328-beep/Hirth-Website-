@@ -1,0 +1,177 @@
+/* the frame around the work — deliberately quiet, so the flyers carry it */
+:root{
+  --bg:#0B0F14; --bg2:#111820; --line:#1E2932; --line2:#2A3742;
+  --ink:#ECF1F5; --dim:#8A98A4; --dim2:#5F6C77;
+  --accent:#6FB6E8; --gold:#C6A461;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Space Grotesk",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.6;
+  background-image:
+    radial-gradient(1200px 520px at 50% -140px, rgba(59,124,178,.16), transparent 70%),
+    radial-gradient(700px 400px at 100% 8%, rgba(198,164,97,.05), transparent 65%);
+  background-attachment:fixed;
+}
+.wrap{max-width:1480px;margin:0 auto;padding:0 24px}
+body{opacity:0;transition:opacity .4s ease}
+body.ready{opacity:1}
+
+/* masthead */
+header.mast{padding:64px 0 8px;text-align:center;position:relative}
+header.mast .logo{width:min(300px,64vw);height:auto;display:block;margin:0 auto}
+.tagline{font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:500;
+  color:var(--gold);font-size:clamp(17px,2.4vw,22px);margin:22px 0 0}
+.meta{margin:14px 0 0;color:var(--dim);font-size:13px;letter-spacing:.02em}
+.meta .sep{color:var(--gold);margin:0 10px;opacity:.8}
+.rulemark{display:flex;align-items:center;gap:14px;margin:30px auto 0;max-width:340px}
+.rulemark::before,.rulemark::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(198,164,97,.6))}
+.rulemark::after{background:linear-gradient(90deg,rgba(198,164,97,.6),transparent)}
+.rulemark i{width:6px;height:6px;transform:rotate(45deg);background:var(--gold);display:block}
+
+/* a card that has not painted yet */
+.car.placeholder{display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008))}
+.spin{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);
+  border-top-color:var(--accent);animation:sp 900ms linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none;border-top-color:var(--line2)}}
+
+/* the two places */
+.switch{display:flex;gap:10px;justify-content:center;margin:38px 0 0;flex-wrap:wrap;
+  scroll-margin-top:18px}
+.switch button{font:600 14px "Space Grotesk",sans-serif;background:var(--bg2);color:var(--dim);
+  border:1px solid var(--line2);padding:11px 26px;border-radius:999px;cursor:pointer;transition:.16s}
+.switch button[aria-selected="true"]{background:var(--accent);color:#08121B;border-color:transparent;
+  box-shadow:0 10px 26px -12px rgba(111,182,232,.7)}
+.switch button:hover{color:var(--ink);border-color:var(--accent)}
+.switch button[aria-selected="true"]:hover{color:#08121B}
+.switch .ct{margin-left:10px;font-size:12px;opacity:.72;font-weight:500}
+.view[hidden]{display:none}
+
+.sechead{display:flex;align-items:baseline;gap:18px;margin:34px 0 2px;flex-wrap:wrap}
+.sechead h2{font-family:Fraunces,serif;font-weight:500;font-size:22px;margin:0;white-space:nowrap;color:var(--ink)}
+.sechead .ln{flex:1;min-width:40px;height:1px;background:linear-gradient(90deg,var(--line2),transparent);
+  transform:translateY(-6px)}
+.sechead .secnote{font-size:12.5px;letter-spacing:.02em;color:var(--dim2);white-space:nowrap}
+
+/* cards — a wall of tiles, each one a finished post: slides on top, then the
+   caption, the link, the hashtags and the buttons that publish it */
+main.posts{padding:26px 0 20px;display:grid;gap:26px;align-items:start;
+  grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  display:flex;flex-direction:column;height:100%;
+  transition:border-color .25s ease, transform .25s ease, box-shadow .25s ease}
+.card:hover{border-color:var(--line2);transform:translateY(-2px);
+  box-shadow:0 30px 60px -34px rgba(0,0,0,.85)}
+.media{position:relative;padding:18px 18px 40px}
+/* the story keeps its own aspect, and the card grows to hold it */
+.card.story .car{aspect-ratio:9/16}
+.car{position:relative;overflow:hidden;border-radius:8px;aspect-ratio:1/1;cursor:zoom-in;
+  background:rgba(0,0,0,.28);
+  box-shadow:0 18px 40px -22px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.06)}
+.track{display:flex;height:100%;transition:transform .42s cubic-bezier(.22,.61,.36,1)}
+.slide{min-width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+/* canvas while it paints, then an <img> of the same pixels — same box */
+.cv{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+.nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:38px;height:38px;
+  border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  color:#F1E7D3;border:1px solid rgba(255,255,255,.18);background:rgba(9,16,26,.55);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font-size:19px;line-height:1;
+  transition:background .15s ease,opacity .15s ease}
+.nav:hover{background:rgba(9,16,26,.9)}
+.nav[disabled]{opacity:.25;cursor:default}
+.prev{left:10px}.next{right:10px}
+.dots{position:absolute;left:0;right:0;bottom:-26px;display:flex;gap:7px;justify-content:center}
+.dot{width:7px;height:7px;padding:0;border:none;border-radius:50%;background:rgba(236,241,245,.28);
+  cursor:pointer;transition:width .2s ease,background .2s ease,border-radius .2s ease}
+.dot.on{background:var(--gold);width:22px;border-radius:4px}
+
+.body{padding:2px 20px 22px;min-width:0;display:flex;flex-direction:column;flex:1}
+.card.text .body{padding-top:22px}
+.eyebrow{font-size:10px;letter-spacing:.18em;color:var(--accent);font-weight:600;margin-bottom:10px}
+
+/* the caption, as it will be pasted — long ones scroll inside the card so a
+   tile never becomes a page of its own */
+.cap{color:#CFDAE3;font-size:13.5px;line-height:1.62;white-space:pre-wrap;
+  max-height:220px;overflow:auto;padding-right:6px;
+  -webkit-mask-image:linear-gradient(180deg,#000 88%,transparent);
+  mask-image:linear-gradient(180deg,#000 88%,transparent)}
+.card.text .cap{max-height:300px;font-size:14px}
+.cap::-webkit-scrollbar{width:5px}
+.cap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.sitelink{display:block;margin-top:12px;color:var(--accent);font-size:13px;
+  text-decoration:none;letter-spacing:.01em}
+.sitelink:hover{text-decoration:underline}
+.tagline2{margin-top:10px;color:#6E92AF;font-size:12px;line-height:1.55;word-break:break-word}
+
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.row.slides{margin-top:9px;padding-top:12px;border-top:1px solid var(--line)}
+.row:last-child{margin-bottom:0}
+.body>.row:first-of-type{margin-top:auto;padding-top:16px}
+/* buttons and download links are the same object to look at — the difference
+   is that a download is an <a> with a file already on it, so the click is an
+   ordinary click on an ordinary link and nothing has to be allowed */
+.row button{font:600 12px "Space Grotesk",sans-serif;border-radius:999px;
+  cursor:pointer;padding:8px 14px;transition:filter .14s ease,transform .14s ease;white-space:nowrap;
+  display:inline-block;text-decoration:none;line-height:1.35;border:none;text-align:center}
+.row .primary{background:var(--accent);color:#08121B}
+.row .copy{background:transparent;color:var(--dim);border:1px solid var(--line2)}
+.row .wide{flex:1 1 100%}
+.row .copy.slim{padding:7px 12px;font-size:11.5px;flex:1 1 0;min-width:0}
+.row .copy:hover{color:var(--ink);border-color:var(--accent)}
+.row .primary:hover{filter:brightness(1.07)}
+.row .primary:active,.row .copy:active{transform:scale(.97)}
+.row .done{background:#243642;color:var(--gold)}
+.row [disabled]{opacity:.45;cursor:default}
+.row .primary.wide:not(.ready){opacity:.55;pointer-events:none}
+
+/* the save sheet — the images, full size, where holding one down saves it */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(4,8,12,.88);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  overflow:auto;padding:26px 16px 60px;display:flex;justify-content:center;
+  animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheetbox{width:min(560px,100%);height:max-content}
+.sheethead{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  position:sticky;top:0;z-index:2;padding:8px 0 12px;background:linear-gradient(180deg,
+  rgba(4,8,12,.96) 62%,transparent)}
+.sheethead strong{font-family:Fraunces,serif;font-weight:600;font-size:17px;color:var(--ink)}
+.sheetx{width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);cursor:pointer;
+  background:rgba(255,255,255,.05);color:var(--ink);font-size:15px;line-height:1}
+.sheetx:hover{border-color:var(--accent)}
+.sheethint{margin:0 0 18px;color:var(--dim);font-size:13px;line-height:1.6}
+.row.sheetsave{margin-top:0;margin-bottom:16px}
+.sheetfig{margin:0 0 22px;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.sheetfig img{width:100%;height:auto;display:block;border-radius:10px;
+  box-shadow:0 20px 44px -24px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.07)}
+.row.sheetfigrow{margin-top:0;align-items:center}
+.signum{margin-left:auto;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim2)}
+.row.sheetrow{margin-top:4px}
+/* said once, in the card, when the browser will not carry a set */
+.sheethint.onefile{margin:14px 0 0;font-size:12px;color:var(--dim2);line-height:1.55}
+.row button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+footer.ft{margin:26px 0 60px;padding-top:26px;border-top:1px solid var(--line);
+  text-align:center;color:var(--dim);font-size:13px}
+footer.ft strong{color:var(--ink);font-family:Fraunces,serif;font-weight:600;font-size:17px}
+footer.ft .lic{margin-top:8px;color:var(--dim2);font-size:12px;letter-spacing:.04em}
+
+@media (max-width:760px){
+  main.posts{grid-template-columns:1fr;gap:22px}
+  .media{padding:16px 16px 38px}
+  .body{padding:4px 18px 20px}
+}
+@media print{
+  .switch,.nav,.dots,.row,.sheet{display:none!important}
+  .view[hidden]{display:block!important}
+  body{background:#fff!important;opacity:1!important}
+  main.posts{display:block}
+  .card{break-inside:avoid;border-color:#ddd;margin-bottom:20px}
+  .cap{max-height:none;overflow:visible;-webkit-mask-image:none;mask-image:none}
+}
