@@ -35,10 +35,12 @@ jobs:
 
             [[ -f "$file" ]] || return 1
 
-            # The weekly social kit lives at /flyers and is its own page. It is a
-            # full HTML document, so without this guard a push that rebuilds it
-            # would be mistaken for a new website upload and copied over index.html.
+            # The suite lives at /suite and the post maker at /flyers. Both are
+            # full HTML documents, so without this guard a push that rebuilds
+            # either would be mistaken for a new website upload and copied over
+            # index.html — replacing the public site with an internal tool.
             [[ "$file" == flyers/* ]] && return 1
+            [[ "$file" == suite/* ]] && return 1
 
             [[ "$lower" == *.zip ]] && return 0
 
