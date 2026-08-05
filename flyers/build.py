@@ -23,6 +23,8 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 ASSETS = ROOT / "assets"
+SITE = ROOT.parent
+SUITE = SITE / "suite"
 
 # key in ASSET_SRC -> file on disk
 ASSET_MAP = {
@@ -119,11 +121,25 @@ def main() -> None:
         + ("<title>%s</title>\n" % title.group(1) if title else "")
         + "</head>\n<body>\n" + body_only + "\n</body>\n</html>\n"
     )
+    # The sign-in goes on the pages that are served from the public site. The
+    # artifact is already private to the account it was published from, so a
+    # second passcode there would be a lock on the inside of an open door.
+    gate = (SUITE / "gate.html").read_text(encoding="utf-8")
+    standalone = standalone.replace("<body>\n", "<body>\n" + gate + "\n", 1)
+    if gate not in standalone:
+        sys.exit("the gate was never injected into the standalone page")
     (ROOT / "index.html").write_text(standalone, encoding="utf-8")
+
+    # the launcher, from its own source, with the same gate
+    suite = (SUITE / "page.html").read_text(encoding="utf-8")
+    if "<!--GATE-->" not in suite:
+        sys.exit("suite/page.html has no <!--GATE--> placeholder")
+    (SUITE / "index.html").write_text(suite.replace("<!--GATE-->", gate), encoding="utf-8")
 
     kb = lambda p: "%.0f KB" % (p.stat().st_size / 1024)
     print("built flyers/artifact.html  %s" % kb(ROOT / "artifact.html"))
     print("built flyers/index.html     %s" % kb(ROOT / "index.html"))
+    print("built suite/index.html      %s" % kb(SUITE / "index.html"))
 
 
 if __name__ == "__main__":
