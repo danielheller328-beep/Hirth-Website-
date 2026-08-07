@@ -527,7 +527,7 @@ function PropertyCard({
   status = 'for-sale',
   href = '#',
   style,
-  placeholderLogo = '../../assets/logo-hirth-white.png',
+  placeholderLogo = 'assets/logo-hirth-white.png',
   onOpen
 }) {
   const [hover, setHover] = React.useState(false);
@@ -1604,7 +1604,7 @@ function DiveHero({
     style: {
       position: 'absolute',
       zIndex: 19,
-      backgroundImage: 'url(../../assets/maps/dive-socal-blue.png)',
+      backgroundImage: 'url(assets/maps/dive-socal-blue.jpg)',
       backgroundSize: '100% 100%',
       willChange: 'transform, opacity',
       opacity: 0
@@ -1625,7 +1625,7 @@ function DiveHero({
   }, /*#__PURE__*/React.createElement("div", {
     className: "dive-planet",
     style: {
-      backgroundImage: 'url(../../assets/maps/earth-mercator-blue.png)'
+      backgroundImage: 'url(assets/maps/earth-mercator-blue.jpg)'
     }
   }, /*#__PURE__*/React.createElement("span", {
     className: "dive-la-glint",
@@ -1647,7 +1647,7 @@ function DiveHero({
       pointerEvents: 'none'
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/logo-hirth-white.png",
+    src: "assets/logo-hirth-white.png",
     alt: "The Hirth Group",
     style: {
       height: '210px',
@@ -1732,7 +1732,7 @@ function DiveHero({
     }
   }, /*#__PURE__*/React.createElement("img", {
     className: "fx",
-    src: "../../assets/logo-hirth-white.png",
+    src: "assets/logo-hirth-white.png",
     alt: "The Hirth Group",
     style: {
       height: '108px',
@@ -1928,7 +1928,7 @@ function HomePage({
   }, /*#__PURE__*/React.createElement("div", {
     className: "tilt3d"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/photos/team.png",
+    src: "assets/photos/team.jpg",
     alt: "The Hirth Group team",
     style: {
       width: '100%',
@@ -2255,7 +2255,7 @@ function HeroMapBackdrop() {
     style: {
       position: 'absolute',
       inset: 0,
-      backgroundImage: 'url(../../assets/maps/la-hero-dark.png)',
+      backgroundImage: 'url(assets/maps/la-hero-dark.jpg)',
       backgroundSize: '100% 100%'
     }
   }), HERO_MARKERS.map((m, i) => /*#__PURE__*/React.createElement("div", {
@@ -2361,7 +2361,7 @@ function MarketCoverage() {
       ['--mk']: s.accent
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: '../../assets/maps/' + s.key + '-dark.png',
+    src: 'assets/maps/' + s.key + '-dark.png',
     alt: s.name + ' map',
     className: "map-tint",
     style: {
@@ -2915,20 +2915,20 @@ function TeamPage({
   const team = [{
     name: 'Daniel Hirth',
     role: 'Managing Director',
-    photo: '../../assets/photos/daniel-hirth-portrait.png',
+    photo: 'assets/photos/daniel-hirth-portrait.jpg',
     accent: 'var(--blue-400)',
     page: 'daniel-hirth',
     bio: ['Born and raised in Los Angeles, Daniel was introduced to real estate at a very young age — riding alongside his father collecting rents, overseeing renovations, and managing commercial properties. After graduating from California State University, Northridge, he began his career at Marcus & Millichap in 2012, mastering the acquisition and disposition of retail, industrial, multifamily, office, and land assets.', 'With over 200 transactions totaling more than $520 million in closed sales, Daniel acts as a trusted advisor — strategically restructuring his clients’ portfolios so their equity works efficiently. He also mentors the next generation of professionals at The Hirth Group, building a team where each agent brings unique strengths to better serve clients.']
   }, {
     name: 'Alex Reyhan',
     role: 'Vice President',
-    photo: '../../assets/photos/team-alex-reyhan.png',
+    photo: 'assets/photos/team-alex-reyhan.jpg',
     accent: 'var(--teal-400)',
     bio: ['Born and raised in Southern California, Alex Reyhan brings a deep understanding of the region’s dynamic real estate market. Since joining The Hirth Group in 2015, he has been instrumental in acquisitions, dispositions, and leasing across retail, shopping centers, industrial, mixed-use, office, and land — with a track record exceeding $500 million in closed transactions.', 'His marquee deals include the Abbot Kinney Portfolio ($29.3M), Hollywood & Western Petco ($30.4M), Main Street, Santa Ana ($18.6M), and Main Street, Venice ($8.9M). A UCLA history graduate, Alex pairs sharp deal structuring with a relationship-first approach, and is deeply involved in the Los Angeles Jewish community.']
   }, {
     name: 'Ethan Donel',
     role: 'Senior Associate',
-    photo: '../../assets/photos/team-ethan-donel.png',
+    photo: 'assets/photos/team-ethan-donel.jpg',
     accent: 'var(--gold-500)',
     bio: ['Ethan Donel is a Los Angeles native whose genuine interest in commercial real estate has fueled his career from a very young age. He joined The Hirth Group in 2019 as an Investment Associate, spearheading retail, mixed-use, office, industrial, land, and multifamily deals — specializing in dispositions, acquisitions, and leasing across the San Fernando Valley from Woodland Hills to Burbank.', 'With diligence, charisma, and the mentorship of Daniel Hirth and Alex Reyhan, Ethan quickly became a Senior Associate. He collaborates closely with clients to deliver professional market research and the deal information crucial to sound business decisions, consistently going above and beyond to provide timely, exceptional service.']
   }];
@@ -3321,7 +3321,7 @@ function ProfilePage({
     }
   }, /*#__PURE__*/React.createElement("img", {
     className: "r-portrait",
-    src: "../../assets/photos/daniel-hirth-portrait.png",
+    src: "assets/photos/daniel-hirth-portrait.jpg",
     alt: "Daniel Hirth",
     style: {
       width: '100%',
@@ -3483,7 +3483,7 @@ function ProfilePage({
       marginTop: '8px'
     }
   }, /*#__PURE__*/React.createElement("img", {
-    src: "../../assets/logo-hirth-group.png",
+    src: "assets/logo-hirth-group.png",
     alt: "",
     style: {
       height: '54px',
@@ -3659,11 +3659,11 @@ try { (() => {
 // /for-sale (15), /for-lease (5), /closed (~55). Prices/specs are not published
 // in the live feeds — intentionally omitted; do not invent figures.
 // Listings without a copied photo render the branded navy placeholder.
-const P = '../../assets/photos/';
-const S = '../../assets/photos/sale/';
-const LSE = '../../assets/photos/lease/';
-const LEA = '../../assets/photos/leased/';
-const CLO = '../../assets/photos/closed/';
+const P = 'assets/photos/';
+const S = 'assets/photos/sale/';
+const LSE = 'assets/photos/lease/';
+const LEA = 'assets/photos/leased/';
+const CLO = 'assets/photos/closed/';
 const LISTINGS = [
 // ---- FOR SALE ----
 {
@@ -3822,31 +3822,31 @@ const LISTINGS = [
   meta: 'South Gate, CA · 900 SF Retail',
   status: 'for-lease',
   image: LSE + '3618-tweedy.jpg',
-  flyer: '../../assets/flyers/3618-tweedy.pdf'
+  flyer: 'assets/flyers/3618-tweedy.pdf'
 }, {
   title: '2001 Hawkins Circle',
   meta: 'Los Angeles, CA 90001 · Industrial',
   status: 'for-lease',
   image: LSE + '2001-hawkins.jpg',
-  flyer: '../../assets/flyers/2001-hawkins.pdf'
+  flyer: 'assets/flyers/2001-hawkins.pdf'
 }, {
   title: '3311 Motor Avenue',
   meta: 'Los Angeles, CA 90034 · Retail',
   status: 'for-lease',
   image: LSE + '3311-motor.jpg',
-  flyer: '../../assets/flyers/3311-motor.pdf'
+  flyer: 'assets/flyers/3311-motor.pdf'
 }, {
   title: '727 La Brea Avenue',
   meta: 'Los Angeles, CA 90028 · Retail / Office',
   status: 'for-lease',
   image: LSE + '727-labrea.jpg',
-  flyer: '../../assets/flyers/727-labrea.pdf'
+  flyer: 'assets/flyers/727-labrea.pdf'
 }, {
   title: '1058 Gardena Boulevard',
   meta: 'Gardena, CA 90247 · Retail',
   status: 'for-lease',
   image: LSE + '1058-gardena.jpg',
-  flyer: '../../assets/flyers/1058-gardena.pdf'
+  flyer: 'assets/flyers/1058-gardena.pdf'
 },
 // ---- LEASED ---- (photos cropped from hirthgroup.com/leased gallery)
 {
