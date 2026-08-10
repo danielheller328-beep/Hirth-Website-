@@ -1,0 +1,37 @@
+/* The Hirth Group — spacing, radius, shadow, motion tokens */
+
+:root {
+  /* ---- Spacing (8px base) ---- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  24px;
+  --space-6:  32px;
+  --space-7:  48px;
+  --space-8:  64px;
+  --space-9:  96px;
+  --space-10: 128px;  /* section rhythm on desktop */
+
+  /* ---- Layout ---- */
+  --container-max: 1200px;
+  --container-pad: 32px;
+  --section-gap: var(--space-10);
+
+  /* ---- Radii — near-square; the brand is architectural ---- */
+  --radius-xs: 2px;   /* buttons, inputs, tags */
+  --radius-sm: 3px;   /* cards */
+  --radius-md: 4px;   /* images inside cards */
+  --radius-pill: 999px; /* avatar only */
+
+  /* ---- Shadows — low, cool, restrained ---- */
+  --shadow-card: 0 1px 2px rgba(15, 30, 39, 0.06), 0 4px 16px rgba(15, 30, 39, 0.06);
+  --shadow-card-hover: 0 2px 4px rgba(15, 30, 39, 0.08), 0 12px 32px rgba(15, 30, 39, 0.12);
+  --shadow-overlay: 0 8px 40px rgba(15, 30, 39, 0.22);
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --duration-fast: 150ms; /* @kind other */
+  --duration-base: 250ms; /* @kind other */
+  --duration-slow: 450ms; /* @kind other */
+}

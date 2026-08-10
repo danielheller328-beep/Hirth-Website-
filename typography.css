@@ -1,0 +1,37 @@
+/* The Hirth Group — typography tokens */
+
+:root {
+  /* ---- Families ---- */
+  --font-display: 'Marcellus', 'Times New Roman', serif;
+  --font-sans: 'Archivo', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* ---- Sizes (desktop reference, 1440 grid) ---- */
+  --text-display-xl: 64px;  /* hero headline, big stats */
+  --text-display:    48px;  /* page titles */
+  --text-h2:         36px;  /* section titles */
+  --text-h3:         26px;  /* card / sub-section titles */
+  --text-h4:         20px;  /* minor headings */
+  --text-body-lg:    18px;  /* lead paragraphs, bios */
+  --text-body:       16px;  /* default */
+  --text-small:      14px;  /* meta, captions */
+  --text-caption:    12px;  /* legal, license lines */
+  --text-eyebrow:    13px;  /* uppercase kickers */
+
+  /* ---- Line heights ---- */
+  --leading-display: 1.08;
+  --leading-heading: 1.2;
+  --leading-body:    1.65;
+  --leading-tight:   1.4;
+
+  /* ---- Tracking ---- */
+  --tracking-display: 0.01em;   /* Marcellus is wide already */
+  --tracking-eyebrow: 0.22em;   /* uppercase kickers, nav links */
+  --tracking-caps:    0.12em;   /* uppercase buttons, labels */
+  --tracking-body:    0;
+
+  /* ---- Weights (Archivo variable) ---- */
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+}

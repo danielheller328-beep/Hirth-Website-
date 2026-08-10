@@ -1,0 +1,97 @@
+/* The Hirth Group — color tokens
+   Drawn from the brand mark: Hirth blue + silver on deep slate-navy. */
+
+:root {
+  /* ---- Base: navy (brand ink) ---- */
+  --navy-950: #0c161c;
+  --navy-900: #14242e;   /* primary dark surface — logo background */
+  --navy-800: #1c313e;
+  --navy-700: #28414f;
+  --navy-600: #3a5565;
+  --navy-500: #4f6b7c;
+
+  /* ---- Base: Hirth blue (brand accent) ---- */
+  --blue-700: #0e6e9e;
+  --blue-600: #1485bd;
+  --blue-500: #1b9cd8;   /* logo blue */
+  --blue-400: #4cb4e2;
+  --blue-100: #d9eef9;
+  --blue-50:  #edf7fc;
+
+  /* ---- Expanded jewel palette — warmth & variety against the blue.
+     Used as product-type and section accents; blue stays the primary brand. ---- */
+  --gold-800:  #7d5d28;
+  --gold-700:  #9c7434;
+  --gold-600:  #b08a3e;   /* on-light gold text */
+  --gold-500:  #cda35f;   /* brass — premium/value */
+  --gold-400:  #d9b574;
+  --gold-300:  #e6c992;
+  --gold-200:  #efd9ab;   /* bright gold on navy */
+  --gold:      #cda35f;   /* alias → brass */
+  --emerald-700: #1f7a4d;
+  --emerald-500: #2f9d6e;  /* multifamily / closed-won */
+  --emerald-300: #6fc79e;
+  --teal-700:  #0d6e72;
+  --teal-500:  #169aa0;
+  --teal-400:  #2bb6bb;    /* office */
+  --terra-700: #a3552e;
+  --terra-500: #c8743f;    /* land / retail warmth */
+  --terra-300: #e0a274;
+  --plum-500:  #7b6aa0;    /* mixed-use */
+  --plum-400:  #9a89c0;
+
+  /* ---- Product-type accents (listings, services, submarkets) ---- */
+  --type-retail:      #c8743f;  /* terracotta */
+  --type-industrial:  #5b7a8c;  /* steel */
+  --type-office:      #2bb6bb;  /* teal */
+  --type-multifamily: #2f9d6e;  /* emerald */
+  --type-land:        #cda35f;  /* brass */
+  --type-mixed:       #7b6aa0;  /* plum */
+
+
+  /* ---- Base: silver / slate neutrals ---- */
+  --grey-900: #20272c;
+  --grey-700: #46525a;
+  --grey-500: #75828b;
+  --grey-400: #98a3ab;   /* logo silver */
+  --grey-300: #c2cad0;
+  --grey-200: #dde2e6;
+  --grey-100: #eceff1;
+  --grey-50:  #f5f7f8;
+  --white:    #ffffff;
+  --paper:    #fafbfb;   /* page background */
+
+  /* ---- Semantic: surfaces ---- */
+  --surface-page:    var(--paper);
+  --surface-card:    var(--white);
+  --surface-subtle:  var(--grey-50);
+  --surface-inverse: var(--navy-900);
+  --surface-inverse-raised: var(--navy-800);
+  --surface-accent-tint: var(--blue-50);
+
+  /* ---- Semantic: text ---- */
+  --text-primary:   var(--navy-900);
+  --text-secondary: var(--grey-700);
+  --text-muted:     var(--grey-500);
+  --text-accent:    var(--blue-600);
+  --text-inverse:   #f4f7f9;
+  --text-inverse-secondary: #aebfc9;
+
+  /* ---- Semantic: borders & lines ---- */
+  --border-subtle:  var(--grey-200);
+  --border-strong:  var(--grey-300);
+  --border-inverse: rgba(255, 255, 255, 0.14);
+  --rule-accent:    var(--blue-500); /* short accent rules under headings */
+
+  /* ---- Semantic: interactive ---- */
+  --action-primary:        var(--navy-900);
+  --action-primary-hover:  var(--navy-800);
+  --action-accent:         var(--blue-500);
+  --action-accent-hover:   var(--blue-600);
+  --focus-ring:            rgba(27, 156, 216, 0.45);
+
+  /* ---- Semantic: status (used sparingly — listing states) ---- */
+  --status-available: var(--blue-600);
+  --status-closed:    #1f7a4d;
+  --status-leased:    var(--grey-500);
+}

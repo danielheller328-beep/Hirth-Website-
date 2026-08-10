@@ -1,0 +1,42 @@
+/* The Hirth Group — minimal base element styles for cards, kits, and templates. */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-display);
+  margin: 0;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  margin: 0;
+}
+
+p { margin: 0; }
+
+a {
+  color: var(--text-accent);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+a:hover { color: var(--blue-700); }
+
+img { display: block; max-width: 100%; }
+
+::selection { background: var(--blue-100); }
