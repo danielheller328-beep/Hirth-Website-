@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 68 · 10 Aug 2026 – 23 Aug 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| c1031 | 1031 Exchange | Signal |
+| ccap | Underwriting | Nocturne |
+| cwait | Pricing | Dossier |
+| crent | Due Diligence | Blueprint |
+| coffmkt | Deal Flow | Atelier |
+| cnnn | Net Lease | Midnight |
+
+LinkedIn: In the City of LA, transfer tax is part of the price, The estoppel is where the story stops matching the file, Price is one term, The submarket is not the city, The deal you walk away from, Owner-users are quietly the strongest buyers right now, A quiet escrow is a designed escrow
+
 ## Week 67 · 27 Jul 2026 – 09 Aug 2026
 
 | Post | Topic | Art direction |
