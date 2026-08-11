@@ -42,7 +42,31 @@ jobs:
             [[ "$file" == flyers/* ]] && return 1
             [[ "$file" == suite/* ]] && return 1
 
-            [[ "$lower" == *.zip ]] && return 0
+            if [[ "$lower" == *.zip ]]; then
+              python3 - "$file" <<'PY'
+          import re
+          import sys
+          import zipfile
+
+          try:
+              with zipfile.ZipFile(sys.argv[1]) as package:
+                  for member in package.infolist():
+                      if member.is_dir():
+                          continue
+                      try:
+                          with package.open(member) as handle:
+                              head = handle.read(8192).decode("utf-8", "ignore")
+                      except Exception:
+                          continue
+                      if re.search(r"<!doctype\s+html|<html([\s>])", head, re.I):
+                          raise SystemExit(0)
+          except zipfile.BadZipFile:
+              pass
+
+          raise SystemExit(1)
+          PY
+              return $?
+            fi
 
             # A website upload can have any filename. Detect HTML by its content.
             [[ $(stat -c '%s' "$file") -le 52428800 ]] || return 1
