@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 69 · 24 Aug 2026 – 06 Sep 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| cprop13 | Property Tax | Nocturne |
+| cdom | Days on Market | Dossier |
+| cestop | Due Diligence | Blueprint |
+| cula | Transfer Tax | Atelier |
+| cmaturity | Debt | Midnight |
+| cbov | Valuation | Signal |
+
+LinkedIn: The cap rate on the flyer is not the cap rate, What holding out actually costs, 45 and 180, The good deals are gone before they are listed, Read the rent roll before the offering memorandum, A 4.25% cap is not expensive. It is a different product., Everyone sees the same listings
+
 ## Week 68 · 10 Aug 2026 – 23 Aug 2026
 
 | Post | Topic | Art direction |
