@@ -406,14 +406,14 @@ function TeamPage({
 }) {
   const team = [{
     name: 'Daniel Hirth',
-    role: 'Managing Director',
+    role: 'Principal',
     photo: '../assets/photos/daniel-hirth-portrait.png',
     accent: 'var(--blue-400)',
     page: 'daniel-hirth',
     bio: ['Born and raised in Los Angeles, Daniel was introduced to real estate at a very young age — riding alongside his father collecting rents, overseeing renovations, and managing commercial properties. After graduating from California State University, Northridge, he began his career at Marcus & Millichap in 2012, mastering the acquisition and disposition of retail, industrial, multifamily, office, and land assets.', 'With over 200 transactions totaling more than $520 million in closed sales, Daniel acts as a trusted advisor — strategically restructuring his clients’ portfolios so their equity works efficiently. He also mentors the next generation of professionals at The Hirth Group, building a team where each agent brings unique strengths to better serve clients.']
   }, {
     name: 'Alex Reyhan',
-    role: 'Vice President',
+    role: 'Managing Partner',
     photo: '../assets/photos/team-alex-reyhan.png',
     accent: 'var(--teal-400)',
     bio: ['Born and raised in Southern California, Alex Reyhan brings a deep understanding of the region’s dynamic real estate market. Since joining The Hirth Group in 2015, he has been instrumental in acquisitions, dispositions, and leasing across retail, shopping centers, industrial, mixed-use, office, and land — with a track record exceeding $500 million in closed transactions.', 'His marquee deals include the Abbot Kinney Portfolio ($29.3M), Hollywood & Western Petco ($30.4M), Main Street, Santa Ana ($18.6M), and Main Street, Venice ($8.9M). A UCLA history graduate, Alex pairs sharp deal structuring with a relationship-first approach, and is deeply involved in the Los Angeles Jewish community.']

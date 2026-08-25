@@ -642,7 +642,7 @@ const LISTINGS = [
   price: '$1,800,000',
   headline: 'Single-Tenant Industrial Building in the Heart of Inglewood',
   specs: ['±4,201 SF Building', '±5,272 SF Lot', 'Near $400 / SF', 'Single Tenant'],
-  tagline: 'Exclusively listed by The Hirth Group — represented both buyer and seller.',
+  tagline: 'Closed by The Hirth Group — represented both buyer and seller.',
   description: ['Elijah Suval & Daniel Hirth of The Hirth Group are pleased to announce the successful closing of 323 E Beach Avenue, Inglewood CA — a single-tenant industrial warehouse comprised of approximately 4,201 SF of building on an estimated 5,272 SF lot.', 'The Hirth Group procured multiple offers and ultimately opened escrow. Daniel and Elijah successfully negotiated through environmental issues and were able to keep the deal together while maintaining a strong sale price for their client.', 'The seller’s motivation was due to a massive increase in Inglewood’s property values, while the buyer’s motivation was due to market demand for industrial product and a booming Inglewood submarket.']
 }, {
   title: '5810–5820 Imperial Highway',
@@ -1496,7 +1496,7 @@ const SERVICES = [{
 }];
 const DANIEL = {
   name: 'Daniel Hirth',
-  role: 'Managing Director',
+  role: 'Principal',
   phone: '310.300.2838',
   fax: '888.798.3878',
   email: 'Daniel@HirthGroup.com',

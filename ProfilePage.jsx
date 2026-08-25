@@ -62,7 +62,7 @@ function ProfilePage({ go }) {
             <img src="../assets/logo-hirth-group.png" alt="" style={{ height: '54px', width: 'auto', opacity: 0.9 }} />
             <div>
               <p style={{ fontFamily: 'var(--font-display)', fontSize: '22px', color: 'var(--text-primary)', margin: 0 }}>Daniel Hirth</p>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '2px 0 0', letterSpacing: '0.04em' }}>Managing Director · The Hirth Group</p>
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '2px 0 0', letterSpacing: '0.04em' }}>Principal · The Hirth Group</p>
             </div>
           </div>
           <div style={{ paddingTop: '32px', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>

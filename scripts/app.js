@@ -283,7 +283,7 @@ function ListingModal({
   };
   const HIRTH_AGENTS = [{
     name: 'Daniel Hirth',
-    role: 'Managing Director',
+    role: 'Principal',
     phone: '310.300.2838',
     tel: '3103002838',
     email: 'Daniel@HirthGroup.com',
@@ -291,7 +291,7 @@ function ListingModal({
     photo: '../assets/photos/daniel-hirth-portrait.png'
   }, {
     name: 'Alex Reyhan',
-    role: 'Vice President',
+    role: 'Managing Partner',
     phone: '310.300.3181',
     tel: '3103003181',
     email: 'Alex@HirthGroup.com',
@@ -750,7 +750,7 @@ function ListingModal({
       color: 'var(--gold-500)',
       margin: 0
     }
-  }, "Listed By"), HIRTH_AGENTS.map(a => /*#__PURE__*/React.createElement("div", {
+  }, listing.status === 'closed' ? 'Closed By:' : 'Listed By'), HIRTH_AGENTS.map(a => /*#__PURE__*/React.createElement("div", {
     key: a.name,
     style: {
       display: 'flex',

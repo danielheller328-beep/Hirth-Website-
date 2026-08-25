@@ -596,7 +596,7 @@ Daniel Hirth · 310.300.2838`,
 
 Not the loudest team in the room — the one that finds the deal everyone else walked past, and gets it closed. Valuation, disposition and 1031 guidance, start to finish.
 
-Daniel Hirth · Managing Director
+Daniel Hirth · Principal
 310.300.2838 · HirthGroup.com · CA DRE 01515796`,
     tags: '#CommercialRealEstate #CRE #RealEstateInvesting #LosAngelesRealEstate #LARealEstate #CREBroker #InvestmentProperty #1031Exchange #CommercialProperty #DealFlow #ValueAdd #HirthGroup #KWCommercial #NNN #SoldByHirth' },
 
@@ -632,7 +632,7 @@ Mispricing a building by ten percent does not cost you ten percent — it costs 
 
 Call before you decide the number, not after. No listing agreement, no obligation, no pressure.
 
-Daniel Hirth · Managing Director
+Daniel Hirth · Principal
 310.300.2838 · HirthGroup.com`,
     tags: '#ThinkingOfSelling #CommercialRealEstate #CRE #SellCommercial #BrokerOpinionOfValue #PropertyValuation #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateStrategy #1031Exchange #DaysOnMarket' }
 ];

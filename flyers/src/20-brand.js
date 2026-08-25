@@ -11,7 +11,7 @@
 const HOUSE = {
   name: 'THE HIRTH GROUP',
   agent: 'Daniel Hirth',
-  role: 'Managing Director',
+  role: 'Principal',
   phone: '310.300.2838',
   dre: 'CA DRE 01515796',
   site: 'HIRTHGROUP.COM',
@@ -22,8 +22,8 @@ const HOUSE = {
 };
 
 const TEAM = [
-  { key: 'dh', name: 'Daniel Hirth', role: 'Managing Director', phone: '310.300.2838', dre: 'CA DRE 01515796' },
-  { key: 'ar', name: 'Alex Reyhan', role: 'Advisor · CRE', phone: '310.300.3181', dre: 'CA DRE 02005428' },
+  { key: 'dh', name: 'Daniel Hirth', role: 'Principal', phone: '310.300.2838', dre: 'CA DRE 01515796' },
+  { key: 'ar', name: 'Alex Reyhan', role: 'Managing Partner', phone: '310.300.3181', dre: 'CA DRE 02005428' },
   { key: 'ed', name: 'Ethan Donel', role: 'Senior Associate', phone: '310.300.3179', dre: 'CA DRE 02059315' }
 ];
 

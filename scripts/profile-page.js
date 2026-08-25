@@ -225,7 +225,7 @@ function ProfilePage({
       margin: '2px 0 0',
       letterSpacing: '0.04em'
     }
-  }, "Managing Director \xB7 The Hirth Group"))), /*#__PURE__*/React.createElement("div", {
+  }, "Principal \xB7 The Hirth Group"))), /*#__PURE__*/React.createElement("div", {
     style: {
       paddingTop: '32px',
       display: 'flex',
