@@ -173,26 +173,44 @@ const WEEK = {
   content: pickContent(),
   linkedin: pickLinkedIn()
 };
-/* the poster — the house piece, one statement a run */
-WEEK.poster = (function () {
-  const P = POSTERS[WEEK_N % POSTERS.length];
-  return Object.assign({}, P, {
-    poster: true, who: 'dh',
-    /* the cut turns independently of the statement, and seven cuts against six
-       statements share no factor — forty-two weeks before a statement meets
-       the same portrait treatment twice */
-    cutIndex: WEEK_N,
-    cutName: posterCut(WEEK_N).name,
-    title: stripRich(P.line),
-    adName: 'Press · ' + posterCut(WEEK_N).name,
-    stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
-  });
-})();
+/* ── the flyers ───────────────────────────────────────────────────────────
+   These are the ones that land: his face on the sheet, one sentence set as
+   large as it will go, the signature block along the foot. So they are the
+   bulk of the run rather than a single house piece at the top of it — four
+   flyers, three square for the feed and one tall for a story.
 
-/* the carousels take the first two topics, the stories take the other four —
-   so the week is seven pieces about seven different things */
+   Each takes a different statement and a different cut, so four flyers in a
+   run are four different posters and not one poster four times. Twelve
+   statements against seven cuts: a statement is eighty-four runs away from
+   meeting the same cut a second time.
+   ─────────────────────────────────────────────────────────────────────── */
+const FLYERS_PER_RUN = 4;
+WEEK.flyers = (function () {
+  const step = stepFor(POSTERS.length, FLYERS_PER_RUN);
+  const out = [];
+  for (let i = 0; i < FLYERS_PER_RUN; i++) {
+    const P = POSTERS[(WEEK_N * step + i) % POSTERS.length];
+    /* the cuts are walked apart inside the run so no two flyers in the same
+       set arrive in the same treatment */
+    const cutIndex = WEEK_N * FLYERS_PER_RUN + i * 2;
+    const cut = posterCut(cutIndex);
+    out.push(Object.assign({}, P, {
+      poster: true, who: 'dh',
+      cutIndex: cutIndex,
+      cutName: cut.name,
+      tall: i === FLYERS_PER_RUN - 1,        /* the last one runs as a story */
+      title: stripRich(P.line),
+      adName: 'Press · ' + cut.name,
+      stats: [[HOUSE.deals, 'Transactions'], [HOUSE.volume, 'Sales Volume'], ['LA', 'Market']]
+    }));
+  }
+  return out;
+})();
+WEEK.poster = WEEK.flyers[0];
+
+/* one carousel and two topic stories carry the written side of the run */
 WEEK.carousels = (function () {
-  const out = WEEK.content.slice(0, 2);
+  const out = WEEK.content.slice(0, 1);
   /* two posts side by side must not arrive in the same container, however the
      hash falls — the second is walked on until it differs. Compared by name,
      not by identity: each art direction owns its own points and figure, so
@@ -207,7 +225,7 @@ WEEK.carousels = (function () {
 })();
 
 WEEK.stories = (function () {
-  const out = WEEK.content.slice(2).map((P, i) => ({
+  const out = WEEK.content.slice(1, 3).map((P, i) => ({
     id: 'st-' + P.id, title: stripRich(P.title), ad: P.ad, story: true,
     kind: P.topic, cap: P.cap, tags: P.tags, stats: P.stats,
     draw: c => (P.review ? storyReview(c, P.ad, P, frameMeta(P, 9, 1, SW, SH))
@@ -215,9 +233,8 @@ WEEK.stories = (function () {
         : storyStatement(c, P.ad, P, frameMeta(P, 9, 1, SW, SH)))
   }));
 
-  /* every third week the last story is the house instead of a topic — the
-     poster is never repeated here, it is already the week's first post */
-  if (WEEK_N % 3 === 0 && out.length) {
+  /* every third run the last topic story gives way to the house piece */
+  if (WEEK_N % 3 === 0 && out.length > 1) {
     const teamAd = AD[AD_ORDER[(WEEK_N * 3 + 1) % AD_ORDER.length]];
     out[out.length - 1] = {
       id: 'st-team', title: 'The Team', ad: teamAd, story: true, kind: 'The House',
@@ -870,7 +887,8 @@ const VIEWS = [
 function buildSwitch() {
   const host = document.getElementById('switch');
   host.innerHTML = '';
-  const counts = { week: 7, li: WEEK.linkedin.length };
+  const counts = { week: WEEK.flyers.length + WEEK.carousels.length + WEEK.stories.length,
+                   li: WEEK.linkedin.length };
   const btns = VIEWS.map(v => {
     const b = document.createElement('button');
     b.id = 'tab-' + v.id;
@@ -903,21 +921,26 @@ function buildFeed() {
   host.innerHTML = '';
   let n = 0;
 
-  /* the poster leads — it is the house piece, and it is the one with his face */
-  const pp = WEEK.poster;
-  pp.slideCount = 1;
-  host.appendChild(postCard(n++, pp,
-    () => [paint(c => posterFrame(c, pp, frameMeta({ id: pp.id }, 0, 1, FW, FH)), FW, FH)],
-    'POSTER · ' + pp.cutName.toUpperCase() + ' CUT'));
+  /* the flyers lead, because they are the ones that land */
+  const flyers = WEEK.flyers.slice(0, MAXPOSTS === Infinity ? WEEK.flyers.length : MAXPOSTS);
+  flyers.forEach(P => {
+    P.slideCount = 1;
+    P.story = P.tall;                      /* a tall flyer is a story card */
+    const W = P.tall ? SW : FW, H = P.tall ? SH : FH;
+    const draw = P.tall ? posterStory : posterFrame;
+    host.appendChild(postCard(n++, P,
+      () => [paint(c => draw(c, P, frameMeta({ id: P.id }, 0, 1, W, H)), W, H)],
+      'FLYER · ' + (P.tall ? '9:16 · ' : '') + P.cutName.toUpperCase() + ' CUT'));
+  });
 
-  const carousels = WEEK.carousels.slice(0, Math.min(2, MAXPOSTS));
+  const carousels = WEEK.carousels.slice(0, Math.min(1, MAXPOSTS));
   carousels.forEach(P => {
     P.slideCount = SLIDES_PER_POST;
     host.appendChild(postCard(n++, P, () => contentSlides(P),
       'CAROUSEL · ' + SLIDES_PER_POST + ' SLIDES · ' + P.topic.toUpperCase()));
   });
 
-  const stories = WEEK.stories.slice(0, MAXPOSTS === Infinity ? 4 : MAXPOSTS);
+  const stories = WEEK.stories.slice(0, MAXPOSTS === Infinity ? 2 : MAXPOSTS);
   stories.forEach(P => {
     P.slideCount = 1;
     host.appendChild(postCard(n++, P, () => [paint(P.draw, SW, SH)],
@@ -928,9 +951,10 @@ function buildFeed() {
   liHost.innerHTML = '';
   WEEK.linkedin.forEach((P, i) => liHost.appendChild(liCard(i, P)));
 
-  const posts = 1 + carousels.length;
+  const total = flyers.length + carousels.length + stories.length;
   document.getElementById('sectionHead').textContent =
-    (posts + stories.length) + ' pieces — ' + posts + ' posts, ' + stories.length + ' stories';
+    total + ' pieces — ' + flyers.length + ' flyers, ' + carousels.length +
+    ' carousel, ' + stories.length + ' stories';
   document.getElementById('weekRange').textContent =
     weekLabel() + '  ·  next set ' + nextMondayLabel();
   document.getElementById('liNote').textContent =

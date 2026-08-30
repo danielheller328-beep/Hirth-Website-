@@ -634,5 +634,78 @@ Call before you decide the number, not after. No listing agreement, no obligatio
 
 Daniel Hirth · Principal
 310.300.2838 · HirthGroup.com`,
-    tags: '#ThinkingOfSelling #CommercialRealEstate #CRE #SellCommercial #BrokerOpinionOfValue #PropertyValuation #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateStrategy #1031Exchange #DaysOnMarket' }
+    tags: '#ThinkingOfSelling #CommercialRealEstate #CRE #SellCommercial #BrokerOpinionOfValue #PropertyValuation #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateStrategy #1031Exchange #DaysOnMarket' },
+
+  { id: 'p-quiet', kicker: 'How We Work',
+    line: 'The best deals I have done *never hit a platform.*',
+    cap: `The best deals I have done never hit a platform.
+
+An owner mentions to somebody that they are tired. A broker who already knows the buyer for that specific asset picks up the phone. It trades in three weeks and you never saw it, because there was nothing to see.
+
+You do not get on that call by refreshing listing alerts. You get on it by being the specific answer to a question somebody is about to ask.
+
+Daniel Hirth · The Hirth Group
+310.300.2838 · HirthGroup.com`,
+    tags: '#OffMarket #DealFlow #PocketListing #CommercialRealEstate #CRE #CREBroker #InvestmentProperty #BuyerRepresentation #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #CommercialProperty #RealEstateInvesting #SanFernandoValley' },
+
+  { id: 'p-third', kicker: 'Pricing',
+    line: 'Nobody buys the third price cut. *They wait for the fourth.*',
+    cap: `Nobody buys the third price cut. They wait for the fourth.
+
+Cut once and the market reads it as a correction. Cut twice and it reads as a problem. Cut three times and every buyer watching has learned that waiting is free — so they wait, and you cut again, and you have trained them to.
+
+The number that works is the one you open at. Everything after it is negotiating against yourself in public.
+
+Daniel Hirth · Principal
+310.300.2838`,
+    tags: '#Pricing #DaysOnMarket #SellCommercial #CommercialRealEstate #CRE #ListingStrategy #PropertyValuation #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #ThinkingOfSelling #BrokerOpinionOfValue' },
+
+  { id: 'p-answer', kicker: 'Due Diligence',
+    line: 'Ask me what is wrong with it. *I will tell you.*',
+    cap: `Ask me what is wrong with it. I will tell you.
+
+Every building has something. The roof is at the end of its life, the parking is non-conforming, the anchor tenant has two years left and an option nobody has read. None of that kills a deal. Finding it in week six does.
+
+A broker who only tells you what is good about a building is not representing you. They are marketing at you.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+    tags: '#DueDiligence #CommercialRealEstate #CRE #BuyerRepresentation #InvestmentProperty #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #Underwriting #CommercialProperty #RealEstateInvesting #DealFlow #ValueAdd' },
+
+  { id: 'p-nineteen', kicker: 'The Record',
+    line: 'Nineteen years in one market. *That is the whole edge.*',
+    cap: `Nineteen years in one market. That is the whole edge.
+
+I know which corners absorb space and which ones have been quietly dying for a decade. I know which owners have been approached eleven times and which have never been asked. That is not something you read off a platform — it is a map you build one deal at a time.
+
+197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+
+Daniel Hirth · Principal
+310.300.2838 · HirthGroup.com`,
+    tags: '#LosAngelesRealEstate #LARealEstate #CommercialRealEstate #CRE #CREBroker #InvestmentProperty #DealFlow #HirthGroup #KWCommercial #CommercialProperty #RealEstateInvesting #SanFernandoValley #IndustrialRealEstate #RetailRealEstate #SoldByHirth' },
+
+  { id: 'p-honest', kicker: 'Valuation',
+    line: 'An honest number first. *Even when it is not the one you want.*',
+    cap: `An honest number first — even when it is not the one you want.
+
+An appraisal tells you what a building was worth. A broker should tell you what it will trade for, to the buyers who are actually in the market this quarter, at the rates they are actually being quoted.
+
+Those are different jobs, and only one of them helps you decide.
+
+No listing agreement, no obligation. Just the number.
+
+Daniel Hirth · 310.300.2838 · HirthGroup.com`,
+    tags: '#PropertyValuation #BrokerOpinionOfValue #CommercialRealEstate #CRE #SellCommercial #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateStrategy #ThinkingOfSelling #CapRate #CommercialProperty' },
+
+  { id: 'p-return', kicker: 'The Business',
+    line: 'Built on the second deal. *Not the first one.*',
+    cap: `Built on the second deal, not the first one.
+
+Anybody can win a listing. The business that lasts is the one where the same owner calls you again four years later, and then sends you their partner.
+
+That only happens if the first deal was run straight — including the parts where the honest answer cost us something.
+
+197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+    tags: '#CommercialRealEstate #CRE #CREBroker #ClientFirst #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateInvesting #CommercialProperty #DealFlow #SoldByHirth #Testimonial #RealEstateStrategy' }
 ];
