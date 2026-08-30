@@ -707,5 +707,81 @@ That only happens if the first deal was run straight — including the parts whe
 197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
 
 Daniel Hirth · The Hirth Group · 310.300.2838`,
-    tags: '#CommercialRealEstate #CRE #CREBroker #ClientFirst #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateInvesting #CommercialProperty #DealFlow #SoldByHirth #Testimonial #RealEstateStrategy' }
+    tags: '#CommercialRealEstate #CRE #CREBroker #ClientFirst #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty #RealEstateInvesting #CommercialProperty #DealFlow #SoldByHirth #Testimonial #RealEstateStrategy' },
+
+  /* The six above all argue a principle in the same register — Daniel stating
+     how the business ought to work. Four of these run in a fortnight, back to
+     back, and six variations on one voice reads as one voice. These six break
+     the shape on purpose: a specific street, a buyer instead of a seller, an
+     hour of the actual job, a joke, a tenant, and a deal that did not happen. */
+
+  { id: 'p-corner', kicker: 'Submarkets',
+    line: 'One mile north on the same street. *A different market.*',
+    cap: `Sepulveda in Van Nuys and Sepulveda in Sherman Oaks are the same street and not the same market. Neither are the two ends of Lankershim.
+
+Rents diverge, absorption diverges, and the buyer pool diverges — and none of it shows up in a search radius, which is how a building gets priced off comps from a mile away that have nothing to do with it.
+
+That is not something you can look up. It is the part you have to have walked.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+    tags: '#Submarket #SanFernandoValley #LosAngelesRealEstate #IndustrialRealEstate #Absorption #HirthGroup' },
+
+  { id: 'p-buyer', kicker: 'For Buyers',
+    line: 'You lose on the deal *you never saw.*',
+    cap: `The building you overpaid for is rarely the expensive mistake. The expensive one is the building that traded quietly in March to somebody who was on a list you were not on.
+
+You cannot outbid a deal you never heard about. And the owners worth buying from are not the ones running a process — they are the ones who have not decided to sell yet.
+
+If you are buying in LA this year, the useful question is not what is listed. It is who knows you are looking.
+
+Daniel Hirth · 310.300.2838 · HirthGroup.com`,
+    tags: '#BuyerRepresentation #OffMarket #DealFlow #LosAngelesRealEstate #CommercialRealEstate #HirthGroup' },
+
+  { id: 'p-tuesday', kicker: 'The Job',
+    line: 'Most of this job is *phone calls nobody sees.*',
+    cap: `A normal Tuesday: four owners who are not selling, one who might be in eighteen months, a lender who tells me what is actually getting quoted this week, and a tenant rep who mentions his client is outgrowing a space in Sun Valley.
+
+None of that closes anything. All of it is why the call in November has an answer ready.
+
+The deal is the visible part. The nineteen years of calls underneath it are the product.
+
+Daniel Hirth · Principal
+310.300.2838 · HirthGroup.com`,
+    tags: '#CREBroker #DealFlow #LosAngelesRealEstate #BrokerLife #CommercialRealEstate #HirthGroup' },
+
+  { id: 'p-drone', kicker: 'How We Work',
+    line: 'No drone footage. *Just the number.*',
+    cap: `Nobody has ever bought a building because the video had a sunset in it.
+
+Buyers want the rent roll, the trailing twelve, what the taxes reassess to, and what the last three comparable assets actually traded at. Give them that in week one and the good ones move in week two.
+
+Marketing is not the job. Being right about the price is the job.
+
+Daniel Hirth · The Hirth Group
+310.300.2838 · CA DRE 01515796`,
+    tags: '#SellCommercial #ListingStrategy #PropertyValuation #CommercialRealEstate #LosAngelesRealEstate #HirthGroup' },
+
+  { id: 'p-rent', kicker: 'Owner-Users',
+    line: 'Every month you rent, *you are funding a landlord’s retirement.*',
+    cap: `If your business has been in the same space six years and you are still signing renewals, run the other number once.
+
+SBA money puts an owner-user into a building for around ten percent down. The payment often lands near the rent you are already paying — except the principal is yours, the appreciation is yours, and in year fifteen you own an asset instead of a stack of expired leases.
+
+It does not pencil for everybody. It pencils for more people than run it.
+
+Daniel Hirth · 310.300.2838`,
+    tags: '#OwnerUser #SBA #IndustrialRealEstate #CommercialRealEstate #LosAngelesRealEstate #HirthGroup' },
+
+  { id: 'p-walkaway', kicker: 'The Business',
+    line: 'The deal I talked you out of *is why you called back.*',
+    cap: `In 2019 I told a client to walk from a building he wanted. The roof was at the end of its life and the anchor had an option nobody had read carefully.
+
+That cost me the commission. He has since bought two more through us and sent his brother.
+
+A broker who has never talked you out of anything has not been reading the file. He has been reading the room.
+
+197+ transactions. $471 Million+ in sales volume. Greater Los Angeles.
+
+Daniel Hirth · The Hirth Group · 310.300.2838`,
+    tags: '#CREBroker #DueDiligence #ClientFirst #CommercialRealEstate #LosAngelesRealEstate #HirthGroup' }
 ];

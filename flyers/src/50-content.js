@@ -735,8 +735,13 @@ const LI_TAGS = '#CommercialRealEstate #CRE #LosAngeles #InvestmentProperty #CRE
 
 /* Every LinkedIn piece was falling back to the same five generic tags, which
    is the first-comment equivalent of saying nothing. Keyed to the topic
-   instead — the house tags plus the ones the piece is actually about. */
-const LI_HOUSE = ' #CommercialRealEstate #CRE #CREBroker #HirthGroup #KWCommercial #LosAngelesRealEstate #LARealEstate #InvestmentProperty';
+   instead — the house tags plus the ones the piece is actually about.
+
+   The house tail used to run eight tags long, which put thirteen on every
+   post. Thirteen hashtags is a tell: it is what an account does when it is
+   posting at a feed rather than to people, and LinkedIn stops rewarding it
+   somewhere around five. Two house tags, and the topic carries the rest. */
+const LI_HOUSE = ' #HirthGroup #LosAngelesRealEstate';
 const LI_TAGS_BY_TOPIC = {
   'Underwriting': '#Underwriting #CapRate #NOI #DueDiligence #ValueAdd',
   'Pricing': '#PropertyValuation #SellCommercial #ListingStrategy #BrokerOpinionOfValue #ThinkingOfSelling',
@@ -759,7 +764,8 @@ const LI_TAGS_BY_TOPIC = {
   'Process': '#Escrow #DueDiligence #TransactionManagement #SellCommercial #RealEstateStrategy'
 };
 function liTags(topic) {
-  return (LI_TAGS_BY_TOPIC[topic] || '#RealEstateInvesting #CommercialProperty #DealFlow') + LI_HOUSE;
+  var t = (LI_TAGS_BY_TOPIC[topic] || '#RealEstateInvesting #CommercialProperty #DealFlow');
+  return t.split(/\s+/).slice(0, 3).join(' ') + LI_HOUSE;
 }
 const LINKEDIN = [
 { topic: 'Underwriting', title: 'The cap rate on the flyer is not the cap rate',
