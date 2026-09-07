@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 70 · 07 Sep 2026 – 20 Sep 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| ccredit | Leasing | Dossier |
+| ccapex | Capital | Blueprint |
+| ccarry | Structure | Atelier |
+| creview | Client Review | Midnight |
+| cpark | Parking | Signal |
+| czone | Entitlements | Nocturne |
+
+LinkedIn: The seller’s tax bill is not your tax bill, Nobody buys the third price cut, The maturity date is the real deadline, Appraisal vs broker opinion, Ten years from a weak tenant is not ten years, Seller financing is a pricing tool, Deferred maintenance is a price, not a surprise
+
 ## Week 69 · 24 Aug 2026 – 06 Sep 2026
 
 | Post | Topic | Art direction |
