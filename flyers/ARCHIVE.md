@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 71 · 21 Sep 2026 – 04 Oct 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| ccarryback | Seller Financing | Blueprint |
+| cinsure | Insurance | Atelier |
+| cvacant | Vacancy | Midnight |
+| cland | Land Value | Signal |
+| cassume | Assumption | Nocturne |
+| cphase1 | Environmental | Dossier |
+
+LinkedIn: In the City of LA, transfer tax is part of the price, The estoppel is where the story stops matching the file, Price is one term, The submarket is not the city, The deal you walk away from, Owner-users are quietly the strongest buyers right now, A quiet escrow is a designed escrow
+
 ## Week 70 · 07 Sep 2026 – 20 Sep 2026
 
 | Post | Topic | Art direction |
