@@ -2062,7 +2062,7 @@ const ADDR_COORDS = {
 };
 
 function PropertiesMap({ items, label }) {
-  const [view, setView] = React.useState('road'); // 'road' | 'sat'
+  const [view] = React.useState('sat');
   const mapRef = React.useRef(null);
   const elRef = React.useRef(null);
   const layersRef = React.useRef({});
@@ -2087,7 +2087,8 @@ function PropertiesMap({ items, label }) {
       const road = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' });
       const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri, Maxar, Earthstar Geographics' });
       const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, pane: 'shadowPane' });
-      road.addTo(map);
+      sat.addTo(map);
+      labels.addTo(map);
       // Leaflet rebuilds the attribution container with innerHTML on every layer
       // change, so patching the anchor once doesn't survive a basemap toggle.
       // Setting a plain-text prefix means no anchor is ever injected.
@@ -2135,17 +2136,6 @@ function PropertiesMap({ items, label }) {
         <div style={{ position: 'absolute', top: '20px', left: '22px', zIndex: 500, pointerEvents: 'none', background: 'linear-gradient(135deg, rgba(10,20,26,0.92), rgba(10,20,26,0.55))', padding: '14px 20px', borderRadius: 'var(--radius-sm)', backdropFilter: 'blur(4px)' }}>
           <p style={{ font: 'var(--weight-medium) 11px var(--font-sans)', letterSpacing: 'var(--tracking-eyebrow)', textTransform: 'uppercase', color: 'var(--gold-500)', margin: 0 }}>On the Map</p>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '24px', color: '#fff', margin: '6px 0 0' }}>{label} Across LA</h3>
-        </div>
-        {/* Map / Satellite toggle */}
-        <div style={{ position: 'absolute', top: '20px', right: '22px', zIndex: 500, display: 'flex', borderRadius: 'var(--radius-xs)', overflow: 'hidden', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-card)' }}>
-          {[['road', 'Map'], ['sat', 'Satellite']].map(([v, lbl]) => (
-            <button key={v} onClick={() => setView(v)} style={{
-              font: 'var(--weight-semibold) 11px var(--font-sans)', letterSpacing: 'var(--tracking-caps)', textTransform: 'uppercase',
-              padding: '9px 16px', border: 'none', cursor: 'pointer',
-              background: view === v ? 'var(--blue-500)' : 'rgba(10,20,26,0.9)',
-              color: view === v ? '#fff' : 'var(--text-inverse-secondary)', transition: 'background var(--duration-fast)',
-            }}>{lbl}</button>
-          ))}
         </div>
       </div>
     </div>
