@@ -2084,9 +2084,9 @@ function PropertiesMap({ items, label }) {
     // init once
     if (!mapRef.current) {
       const map = L.map(elRef.current, { scrollWheelZoom: false, attributionControl: true, zoomControl: true }).setView([33.92, -118.1], 9);
-      const road = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, attribution: '© OpenStreetMap © CARTO' });
+      const road = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles © Esri' });
       const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri, Maxar, Earthstar Geographics' });
-      const labels = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19, pane: 'shadowPane' });
+      const labels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, pane: 'shadowPane' });
       road.addTo(map);
       // Leaflet rebuilds the attribution container with innerHTML on every layer
       // change, so patching the anchor once doesn't survive a basemap toggle.
