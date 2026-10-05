@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 72 · 05 Oct 2026 – 18 Oct 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| c1031 | 1031 Exchange | Atelier |
+| ccap | Underwriting | Midnight |
+| cwait | Pricing | Signal |
+| crent | Due Diligence | Nocturne |
+| coffmkt | Deal Flow | Dossier |
+| cnnn | Net Lease | Blueprint |
+
+LinkedIn: The cap rate on the flyer is not the cap rate, What holding out actually costs, 45 and 180, The good deals are gone before they are listed, Read the rent roll before the offering memorandum, A 4.25% cap is not expensive. It is a different product., Everyone sees the same listings
+
 ## Week 71 · 21 Sep 2026 – 04 Oct 2026
 
 | Post | Topic | Art direction |

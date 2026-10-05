@@ -1,38 +1,38 @@
 {
-  "week": 71,
-  "starts": "2026-09-21",
-  "ends": "2026-10-04",
-  "recorded": "2026-09-28",
+  "week": 72,
+  "starts": "2026-10-05",
+  "ends": "2026-10-18",
+  "recorded": "2026-10-05",
   "carousels": [
     {
-      "id": "ccarryback",
-      "topic": "Seller Financing",
-      "art_direction": "Blueprint"
-    },
-    {
-      "id": "cinsure",
-      "topic": "Insurance",
+      "id": "c1031",
+      "topic": "1031 Exchange",
       "art_direction": "Atelier"
     },
     {
-      "id": "cvacant",
-      "topic": "Vacancy",
+      "id": "ccap",
+      "topic": "Underwriting",
       "art_direction": "Midnight"
     },
     {
-      "id": "cland",
-      "topic": "Land Value",
+      "id": "cwait",
+      "topic": "Pricing",
       "art_direction": "Signal"
     },
     {
-      "id": "cassume",
-      "topic": "Assumption",
+      "id": "crent",
+      "topic": "Due Diligence",
       "art_direction": "Nocturne"
     },
     {
-      "id": "cphase1",
-      "topic": "Environmental",
+      "id": "coffmkt",
+      "topic": "Deal Flow",
       "art_direction": "Dossier"
+    },
+    {
+      "id": "cnnn",
+      "topic": "Net Lease",
+      "art_direction": "Blueprint"
     }
   ],
   "listings": [
@@ -48,38 +48,38 @@
   "linkedin": [
     {
       "day": "Monday",
-      "topic": "Transfer Tax",
-      "title": "In the City of LA, transfer tax is part of the price"
+      "topic": "Underwriting",
+      "title": "The cap rate on the flyer is not the cap rate"
     },
     {
       "day": "Tuesday",
-      "topic": "Due Diligence",
-      "title": "The estoppel is where the story stops matching the file"
+      "topic": "Pricing",
+      "title": "What holding out actually costs"
     },
     {
       "day": "Wednesday",
-      "topic": "Negotiation",
-      "title": "Price is one term"
+      "topic": "1031 Exchange",
+      "title": "45 and 180"
     },
     {
       "day": "Thursday",
-      "topic": "Submarkets",
-      "title": "The submarket is not the city"
+      "topic": "Deal Flow",
+      "title": "The good deals are gone before they are listed"
     },
     {
       "day": "Friday",
-      "topic": "The Business",
-      "title": "The deal you walk away from"
+      "topic": "Due Diligence",
+      "title": "Read the rent roll before the offering memorandum"
     },
     {
       "day": "Saturday",
-      "topic": "Owner-Users",
-      "title": "Owner-users are quietly the strongest buyers right now"
+      "topic": "Net Lease",
+      "title": "A 4.25% cap is not expensive. It is a different product."
     },
     {
       "day": "Sunday",
-      "topic": "Process",
-      "title": "A quiet escrow is a designed escrow"
+      "topic": "The Business",
+      "title": "Everyone sees the same listings"
     }
   ],
   "bank": {
