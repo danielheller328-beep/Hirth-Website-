@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 73 · 19 Oct 2026 – 01 Nov 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| cprop13 | Property Tax | Midnight |
+| cdom | Days on Market | Signal |
+| cestop | Due Diligence | Nocturne |
+| cula | Transfer Tax | Dossier |
+| cmaturity | Debt | Blueprint |
+| cbov | Valuation | Atelier |
+
+LinkedIn: The seller’s tax bill is not your tax bill, Nobody buys the third price cut, The maturity date is the real deadline, Appraisal vs broker opinion, Ten years from a weak tenant is not ten years, Seller financing is a pricing tool, Deferred maintenance is a price, not a surprise
+
 ## Week 72 · 05 Oct 2026 – 18 Oct 2026
 
 | Post | Topic | Art direction |
