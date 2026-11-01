@@ -174,6 +174,36 @@ jobs:
             cp _ds_bundle.js ds-bundle.js
           fi
           sed -i 's|src="_ds_bundle\.js"|src="ds-bundle.js"|g' index.html
+
+          # Uploaded HTML/ZIP exports can omit the map authentication. Restore
+          # both CARTO layers on every publish without changing the page design.
+          python3 - <<'PY'
+          import pathlib
+          import re
+          from urllib.parse import parse_qsl, urlencode
+
+          page = pathlib.Path("index.html")
+          html = page.read_text(encoding="utf-8")
+          tile_url = re.compile(
+              r"https://(?:\{s\}|[abcd])\.basemaps\.cartocdn\.com/"
+              r"(?:dark_all|dark_only_labels)/[^\s'\"<>]+"
+          )
+
+          def authenticate(match):
+              base, _, query = match.group(0).partition("?")
+              params = [(name, value) for name, value in parse_qsl(query, keep_blank_values=True)
+                        if name != "key"]
+              params.append(("key", "cb1_4avo_1_1bd6ac76d9d2c46c75c150ed"))
+              return base + "?" + urlencode(params)
+
+          corrected = tile_url.sub(authenticate, html)
+          if corrected != html:
+              page.write_text(corrected, encoding="utf-8")
+              print("Restored CARTO map authentication in uploaded website.")
+          else:
+              print("CARTO map authentication already preserved.")
+          PY
+
           touch .nojekyll
           printf '%s\n' "$site_file" > .published-source
 
