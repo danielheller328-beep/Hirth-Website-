@@ -1,38 +1,38 @@
 {
-  "week": 73,
-  "starts": "2026-10-19",
-  "ends": "2026-11-01",
-  "recorded": "2026-10-26",
+  "week": 74,
+  "starts": "2026-11-02",
+  "ends": "2026-11-15",
+  "recorded": "2026-11-02",
   "carousels": [
     {
-      "id": "cprop13",
-      "topic": "Property Tax",
-      "art_direction": "Midnight"
-    },
-    {
-      "id": "cdom",
-      "topic": "Days on Market",
+      "id": "ccredit",
+      "topic": "Leasing",
       "art_direction": "Signal"
     },
     {
-      "id": "cestop",
-      "topic": "Due Diligence",
+      "id": "ccapex",
+      "topic": "Capital",
       "art_direction": "Nocturne"
     },
     {
-      "id": "cula",
-      "topic": "Transfer Tax",
+      "id": "ccarry",
+      "topic": "Structure",
       "art_direction": "Dossier"
     },
     {
-      "id": "cmaturity",
-      "topic": "Debt",
+      "id": "creview",
+      "topic": "Client Review",
       "art_direction": "Blueprint"
     },
     {
-      "id": "cbov",
-      "topic": "Valuation",
+      "id": "cpark",
+      "topic": "Parking",
       "art_direction": "Atelier"
+    },
+    {
+      "id": "czone",
+      "topic": "Entitlements",
+      "art_direction": "Midnight"
     }
   ],
   "listings": [
@@ -48,38 +48,38 @@
   "linkedin": [
     {
       "day": "Monday",
-      "topic": "Property Tax",
-      "title": "The seller\u2019s tax bill is not your tax bill"
+      "topic": "Transfer Tax",
+      "title": "In the City of LA, transfer tax is part of the price"
     },
     {
       "day": "Tuesday",
-      "topic": "Days on Market",
-      "title": "Nobody buys the third price cut"
+      "topic": "Due Diligence",
+      "title": "The estoppel is where the story stops matching the file"
     },
     {
       "day": "Wednesday",
-      "topic": "Debt",
-      "title": "The maturity date is the real deadline"
+      "topic": "Negotiation",
+      "title": "Price is one term"
     },
     {
       "day": "Thursday",
-      "topic": "Valuation",
-      "title": "Appraisal vs broker opinion"
+      "topic": "Submarkets",
+      "title": "The submarket is not the city"
     },
     {
       "day": "Friday",
-      "topic": "Leasing",
-      "title": "Ten years from a weak tenant is not ten years"
+      "topic": "The Business",
+      "title": "The deal you walk away from"
     },
     {
       "day": "Saturday",
-      "topic": "Structure",
-      "title": "Seller financing is a pricing tool"
+      "topic": "Owner-Users",
+      "title": "Owner-users are quietly the strongest buyers right now"
     },
     {
       "day": "Sunday",
-      "topic": "Capital",
-      "title": "Deferred maintenance is a price, not a surprise"
+      "topic": "Process",
+      "title": "A quiet escrow is a designed escrow"
     }
   ],
   "bank": {

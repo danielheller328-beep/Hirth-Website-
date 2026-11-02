@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 74 · 02 Nov 2026 – 15 Nov 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| ccredit | Leasing | Signal |
+| ccapex | Capital | Nocturne |
+| ccarry | Structure | Dossier |
+| creview | Client Review | Blueprint |
+| cpark | Parking | Atelier |
+| czone | Entitlements | Midnight |
+
+LinkedIn: In the City of LA, transfer tax is part of the price, The estoppel is where the story stops matching the file, Price is one term, The submarket is not the city, The deal you walk away from, Owner-users are quietly the strongest buyers right now, A quiet escrow is a designed escrow
+
 ## Week 73 · 19 Oct 2026 – 01 Nov 2026
 
 | Post | Topic | Art direction |
