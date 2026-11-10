@@ -1689,7 +1689,7 @@ const DANIEL = {
     'With my father\u2019s guidance and mentorship, I graduated from the California State University of Northridge and followed in his footsteps starting my career at Marcus and Millichap in early 2012. In the five years I spent there, I successfully mastered the brokerage skills of acquisition and disposition of commercial real estate assets, negotiating, and deal making including the following product types: retail, industrial, multi-family, office, and land.',
     'The most unique skill set I possess is an in-depth knowledge in all commercial real estate, a skill hard to find amongst my peers. I have managed, acquired and disposed of commercial real estate properties of all product types in Los Angeles County over the past decade.',
     'The most vital role I play for my clients\u2019 an advisor — by taking an in depth look at their real estate portfolio and restructuring if necessary. Thus, guaranteeing their equity is working for them at peak performance yielding them the best return and shielding their income through depreciation and interest payments.',
-    'My unparalleled expertise in marketing, negotiating, financing, managing, and sales has contributed to over 200 transactions exceeding $520,000,000. My success in the real estate market is founded on a relentless work ethic, integrity, and honesty, all of which allow me to play a vital role for my clients\u2019 financial benefit. I am highly organized, and I ensure that each transaction runs smoothly until escrow closes. Working closely with clients that become family is what I live for.',
+    'My unparalleled expertise in marketing, negotiating, financing, managing, and sales has contributed to over 230 transactions exceeding $588,000,000. My success in the real estate market is founded on a relentless work ethic, integrity, and honesty, all of which allow me to play a vital role for my clients\u2019 financial benefit. I am highly organized, and I ensure that each transaction runs smoothly until escrow closes. Working closely with clients that become family is what I live for.',
     'Aside from insuring my clients the most amount of money possible, one of my greatest joys is taking on promising members of the younger generation and giving them the opportunity to join The Hirth Group. By helping them fulfill their dreams and transforming them into independent and strong leaders, I have created a well-rounded team where each agent brings their unique skillset to benefit our clients\u2019 needs.',
     'When I\u2019m not closing deals, I enjoy spending time with my beautiful wife Adi and my amazing sons, Alexander, Lev, and Gabriel. I avidly follow the stock market and the emerging cryptocurrency markets. I enjoy outdoor activities such as hockey, basketball, tennis, golf, and snowboarding.',
   ],
@@ -2488,8 +2488,8 @@ function HomePage({ go, countUp = true }) {
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(60% 120% at 18% 50%, rgba(43,182,187,0.14), transparent 60%), radial-gradient(60% 120% at 82% 50%, rgba(205,163,95,0.13), transparent 60%)', pointerEvents: 'none' }}></div>
         <div className="reveal-up" style={{ position: 'relative' }}>
         <StatBand stats={[
-          { value: '$525,000,000', suffix: '+', label: 'Closed', countUp },
-          { value: '200', suffix: '+', label: 'Transactions', countUp },
+          { value: '$588,000,000', suffix: '+', label: 'Closed', countUp },
+          { value: '230', suffix: '+', label: 'Transactions', countUp },
           { value: '30', suffix: '+', label: 'Years in LA County', countUp },
         ]} />
         </div>
@@ -2592,8 +2592,8 @@ const PROP_TABS = [
 function SoldHeader({ go, status, tabs, countFor }) {
   const stats = [
     ['150', 'Deals Closed', '+'],
-    ['$522,000,000', 'Closed Volume', '+'],
-    ['200', 'Transactions', '+'],
+    ['$588,000,000', 'Closed Volume', '+'],
+    ['230', 'Transactions', '+'],
   ];
   return (
     <section className="texture-map watermark-logo" style={{ position: 'relative', overflow: 'hidden', background: 'var(--navy-900)', padding: '92px var(--container-pad) 0' }}>
@@ -2902,7 +2902,7 @@ function ProfilePage({ go }) {
         {/* career stat strip — animated count-up */}
         <div style={{ borderTop: '1px solid rgba(201,162,77,0.22)', marginTop: '40px', background: 'linear-gradient(180deg, transparent, rgba(201,162,77,0.04))' }}>
           <div className="container r-grid-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'transparent', paddingTop: '24px', paddingBottom: '24px' }}>
-            {[['$525,000,000', '+', 'Career Volume'], ['200', '+', 'Transactions'], ['2012', '', 'In the Business Since']].map(([v, suf, l], i) => (
+            {[['$588,000,000', '+', 'Career Volume'], ['230', '+', 'Transactions'], ['2012', '', 'In the Business Since']].map(([v, suf, l], i) => (
               <div key={l} style={{ borderLeft: i ? '1px solid rgba(201,162,77,0.18)' : 'none' }}>
                 <ProfStat value={v} suffix={suf} label={l} inverse={true} />
               </div>
@@ -3087,7 +3087,7 @@ function ContactPage() {
 function TeamPage({ go }) {
   const team = [
     { name: 'Daniel Hirth', role: 'Principal', photo: 'assets/photos/daniel-hirth-portrait.jpg', accent: 'var(--blue-400)', page: 'daniel-hirth',
-      bio: ['Born and raised in Los Angeles, Daniel was introduced to real estate at a very young age — riding alongside his father collecting rents, overseeing renovations, and managing commercial properties. After graduating from California State University, Northridge, he began his career at Marcus & Millichap in 2012, mastering the acquisition and disposition of retail, industrial, multifamily, office, and land assets.', 'With over 200 transactions totaling more than $520 million in closed sales, Daniel acts as a trusted advisor — strategically restructuring his clients’ portfolios so their equity works efficiently. He also mentors the next generation of professionals at The Hirth Group, building a team where each agent brings unique strengths to better serve clients.'] },
+      bio: ['Born and raised in Los Angeles, Daniel was introduced to real estate at a very young age — riding alongside his father collecting rents, overseeing renovations, and managing commercial properties. After graduating from California State University, Northridge, he began his career at Marcus & Millichap in 2012, mastering the acquisition and disposition of retail, industrial, multifamily, office, and land assets.', 'With over 230 transactions totaling more than $588 million in closed sales, Daniel acts as a trusted advisor — strategically restructuring his clients’ portfolios so their equity works efficiently. He also mentors the next generation of professionals at The Hirth Group, building a team where each agent brings unique strengths to better serve clients.'] },
     { name: 'Alex Reyhan', role: 'Managing Partner', photo: 'assets/photos/team-alex-reyhan.jpg', accent: 'var(--teal-400)',
       bio: ['Born and raised in Southern California, Alex Reyhan brings a deep understanding of the region’s dynamic real estate market. Since joining The Hirth Group in 2015, he has been instrumental in acquisitions, dispositions, and leasing across retail, shopping centers, industrial, mixed-use, office, and land — with a track record exceeding $500 million in closed transactions.', 'His marquee deals include the Abbot Kinney Portfolio ($29.3M), Hollywood & Western Petco ($30.4M), Main Street, Santa Ana ($18.6M), and Main Street, Venice ($8.9M). A UCLA history graduate, Alex pairs sharp deal structuring with a relationship-first approach, and is deeply involved in the Los Angeles Jewish community.'] },
     { name: 'Ethan Donel', role: 'Senior Associate', photo: 'assets/photos/team-ethan-donel.jpg', accent: 'var(--gold-500)',
