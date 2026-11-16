@@ -2,6 +2,19 @@
 
 What the kit put out, week by week. Written by `flyers/weekly.py`.
 
+## Week 75 · 16 Nov 2026 – 29 Nov 2026
+
+| Post | Topic | Art direction |
+|---|---|---|
+| ccarryback | Seller Financing | Nocturne |
+| cinsure | Insurance | Dossier |
+| cvacant | Vacancy | Blueprint |
+| cland | Land Value | Atelier |
+| cassume | Assumption | Midnight |
+| cphase1 | Environmental | Signal |
+
+LinkedIn: The cap rate on the flyer is not the cap rate, What holding out actually costs, 45 and 180, The good deals are gone before they are listed, Read the rent roll before the offering memorandum, A 4.25% cap is not expensive. It is a different product., Everyone sees the same listings
+
 ## Week 74 · 02 Nov 2026 – 15 Nov 2026
 
 | Post | Topic | Art direction |
