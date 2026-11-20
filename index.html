@@ -1647,6 +1647,8 @@ const LISTINGS = [
   { title: '8008 Seville Avenue', meta: 'Huntington Park, CA 90255', status: 'closed', price: '$350,000', dealType: 'Multi Tenant Retail', representation: 'Seller & Buyer' },
 ];
 
+// FLYER-FALLBACK: keep. If a lease brochure under assets/ is missing (GitHub uploads often land at the top level), use the top-level copy.
+(function(){try{LISTINGS.forEach(function(l){if(!l.flyer||l.status!=='for-lease'||!/^assets\//.test(l.flyer))return;var x=new XMLHttpRequest();x.open('HEAD',l.flyer,false);x.send();if(x.status===404){var b=l.flyer.split('/').pop();var y=new XMLHttpRequest();y.open('HEAD',b,false);y.send();if(y.status===200)l.flyer=b;}});}catch(e){}})();
 const FEATURED_TITLES = ['8729 Aviation Boulevard', '1801 Blake Avenue', '1612–1616 N Cahuenga Boulevard', '2221–2225 W Olive Avenue'];
 const FEATURED = FEATURED_TITLES.map((t) => LISTINGS.find((l) => l.title === t)).filter(Boolean);
 
